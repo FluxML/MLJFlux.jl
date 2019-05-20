@@ -52,24 +52,33 @@ params(chain))`.
 
 """
 function  fit!(chain, optimiser, loss, epochs, batch_size,
-               lambda, alpha, verbosity, data)
+               lambda, alpha, verbosity, data; min_loss = 0.5)
 
     # intitialize and start progress meter:
     meter = Progress(epochs+1, dt=0, desc="",
                      barglyphs=BarGlyphs("[=> ]"), barlen=25, color=:yellow)
     verbosity < 1 || next!(meter)
-
+    loss_func(x, y) = loss(chain(x), y)
+    history = []
     for i in 1:epochs
         
-        # <Ayush to write>
-        
+        Flux.train!(loss_func, Flux.params(chain), data, optimiser)  # We're taking data in a Flux-fashion.
+        current_loss = sum(loss_func(data[i][1], data[i][2]) for i=1:length(data))
+        println("Loss is $current_loss")
+        push!(history, current_loss)
+        if (current_loss < min_loss)
+            @info "Early stopping because we've reached desired accuracy"
+            break
+        end
         verbosity < 1 || next!(meter)
         
     end
 
-    return chain
+    return chain, history
 
 end
+
+
 
 # TODO: add automatic stopping and callback functionality to above.
 
@@ -173,12 +182,11 @@ function MLJBase.fit(model::NeuralNetworkRegressor,
 
     chain = fit(model.builder, n, m)
 
-    fit!(chain, model.optimiser, model.loss, model.n, model.batch_size,
+    chain, report = fit!(chain, model.optimiser, model.loss, model.n, model.batch_size,
          model.lambda, model.alpha, verbosity, data)
 
     cache = model.n # track number of epochs trained for update method
     fitresult = (chain, target_is_multivariate)
-    report = NamedTuple{}()
 
     return fitresult, cache, report
 

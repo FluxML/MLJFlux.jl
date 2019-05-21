@@ -18,6 +18,17 @@ const Loss = LossFunctions.SupervisedLoss # owned by LearnBase
 nrows(X::AbstractMatrix) = size(X, 2)
 
 
+## TO MAKE OPTIMISER PARAMETERS ACCESSIBLE TO MLJ (for eg, tuning)
+## Need MLJBase 0.2.1 for this: 
+
+for opt in (:Descent, :Momentum, :Nesterov, :RMSProp, :ADAM, :AdaMax,
+        :ADAGrad, :ADADelta, :AMSGrad, :NADAM, :Optimiser,
+        :InvDecay, :ExpDecay, :WeightDecay)
+
+    @eval MLJBase.istransparent(m::Flux.$opt) = true
+end
+
+
 ## GENERAL METHOD TO OPTIMIZE A CHAIN
 
 """

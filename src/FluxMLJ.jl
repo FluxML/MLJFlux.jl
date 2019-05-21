@@ -1,7 +1,5 @@
 module FluxMLJ
 
-module MLJInterface
-
 export NeuralNetworkRegressor, UnivariateNeuralNetworkRegressor
 export NeuralNetworkClassifier, UnivariateNeuralNetworkClassifier
 
@@ -79,7 +77,6 @@ function  fit!(chain, optimiser, loss, epochs, batch_size,
 end
 
 
-
 # TODO: add automatic stopping and callback functionality to above.
 
 
@@ -102,7 +99,7 @@ abstract type Builder <: MLJBase.Model end
 mutable struct Linear <: Builder
     σ
 end
-Linear(; σ=tanh) = Linear(σ)
+Linear(; σ=identity) = Linear(σ)
 fit(builder::Linear, n::Integer, m::Integer) = Flux.Dense(n, m, builder.σ)
 
 # baby example 2:
@@ -131,7 +128,7 @@ end
 
 ## NEURAL NETWORK REGRESSOR
 
-mutable struct NeuralNetworkRegressor{B<:Builder,O,L<:Loss} <: MLJBase.Deterministic
+mutable struct NeuralNetworkRegressor{B<:Builder,O,L} <: MLJBase.Deterministic
     builder::B
     optimiser::O    # mutable struct from Flux/src/optimise/optimisers.jl
     loss::L         # can be called as in `loss(yhat, y)`
@@ -192,26 +189,22 @@ function MLJBase.fit(model::NeuralNetworkRegressor,
 
 end
 
-MLJBase.predict(model::NeuralNetworkRegressor, fitresult, Xnew_) =
-    predict(model, fitresult, Xnew_, Val(fitresult[2]))
+# reformatting for a single prediction, according to whether target is
+# multivariate or not:
+reformat(ypred, ::Val{true}) = Tuple(ypred)
+reformat(ypred, ::Val{false}) = first(ypred) 
+# TODO: also strip of "tracked"
 
 # for multivariate targets:            
-function predict(model, fitresult, Xnew_, ::Val{true})
+function MLJBase.predict(model, fitresult, Xnew_)
     chain = fitresult[1]
+    ismulti = fitresult[2]
     Xnew = MLJBase.matrix(Xnew_)'
-    return [Tuple(chain(Xnew[:,i])) for i in 1:size(Xnew, 2)]
-end
-
-# for univariate targets:            
-function predict(model, fitresult, Xnew_, ::Val{true})
-    chain = fitresult[1]
-    Xnew = MLJBase.matrix(Xnew_)'
-    return [first(chain(Xnew[:,i])) for i in 1:size(Xnew, 2)]
+    return [reformat(chain(Xnew[:,i]), Val(ismulti)) for i in 1:size(Xnew, 2)]
 end
 
 end
 
-end
 
 
 

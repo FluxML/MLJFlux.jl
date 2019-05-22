@@ -16,7 +16,7 @@ X = MLJBase.table(randn(10N, 5))
 ymatrix = hcat(1 .+ X.x1 - X.x2, 1 .- 2X.x4 + X.x5)
 y = [Tuple(ymatrix[i,:]) for i in 1:size(ymatrix, 1)]
 
-train = 1:7N
+train = 1:7N'
 test = (7N+1):10N
 
 

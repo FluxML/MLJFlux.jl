@@ -6,7 +6,9 @@ export NeuralNetworkClassifier, UnivariateNeuralNetworkClassifier
 import Flux
 import MLJBase
 import LossFunctions
+import Base.==
 using ProgressMeter
+
 
 # CONSTANTS
 
@@ -18,14 +20,38 @@ const Loss = LossFunctions.SupervisedLoss # owned by LearnBase
 nrows(X::AbstractMatrix) = size(X, 2)
 
 
-## TO MAKE OPTIMISER PARAMETERS ACCESSIBLE TO MLJ (for eg, tuning)
-## Need MLJBase 0.2.1 for this: 
+## EXPOSE OPTIMISERS TO MLJ (for eg, tuning)
+
+## Need MLJBase >=0.2.1 for this.
+
+# Here we: (i) Make the optimser structs "transarent" so that their
+# field values are exposed by calls to MLJ.params (needed for tuning);
+# and (ii) Overload == for optimisers, so that we can detect when
+# their parameters remain unchanged on calls to MLJBase.update methods.
+
+# We define optimisers of to be `==` if: (i) They have identical type
+# AND (ii) their defined field values are `==`:
 
 for opt in (:Descent, :Momentum, :Nesterov, :RMSProp, :ADAM, :AdaMax,
         :ADAGrad, :ADADelta, :AMSGrad, :NADAM, :Optimiser,
         :InvDecay, :ExpDecay, :WeightDecay)
 
-    @eval MLJBase.istransparent(m::Flux.$opt) = true
+    @eval begin
+        @show Flux.$opt
+        
+        MLJBase.istransparent(m::Flux.$opt) = true
+
+        function ==(m1::Flux.$opt, m2::Flux.$opt)
+            same_values = true
+            for fld in fieldnames(Flux.$opt)
+                same_values = same_values &&
+                    getfield(m1, fld) == getfield(m2, fld)
+            end
+            return same_values
+        end
+        
+    end
+    
 end
 
 

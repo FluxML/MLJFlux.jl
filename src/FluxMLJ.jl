@@ -145,7 +145,7 @@ abstract type Builder <: MLJBase.Model end
 mutable struct Linear <: Builder
     σ
 end
-Linear(; σ=identity) = Linear(σ)
+Linear(; σ=Flux.sigmoid) = Linear(σ)
 fit(builder::Linear, n::Integer, m::Integer) = Flux.Dense(n, m, builder.σ)
 
 # baby example 2:
@@ -231,10 +231,10 @@ function MLJBase.fit(model::NeuralNetworkRegressor,
     chain, history = fit!(chain, model.optimiser, model.loss, model.n, model.batch_size,
          model.lambda, model.alpha, verbosity, data, model.patience)
 
-    cache = model.n # track number of epochs trained for update method
+    cache = nothing # track number of epochs trained for update method
     fitresult = (chain, target_is_multivariate)
 
-    report = (training_losses=history)
+    report = (training_losses=history, epochs=model.n)
     
     return fitresult, cache, report
 
@@ -252,6 +252,77 @@ function MLJBase.predict(model, fitresult, Xnew_)
     Xnew = MLJBase.matrix(Xnew_)'
     return [reformat(chain(Xnew[:,i]), Val(ismulti)) for i in 1:size(Xnew, 2)]
 end
+
+## Classifier:
+
+mutable struct NeuralNetworkClassifier{B<:Builder,O,L} <: MLJBase.Probabilistic
+    builder::B
+    optimiser::O    # mutable struct from Flux/src/optimise/optimisers.jl
+    loss::L         # can be called as in `loss(yhat, y)`
+    n::Int          # number of epochs
+    batch_size::Int # size of a batch
+    lambda::Float64 # regularization strength
+    alpha::Float64  # regularizaton mix (0 for all l2, 1 for all l1)
+    patience::Int
+end
+
+NeuralNetworkClassifier(; builder::B   = Linear()
+              , optimiser::O = Flux.Optimise.ADAM()
+              , loss::L      = Flux.crossentropy
+              , n            = 10
+              , batch_size   = 1
+              , lambda       = 0
+              , alpha        = 0
+              , patience     = 3) where {B,O,L} =
+                  NeuralNetworkClassifier{B,O,L}(builder
+                                       , optimiser
+                                       , loss
+                                       , n
+                                       , batch_size
+                                       , lambda
+                                       , alpha
+                                       , patience)
+
+input_is_multivariate(::Type{<:NeuralNetworkClassifier}) = true
+input_scitype_union(::Type{<:NeuralNetworkClassifier}) = MLJBase.Continuous 
+target_scitype_union(::Type{<:NeuralNetworkClassifier}) =MLJBase.Multiclass
+
+function MLJBase.fit(model::NeuralNetworkClassifier, verbosity::Int,
+                        X_, y_)
+    Xmatrix = MLJBase.matrix(X_)'
+
+    row_batches = Base.Iterators.partition(1:length(y_), model.batch_size)
+
+    a_target_element = first(y_)
+    levels = MLJBase.classes(a_target_element)
+    m = length(levels)
+
+    y_onehot = [Flux.onehot(ele, levels) for ele in y_]
+
+    data = [(Xmatrix[:, b], y_onehot[b][1]) for b in row_batches]
+    n = size(Xmatrix, 1)
+
+    chain = fit(model.builder, n, m)
+
+    chain, history = fit!(chain, model.optimiser, model.loss, model.n, model.batch_size,
+    model.lambda, model.alpha, verbosity, data, model.patience)
+
+    cache = nothing # track number of epochs trained for update method
+    fitresult = (chain, false)
+
+    report = (training_losses=history, epochs=model.n)
+
+    return fitresult, cache, report
+end
+
+function MLJBase.predict(model::NeuralNetworkClassifier, fitresult, Xnew_)
+    chain = fitresult[1]
+    ismulti = fitresult[2]
+    Xnew = MLJBase.matrix(Xnew_)'
+    return [chain(Xnew[:,i]).data for i in 1:size(Xnew, 2)]
+
+end
+
 
 end
 

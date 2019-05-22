@@ -3,16 +3,16 @@ module FluxMLJ
 export NeuralNetworkRegressor, UnivariateNeuralNetworkRegressor
 export NeuralNetworkClassifier, UnivariateNeuralNetworkClassifier
 
+# import LossFunctions
 import Flux
 import MLJBase
-import LossFunctions
 import Base.==
 using ProgressMeter
 
 
 # CONSTANTS
 
-const Loss = LossFunctions.SupervisedLoss # owned by LearnBase
+# const Loss = LossFunctions.SupervisedLoss # owned by LearnBase
 
 
 ## HELPERS
@@ -37,7 +37,6 @@ for opt in (:Descent, :Momentum, :Nesterov, :RMSProp, :ADAM, :AdaMax,
         :InvDecay, :ExpDecay, :WeightDecay)
 
     @eval begin
-        @show Flux.$opt
         
         MLJBase.istransparent(m::Flux.$opt) = true
 
@@ -182,7 +181,7 @@ mutable struct NeuralNetworkRegressor{B<:Builder,O,L} <: MLJBase.Deterministic
 end
 NeuralNetworkRegressor(; builder::B   = Linear()
               , optimiser::O = Flux.Optimise.ADAM()
-              , loss::L      = LossFunctions.L2DistLoss()
+              , loss::L      = Flux.mse
               , n            = 10
               , batch_size   = 1
               , lambda       = 0
@@ -222,21 +221,22 @@ function MLJBase.fit(model::NeuralNetworkRegressor,
 
     chain = fit(model.builder, n, m)
 
-    chain, report = fit!(chain, model.optimiser, model.loss, model.n, model.batch_size,
+    chain, history = fit!(chain, model.optimiser, model.loss, model.n, model.batch_size,
          model.lambda, model.alpha, verbosity, data)
 
     cache = model.n # track number of epochs trained for update method
     fitresult = (chain, target_is_multivariate)
 
+    report = (training_losses=history)
+    
     return fitresult, cache, report
 
 end
 
 # reformatting for a single prediction, according to whether target is
 # multivariate or not:
-reformat(ypred, ::Val{true}) = Tuple(ypred)
-reformat(ypred, ::Val{false}) = first(ypred) 
-# TODO: also strip of "tracked"
+reformat(ypred, ::Val{true}) = Tuple(ypred.data)
+reformat(ypred, ::Val{false}) = first(ypred.data) 
 
 # for multivariate targets:            
 function MLJBase.predict(model, fitresult, Xnew_)

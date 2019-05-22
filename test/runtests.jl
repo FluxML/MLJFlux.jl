@@ -8,6 +8,11 @@ import Flux
 import Random.seed!
 seed!(123)
 
+# test equality of optimisers:
+@test Flux.Momentum() == Flux.Momentum()
+@test Flux.Momentum(0.1) != Flux.Momentum(0.2)
+
+
 # in MLJ multivariate inputs are tables:
 N = 200
 X = MLJBase.table(randn(10N, 5))
@@ -29,9 +34,9 @@ fitresult, cache, report = MLJBase.fit(model, 1, MLJBase.selectrows(X,train), y[
 yhat = MLJBase.predict(model, fitresult, MLJBase.selectrows(X, test))
 @test mse(yhat, y[test]) <= 0.001
 
-# univariate targets are normal vectors.
+# univariate targets are ordinary vectors.
 
-y_univariate = hcat(1 .+ X.x1 - X.x2 .- 2X.x4 + X.x5)
+y_univariate = 1 .+ X.x1 - X.x2 .- 2X.x4 + X.x5
 
 uni_model = FluxMLJ.NeuralNetworkRegressor(loss=mse)
 fitresult, cache, report = MLJBase.fit(model, 1, MLJBase.selectrows(X,train), y_univariate[train])

@@ -57,7 +57,7 @@ end
 ## GENERAL METHOD TO OPTIMIZE A CHAIN
 
 """
-        fit!(chain, optimiser, loss, epochs, batch_size, lambda, alpha, verbosity, data)
+    fit!(chain, optimiser, loss, epochs, batch_size, lambda, alpha, verbosity, data)
 
 Optimize a Flux model `chain` using the regularization parameters
 `lambda` (strength) and `alpha` (l2/l1 mix), where `loss(yhat, y) ` is
@@ -91,7 +91,7 @@ function  fit!(chain, optimiser, loss, epochs, batch_size,
     # intitialize and start progress meter:
     meter = Progress(epochs+1, dt=0, desc="",
                      barglyphs=BarGlyphs("[=> ]"), barlen=25, color=:yellow)
-    verbosity < 1 || next!(meter)
+    verbosity != 1 || next!(meter)
     loss_func(x, y) = loss(chain(x), y)
     history = []
     prev_loss = Inf
@@ -99,19 +99,22 @@ function  fit!(chain, optimiser, loss, epochs, batch_size,
         
         Flux.train!(loss_func, Flux.params(chain), data, optimiser)  # We're taking data in a Flux-fashion.
         current_loss = sum(loss_func(data[i][1], data[i][2]) for i=1:length(data))
-        println("Loss is $current_loss")
+        verbosity < 3 || println("Loss is $current_loss")
         push!(history, current_loss)
-        if (current_loss < min_loss)
-            @info "Early stopping because we've reached desired accuracy"
+        if (current_loss < min_loss) 
+            verbosity < 2 ||
+                @info "Early stopping because we've reached desired accuracy"
             break
         end
         if (current_loss == prev_loss)
-            @info "Model has reached maximum possible accuracy. Further training won't increase performance."
+            verbosity < 2 ||
+                @info "Model has reached maximum possible accuracy. "*
+            "Further training won't increase performance."
             break
         end
         prev_loss = current_loss
-        verbosity < 1 || next!(meter)
-        
+        verbosity != 1 || next!(meter)
+
     end
 
     return chain, history
@@ -202,7 +205,7 @@ target_scitype_union(::Type{<:NeuralNetworkRegressor}) =
 function MLJBase.fit(model::NeuralNetworkRegressor,
                      verbosity::Int,
                      X_, y_)
-   
+
     target_is_multivariate = y_ isa AbstractVector{<:Tuple}
 
     # assemble as required by fit(chain,...) above:

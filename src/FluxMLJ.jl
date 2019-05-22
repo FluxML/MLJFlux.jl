@@ -95,6 +95,7 @@ function  fit!(chain, optimiser, loss, epochs, batch_size,
     verbosity < 1 || next!(meter)
     loss_func(x, y) = loss(chain(x), y)
     history = []
+    prev_loss = Inf
     for i in 1:epochs
         
         Flux.train!(loss_func, Flux.params(chain), data, optimiser)  # We're taking data in a Flux-fashion.
@@ -105,6 +106,11 @@ function  fit!(chain, optimiser, loss, epochs, batch_size,
             @info "Early stopping because we've reached desired accuracy"
             break
         end
+        if (current_loss == prev_loss)
+            @info "Model has reached maximum possible accuracy. Further training won't increase performance."
+            break
+        end
+        prev_loss = current_loss
         verbosity < 1 || next!(meter)
         
     end

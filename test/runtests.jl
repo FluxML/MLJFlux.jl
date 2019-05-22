@@ -28,3 +28,14 @@ fitresult, cache, report = MLJBase.fit(model, 1, MLJBase.selectrows(X,train), y[
 
 yhat = MLJBase.predict(model, fitresult, MLJBase.selectrows(X, test))
 @test mse(yhat, y[test]) <= 0.001
+
+# univariate targets are normal vectors.
+
+y_univariate = hcat(1 .+ X.x1 - X.x2 .- 2X.x4 + X.x5)
+
+uni_model = FluxMLJ.NeuralNetworkRegressor(loss=mse)
+fitresult, cache, report = MLJBase.fit(model, 1, MLJBase.selectrows(X,train), y_univariate[train])
+
+yhat_uni = MLJBase.predict(model, fitresult, MLJBase.selectrows(X, test))
+
+@test mse(yhat_uni, y_univariate[test]) <= 0.001

@@ -198,9 +198,9 @@ NeuralNetworkRegressor(; builder::B   = Linear()
                                        , alpha)
 
 input_is_multivariate(::Type{<:NeuralNetworkRegressor}) = true
-input_scitype_union(::Type{<:NeuralNetworkRegressor}) = Continuous 
+input_scitype_union(::Type{<:NeuralNetworkRegressor}) = MLJBase.Continuous 
 target_scitype_union(::Type{<:NeuralNetworkRegressor}) =
-    Union{Continuous,NTuple{<:Continuous}}
+    Union{MLJBase.Continuous,NTuple{<:MLJBase.Continuous}}
     
 function MLJBase.fit(model::NeuralNetworkRegressor,
                      verbosity::Int,

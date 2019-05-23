@@ -86,7 +86,7 @@ params(chain))`.
 
 """
 function  fit!(chain, optimiser, loss, epochs, batch_size,
-               lambda, alpha, verbosity, data, patience)
+               lambda, alpha, verbosity, data)
 
     # intitialize and start progress meter:
     meter = Progress(epochs+1, dt=0, desc="",
@@ -101,13 +101,7 @@ function  fit!(chain, optimiser, loss, epochs, batch_size,
         verbosity < 2 || println("Loss is $(current_loss.data)")
         push!(history, current_loss)
 
-        if (current_loss > prev_loss)
-            patience -= 1
-            if patience == 0
-                @info "Early stopping. Reset `patience` parameter if you want to continue training."
-                break
-            end
-        elseif current_loss == prev_loss
+        if current_loss == prev_loss
             @info "Model has reached maximum possible accuracy."*
             "More training won't increase accuracy"
             break
@@ -117,7 +111,7 @@ function  fit!(chain, optimiser, loss, epochs, batch_size,
         verbosity != 1 || next!(meter)
 
     end
-
+    Flux.testmode!(chain, true)         # to use in inference mode
     return chain, history
 
 end
@@ -182,7 +176,7 @@ mutable struct NeuralNetworkRegressor{B<:Builder,O,L} <: MLJBase.Deterministic
     batch_size::Int # size of a batch
     lambda::Float64 # regularization strength
     alpha::Float64  # regularizaton mix (0 for all l2, 1 for all l1)
-    patience::Int
+    optimiser_changes_trigger_retraining::Bool
 end
 NeuralNetworkRegressor(; builder::B   = Linear()
               , optimiser::O = Flux.Optimise.ADAM()
@@ -191,7 +185,7 @@ NeuralNetworkRegressor(; builder::B   = Linear()
               , batch_size   = 1
               , lambda       = 0
               , alpha        = 0
-              , patience     = 3) where {B,O,L} =
+              ,optimiser_changes_trigger_retraining=false) where {B,O,L} =
                   NeuralNetworkRegressor{B,O,L}(builder
                                        , optimiser
                                        , loss
@@ -199,7 +193,7 @@ NeuralNetworkRegressor(; builder::B   = Linear()
                                        , batch_size
                                        , lambda
                                        , alpha
-                                       , patience)
+                                       , optimiser_changes_trigger_retraining)
 
 input_is_multivariate(::Type{<:NeuralNetworkRegressor}) = true
 input_scitype_union(::Type{<:NeuralNetworkRegressor}) = MLJBase.Continuous 
@@ -229,9 +223,9 @@ function MLJBase.fit(model::NeuralNetworkRegressor,
     chain = fit(model.builder, n, m)
 
     chain, history = fit!(chain, model.optimiser, model.loss, model.n, model.batch_size,
-         model.lambda, model.alpha, verbosity, data, model.patience)
+         model.lambda, model.alpha, verbosity, data)
 
-    cache = nothing # track number of epochs trained for update method
+    cache = deepcopy(model) # track number of epochs trained for update method
     fitresult = (chain, target_is_multivariate)
 
     report = (training_losses=history, epochs=model.n)
@@ -253,6 +247,25 @@ function MLJBase.predict(model, fitresult, Xnew_)
     return [reformat(chain(Xnew[:,i]), Val(ismulti)) for i in 1:size(Xnew, 2)]
 end
 
+function MLJBase.update(model::NeuralNetworkRegressor, verbosity::Int, fitresult, old_model, X, y)
+    if model.n >= old_model.n && 
+        (!model.optimiser_changes_trigger_retraining || model.optimiser != old_model.optimiser) && 
+            model != old_model
+
+        epoch_delta = model.n - old_model.n
+        n = model.n
+        model.n = epoch_delta
+        fitresult, new_model_copy, delta_report = MLJBase.fit(model, verbosity, X, y)
+        model.n = n
+        new_model_copy.n = n
+
+        return fitresult, new_model_copy, delta_report
+
+    else
+        return MLJBase.fit(model, verbosity, X, y)
+    end
+end
+
 ## Classifier:
 
 mutable struct NeuralNetworkClassifier{B<:Builder,O,L} <: MLJBase.Probabilistic
@@ -263,7 +276,7 @@ mutable struct NeuralNetworkClassifier{B<:Builder,O,L} <: MLJBase.Probabilistic
     batch_size::Int # size of a batch
     lambda::Float64 # regularization strength
     alpha::Float64  # regularizaton mix (0 for all l2, 1 for all l1)
-    patience::Int
+    optimiser_changes_trigger_retraining::Bool
 end
 
 NeuralNetworkClassifier(; builder::B   = Linear()
@@ -273,7 +286,7 @@ NeuralNetworkClassifier(; builder::B   = Linear()
               , batch_size   = 1
               , lambda       = 0
               , alpha        = 0
-              , patience     = 3) where {B,O,L} =
+              , optimiser_changes_trigger_retraining = false) where {B,O,L} =
                   NeuralNetworkClassifier{B,O,L}(builder
                                        , optimiser
                                        , loss
@@ -281,7 +294,7 @@ NeuralNetworkClassifier(; builder::B   = Linear()
                                        , batch_size
                                        , lambda
                                        , alpha
-                                       , patience)
+                                       , optimiser_changes_trigger_retraining)
 
 input_is_multivariate(::Type{<:NeuralNetworkClassifier}) = true
 input_scitype_union(::Type{<:NeuralNetworkClassifier}) = MLJBase.Continuous 
@@ -305,7 +318,7 @@ function MLJBase.fit(model::NeuralNetworkClassifier, verbosity::Int,
     chain = fit(model.builder, n, m)
 
     chain, history = fit!(chain, model.optimiser, model.loss, model.n, model.batch_size,
-    model.lambda, model.alpha, verbosity, data, model.patience)
+    model.lambda, model.alpha, verbosity, data)
 
     cache = nothing # track number of epochs trained for update method
     fitresult = (chain, false)
@@ -321,6 +334,25 @@ function MLJBase.predict(model::NeuralNetworkClassifier, fitresult, Xnew_)
     Xnew = MLJBase.matrix(Xnew_)'
     return [chain(Xnew[:,i]).data for i in 1:size(Xnew, 2)]
 
+end
+
+function MLJBase.update(model::NeuralNetworkClassifier, verbosity::Int, fitresult, old_model, X, y)
+    if model.n >= old_model.n && 
+        (!model.optimiser_changes_trigger_retraining || model.optimiser != old_model.optimiser) && 
+            model != old_model
+
+        epoch_delta = model.n - old_model.n
+        n = model.n
+        model.n = epoch_delta
+        fitresult, new_model_copy, delta_report = MLJBase.fit(model, verbosity, X, y)
+        model.n = n
+        new_model_copy.n = n
+
+        return fitresult, new_model_copy, delta_report
+
+    else
+        return MLJBase.fit(model, verbosity, X, y)
+    end
 end
 
 

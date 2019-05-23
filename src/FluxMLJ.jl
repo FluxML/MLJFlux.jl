@@ -86,7 +86,7 @@ params(chain))`.
 
 """
 function  fit!(chain, optimiser, loss, epochs, batch_size,
-               lambda, alpha, verbosity, data, patience)
+               lambda, alpha, verbosity, data)
 
     # intitialize and start progress meter:
     meter = Progress(epochs+1, dt=0, desc="",
@@ -101,13 +101,7 @@ function  fit!(chain, optimiser, loss, epochs, batch_size,
         verbosity < 3 || println("Loss is $current_loss")
         push!(history, current_loss)
 
-        if (current_loss > prev_loss)
-            patience -= 1
-            if patience == 0
-                @info "Early stopping. Reset `patience` parameter if you want to continue training."
-                break
-            end
-        elseif current_loss == prev_loss
+        if current_loss == prev_loss
             @info "Model has reached maximum possible accuracy."*
             "More training won't increase accuracy"
             break
@@ -117,7 +111,7 @@ function  fit!(chain, optimiser, loss, epochs, batch_size,
         verbosity != 1 || next!(meter)
 
     end
-
+    Flux.testmode!(chain, true)         # to use in inference mode
     return chain, history
 
 end
@@ -182,7 +176,6 @@ mutable struct NeuralNetworkRegressor{B<:Builder,O,L} <: MLJBase.Deterministic
     batch_size::Int # size of a batch
     lambda::Float64 # regularization strength
     alpha::Float64  # regularizaton mix (0 for all l2, 1 for all l1)
-    patience::Int
 end
 NeuralNetworkRegressor(; builder::B   = Linear()
               , optimiser::O = Flux.Optimise.ADAM()
@@ -190,16 +183,14 @@ NeuralNetworkRegressor(; builder::B   = Linear()
               , n            = 10
               , batch_size   = 1
               , lambda       = 0
-              , alpha        = 0
-              , patience     = 3) where {B,O,L} =
+              , alpha        = 0) where {B,O,L} =
                   NeuralNetworkRegressor{B,O,L}(builder
                                        , optimiser
                                        , loss
                                        , n
                                        , batch_size
                                        , lambda
-                                       , alpha
-                                       , patience)
+                                       , alpha)
 
 input_is_multivariate(::Type{<:NeuralNetworkRegressor}) = true
 input_scitype_union(::Type{<:NeuralNetworkRegressor}) = MLJBase.Continuous 
@@ -229,7 +220,7 @@ function MLJBase.fit(model::NeuralNetworkRegressor,
     chain = fit(model.builder, n, m)
 
     chain, history = fit!(chain, model.optimiser, model.loss, model.n, model.batch_size,
-         model.lambda, model.alpha, verbosity, data, model.patience)
+         model.lambda, model.alpha, verbosity, data)
 
     cache = nothing # track number of epochs trained for update method
     fitresult = (chain, target_is_multivariate)
@@ -263,7 +254,6 @@ mutable struct NeuralNetworkClassifier{B<:Builder,O,L} <: MLJBase.Probabilistic
     batch_size::Int # size of a batch
     lambda::Float64 # regularization strength
     alpha::Float64  # regularizaton mix (0 for all l2, 1 for all l1)
-    patience::Int
 end
 
 NeuralNetworkClassifier(; builder::B   = Linear()
@@ -272,16 +262,14 @@ NeuralNetworkClassifier(; builder::B   = Linear()
               , n            = 10
               , batch_size   = 1
               , lambda       = 0
-              , alpha        = 0
-              , patience     = 3) where {B,O,L} =
+              , alpha        = 0) where {B,O,L} =
                   NeuralNetworkClassifier{B,O,L}(builder
                                        , optimiser
                                        , loss
                                        , n
                                        , batch_size
                                        , lambda
-                                       , alpha
-                                       , patience)
+                                       , alpha)
 
 input_is_multivariate(::Type{<:NeuralNetworkClassifier}) = true
 input_scitype_union(::Type{<:NeuralNetworkClassifier}) = MLJBase.Continuous 
@@ -305,7 +293,7 @@ function MLJBase.fit(model::NeuralNetworkClassifier, verbosity::Int,
     chain = fit(model.builder, n, m)
 
     chain, history = fit!(chain, model.optimiser, model.loss, model.n, model.batch_size,
-    model.lambda, model.alpha, verbosity, data, model.patience)
+    model.lambda, model.alpha, verbosity, data)
 
     cache = nothing # track number of epochs trained for update method
     fitresult = (chain, false)

@@ -115,7 +115,7 @@ function  fit!(chain, optimiser, loss, epochs, batch_size,
 
     end
     Flux.testmode!(chain, true)         # to use in inference mode
-    return chain, history
+    return chain, map(x->x.data, history)
 
 end
 
@@ -237,7 +237,7 @@ function MLJBase.fit(model::NeuralNetworkRegressor,
     chain, history = fit!(chain, optimiser, model.loss, model.n, model.batch_size,
          model.lambda, model.alpha, verbosity, data)
 
-    cache = (deepcopy(model), data) 
+    cache = (deepcopy(model), data, history) 
     fitresult = (chain, target_is_multivariate)
     report = (training_losses=history,)
     
@@ -260,10 +260,10 @@ end
 
 function MLJBase.update(model::NeuralNetworkRegressor, verbosity::Int, old_fitresult, old_cache, X, y)
 
-    old_model, data = old_cache
+    old_model, data, old_history = old_cache
     old_chain, target_is_multivariate = old_fitresult
 
-    if model.n >= old_model.n &&
+    keep_chain =  model.n >= old_model.n &&
         model.loss == old_model.loss &&
         model.batch_size == old_model.batch_size &&
         model.lambda == old_model.lambda &&
@@ -271,13 +271,13 @@ function MLJBase.update(model::NeuralNetworkRegressor, verbosity::Int, old_fitre
         model.builder == old_model.builder &&
         (!model.optimiser_changes_trigger_retraining ||
          model.optimiser == old_model.optimiser)
-
+    
+    if keep_chain
         chain = old_chain
         epochs = model.n - old_model.n
     else
         n = MLJBase.schema(X).names |> length
         m = length(y[1])
-
         chain = fit(model.builder, n, m)
         epochs = model.n
     end
@@ -286,13 +286,15 @@ function MLJBase.update(model::NeuralNetworkRegressor, verbosity::Int, old_fitre
     # MLJ does not allow fit to mutate models. So:
     optimiser = deepcopy(model.optimiser)
 
-    chain, delta_history = fit!(chain, optimiser, model.loss, epochs,
+    chain, history = fit!(chain, optimiser, model.loss, epochs,
                                 model.batch_size, model.lambda, model.alpha,
                                 verbosity, data)
-    
+    if keep_chain
+        history = vcat(old_history, history)
+    end
     fitresult = (chain, target_is_multivariate)
-    cache = (deepcopy(model), data)
-    report = (training_losses=delta_history,)
+    cache = (deepcopy(model), data, history)
+    report = (training_losses=history,)
     
     return fitresult, cache, report
 

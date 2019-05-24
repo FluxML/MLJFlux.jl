@@ -88,6 +88,7 @@ params(chain))`.
 function  fit!(chain, optimiser, loss, epochs, batch_size,
                lambda, alpha, verbosity, data)
 
+    Flux.testmode!(chain, false)
     # intitialize and start progress meter:
     meter = Progress(epochs+1, dt=0, desc="Optimising neural net:",
                      barglyphs=BarGlyphs("[=> ]"), barlen=25, color=:yellow)

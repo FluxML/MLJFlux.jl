@@ -23,9 +23,28 @@ X = transform(stand, X_);
 
 # construct a neural network model and inspect all hyperparameters:
 builder = FluxMLJ.Short()
-optimiser = Flux.Momentum()
+optimiser = Flux.Momentum(0.003)
 nnmodel = NeuralNetworkRegressor(builder=builder, optimiser=optimiser)
 params(nnmodel)
+
+
+## LEARNING CURVES DEMO
+
+nn = machine(nnmodel, X, y)
+r = range(nnmodel, :n, lower=1, upper=50)
+
+curve = learning_curve!(nn, nested_range=(n=r,), n=4)
+
+using Plots
+plotly()
+
+plot(curve.parameter_values, curve.measurements,
+     xlab=curve.parameter_name)
+
+
+## TUNING DEMO (bit contrived)
+
+nnmodel.optimiser_changes_trigger_retraining=true
 
 # define some hyperparameters ranges:
 r1 = range(builder, :n_hidden, lower=1, upper=5)
@@ -43,10 +62,11 @@ tuned_nnmodel = TunedModel(model=nnmodel,
 
 # tune the neural network:
 tuned = machine(tuned_nnmodel, X, y)
-fit!(tuned)
+fit!(tuned, verbosity=2)
 report(tuned)
-
+plot(tuned)
 # uncomment 3 lines to visualize tuning:
-# using Plots
-# plotly()
 # plot(tuned)
+
+
+

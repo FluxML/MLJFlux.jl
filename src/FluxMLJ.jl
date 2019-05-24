@@ -24,7 +24,7 @@ nrows(X::AbstractMatrix) = size(X, 2)
 
 ## Need MLJBase >=0.2.1 for this.
 
-# Here we: (i) Make the optimser structs "transarent" so that their
+# Here we: (i) Make the optimiser structs "transarent" so that their
 # field values are exposed by calls to MLJ.params (needed for tuning);
 # and (ii) Overload == for optimisers, so that we can detect when
 # their parameters remain unchanged on calls to MLJBase.update methods.
@@ -89,23 +89,26 @@ function  fit!(chain, optimiser, loss, epochs, batch_size,
                lambda, alpha, verbosity, data)
 
     # intitialize and start progress meter:
-    meter = Progress(epochs+1, dt=0, desc="",
+    meter = Progress(epochs+1, dt=0, desc="Optimising neural net:",
                      barglyphs=BarGlyphs("[=> ]"), barlen=25, color=:yellow)
     verbosity != 1 || next!(meter)
     loss_func(x, y) = loss(chain(x), y)
     history = []
     prev_loss = Inf
     for i in 1:epochs
-        Flux.train!(loss_func, Flux.params(chain), data, optimiser)  # We're taking data in a Flux-fashion.
+        # We're taking data in a Flux-fashion.
+        Flux.train!(loss_func, Flux.params(chain), data, optimiser)  
         current_loss = sum(loss_func(data[i][1], data[i][2]) for i=1:length(data))
         verbosity < 2 || println("Loss is $(current_loss.data)")
         push!(history, current_loss)
 
-        if current_loss == prev_loss
-            @info "Model has reached maximum possible accuracy."*
-            "More training won't increase accuracy"
-            break
-        end
+        # Early stopping is to be externally controlled.
+        # So @ablaom has commented next 5 lines :
+        # if current_loss == prev_loss
+        #     @info "Model has reached maximum possible accuracy."*
+        #     "More training won't increase accuracy"
+        #     break
+        # end
 
         prev_loss = current_loss
         verbosity != 1 || next!(meter)
@@ -120,15 +123,15 @@ end
 # TODO: add automatic stopping and callback functionality to above.
 
 
-## BUILDING CHAINS A FROM HYPERPARAMETERs + INPUT/OUTPUT SHAPE 
+## BUILDING CHAINS A FROM HYPERPARAMETERS + INPUT/OUTPUT SHAPE 
 
 # We introduce chain builders as a way of exposing neural network
-# hyperparameters (describing, eg, architecture) to the MLJ
-# user. These parameters generally exclude the input/output
+# hyperparameters (describing, architecture, dropout rates, etc) to
+# the MLJ user. These parameters generally exclude the input/output
 # dimensions/shapes, as the MLJ fit methods will determine these from
-# the training data. A `Builder` object stores the parameters
-# and an associated `fit` method builds a corresponding chain given
-# the input/output dimensions/shape.
+# the training data. A `Builder` object stores the parameters and an
+# associated `fit` method builds a corresponding chain given the
+# input/output dimensions/shape.
 
 # Below n or (n1, n2) etc refers to network inputs, while m or (m1,
 # m2) etc refers to outputs.
@@ -163,7 +166,9 @@ end
 ##############
 
 # An MLJ model wraps a neural network builder with instructions on how
-# to optimise the neural network it builds (after seeing the data).
+# to optimise the neural network it builds (after seeing the data). It
+# additionally specifies a training loss function and loss penalty
+# regularization parameters.
 
 
 ## NEURAL NETWORK REGRESSOR
@@ -185,7 +190,7 @@ NeuralNetworkRegressor(; builder::B   = Linear()
               , batch_size   = 1
               , lambda       = 0
               , alpha        = 0
-              ,optimiser_changes_trigger_retraining=false) where {B,O,L} =
+              , optimiser_changes_trigger_retraining=false) where {B,O,L} =
                   NeuralNetworkRegressor{B,O,L}(builder
                                        , optimiser
                                        , loss
@@ -200,35 +205,43 @@ input_scitype_union(::Type{<:NeuralNetworkRegressor}) = MLJBase.Continuous
 target_scitype_union(::Type{<:NeuralNetworkRegressor}) =
     Union{MLJBase.Continuous,NTuple{<:MLJBase.Continuous}}
     
+function collate(X, y, batch_size)
+    Xmatrix = MLJBase.matrix(X)'  # TODO: later MLJBase.matrix(X_,
+                                   # transpose=true)
+    ymatrix = reduce(hcat, [[tup...] for tup in y])
+    row_batches = Base.Iterators.partition(1:length(y), batch_size)
+    if y isa AbstractVector{<:Tuple}
+        return [(Xmatrix[:, b], ymatrix[:, b]) for b in row_batches]
+    else
+        return [(Xmatrix[:, b], ymatrix[b]) for b in row_batches]
+    end
+end
+
 function MLJBase.fit(model::NeuralNetworkRegressor,
                      verbosity::Int,
-                     X_, y_)
+                     X, y)
 
-    target_is_multivariate = y_ isa AbstractVector{<:Tuple}
+    target_is_multivariate = y isa AbstractVector{<:Tuple}
 
     # assemble as required by fit(chain,...) above:
-    Xmatrix = MLJBase.matrix(X_)'  # TODO: later MLJBase.matrix(X_,
-                                   # transpose=true)
-    ymatrix = reduce(hcat, [[tup...] for tup in y_])
-    row_batches = Base.Iterators.partition(1:length(y_), model.batch_size)
-    if target_is_multivariate
-        data = [(Xmatrix[:, b], ymatrix[:, b]) for b in row_batches]
-    else
-        data = [(Xmatrix[:, b], ymatrix[b]) for b in row_batches]
-    end
 
-    n = size(Xmatrix, 1)
-    m = size(ymatrix, 1)
+    data = collate(X, y, model.batch_size)
+    
+    n = MLJBase.schema(X).names |> length
+    m = length(y[1])
 
     chain = fit(model.builder, n, m)
 
-    chain, history = fit!(chain, model.optimiser, model.loss, model.n, model.batch_size,
+    # fit!(chain,...) mutates optimisers!!
+    # MLJ does not allow fit to mutate models. So:
+    optimiser = deepcopy(model.optimiser)
+    
+    chain, history = fit!(chain, optimiser, model.loss, model.n, model.batch_size,
          model.lambda, model.alpha, verbosity, data)
 
-    cache = deepcopy(model) # track number of epochs trained for update method
+    cache = deepcopy(model) 
     fitresult = (chain, target_is_multivariate)
-
-    report = (training_losses=history, epochs=model.n)
+    report = (training_losses=history,)
     
     return fitresult, cache, report
 
@@ -247,24 +260,38 @@ function MLJBase.predict(model, fitresult, Xnew_)
     return [reformat(chain(Xnew[:,i]), Val(ismulti)) for i in 1:size(Xnew, 2)]
 end
 
-function MLJBase.update(model::NeuralNetworkRegressor, verbosity::Int, fitresult, old_model, X, y)
-    if model.n >= old_model.n && 
-        (!model.optimiser_changes_trigger_retraining || model.optimiser != old_model.optimiser) && 
-            model != old_model
+function MLJBase.update(model::NeuralNetworkRegressor, verbosity::Int, old_fitresult, old_model, X, y)
 
+    if model.n >= old_model.n &&
+        model.loss == old_model.loss &&
+        model.batch_size == old_model.batch_size &&
+        model.lambda == old_model.lambda &&
+        model.alpha == old_model.alpha &&
+        model.builder == old_model.builder &&
+        (!model.optimiser_changes_trigger_retraining || model.optimiser == old_model.optimiser)
+
+        chain, target_is_multivariate = old_fitresult
         epoch_delta = model.n - old_model.n
-        n = model.n
-        model.n = epoch_delta
-        fitresult, new_model_copy, delta_report = MLJBase.fit(model, verbosity, X, y)
-        model.n = n
-        new_model_copy.n = n
+        data = collate(X, y, model.batch_size)
 
-        return fitresult, new_model_copy, delta_report
+        # fit!(chain,...) mutates optimisers!!
+        # MLJ does not allow fit to mutate models. So:
+        optimiser = deepcopy(model.optimiser)
+    
+        chain, delta_history = fit!(chain, optimiser, model.loss, epoch_delta,
+                                    model.batch_size, model.lambda, model.alpha,
+                                    verbosity, data)
 
+        fitresult = (chain, target_is_multivariate)
+        cache = deepcopy(model)
+        report = (training_losses=delta_history,)
+
+        return fitresult, cache, report
     else
         return MLJBase.fit(model, verbosity, X, y)
     end
 end
+
 
 ## Classifier:
 

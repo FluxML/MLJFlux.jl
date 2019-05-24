@@ -206,15 +206,22 @@ input_scitype_union(::Type{<:NeuralNetworkRegressor}) = MLJBase.Continuous
 target_scitype_union(::Type{<:NeuralNetworkRegressor}) =
     Union{MLJBase.Continuous,NTuple{<:MLJBase.Continuous}}
     
-function collate(X, y, batch_size)
+function collate(X, y, batch_size, regressor=true)
     Xmatrix = MLJBase.matrix(X)'  # TODO: later MLJBase.matrix(X_,
                                    # transpose=true)
     ymatrix = reduce(hcat, [[tup...] for tup in y])
     row_batches = Base.Iterators.partition(1:length(y), batch_size)
-    if y isa AbstractVector{<:Tuple}
-        return [(Xmatrix[:, b], ymatrix[:, b]) for b in row_batches]
+    if regressor
+        if y isa AbstractVector{<:Tuple}
+            return [(Xmatrix[:, b], ymatrix[:, b]) for b in row_batches]
+        else
+            return [(Xmatrix[:, b], ymatrix[b]) for b in row_batches]
+        end
     else
-        return [(Xmatrix[:, b], ymatrix[b]) for b in row_batches]
+        a_target_element = first(y)
+        levels = MLJBase.classes(a_target_element)
+        ymatrix = hcat([Flux.onehot(ele, levels) for ele in y]...,)
+        return [(Xmatrix[:, b], ymatrix[:, b]) for b in row_batches]
     end
 end
 
@@ -338,26 +345,27 @@ target_scitype_union(::Type{<:NeuralNetworkClassifier}) =MLJBase.Multiclass
 
 function MLJBase.fit(model::NeuralNetworkClassifier, verbosity::Int,
                         X_, y_)
-    Xmatrix = MLJBase.matrix(X_)'
-
-    row_batches = Base.Iterators.partition(1:length(y_), model.batch_size)
+    
+    target_is_multivariate = y_ isa AbstractVector{<:Tuple}
 
     a_target_element = first(y_)
     levels = MLJBase.classes(a_target_element)
     m = length(levels)
 
-    y_onehot = [Flux.onehot(ele, levels) for ele in y_]
+    data = collate(X_, y_, model.batch_size, false)
 
-    data = [(Xmatrix[:, b], y_onehot[b][1]) for b in row_batches]
-    n = size(Xmatrix, 1)
+
+
+    n = MLJBase.schema(X_).names |> length
+    optimiser = deepcopy(model.optimiser)
 
     chain = fit(model.builder, n, m)
 
     chain, history = fit!(chain, model.optimiser, model.loss, model.n, model.batch_size,
     model.lambda, model.alpha, verbosity, data)
 
-    cache = nothing # track number of epochs trained for update method
-    fitresult = (chain, false)
+    cache = deepcopy(model), data, history # track number of epochs trained for update method
+    fitresult = (chain, target_is_multivariate)
 
     report = (training_losses=history, epochs=model.n)
 
@@ -372,24 +380,46 @@ function MLJBase.predict(model::NeuralNetworkClassifier, fitresult, Xnew_)
 
 end
 
-function MLJBase.update(model::NeuralNetworkClassifier, verbosity::Int, fitresult, old_model, X, y)
-    if model.n >= old_model.n && 
-        (!model.optimiser_changes_trigger_retraining || model.optimiser != old_model.optimiser) && 
-            model != old_model
+function MLJBase.update(model::NeuralNetworkClassifier, verbosity::Int, old_fitresult, old_cache, X, y)
 
-        epoch_delta = model.n - old_model.n
-        n = model.n
-        model.n = epoch_delta
-        fitresult, new_model_copy, delta_report = MLJBase.fit(model, verbosity, X, y)
-        model.n = n
-        new_model_copy.n = n
+    old_model, data, old_history = old_cache
+    old_chain, target_is_multivariate = old_fitresult
 
-        return fitresult, new_model_copy, delta_report
-
+    keep_chain =  model.n >= old_model.n &&
+        model.loss == old_model.loss &&
+        model.batch_size == old_model.batch_size &&
+        model.lambda == old_model.lambda &&
+        model.alpha == old_model.alpha &&
+        model.builder == old_model.builder &&
+        (!model.optimiser_changes_trigger_retraining ||
+         model.optimiser == old_model.optimiser)
+    
+    if keep_chain
+        chain = old_chain
+        epochs = model.n - old_model.n
     else
-        return MLJBase.fit(model, verbosity, X, y)
+        n = MLJBase.schema(X).names |> length
+        m = length(y[1])
+        chain = fit(model.builder, n, m)
+        epochs = model.n
     end
+
+    optimiser = deepcopy(model.optimiser)
+
+    chain, history = fit!(chain, optimiser, model.loss, epochs,
+                                model.batch_size, model.lambda, model.alpha,
+                                verbosity, data)
+    if keep_chain
+        history = vcat(old_history, history)
+    end
+    fitresult = (chain, target_is_multivariate)
+    cache = (deepcopy(model), data, history)
+    report = (training_losses=history,)
+    
+    return fitresult, cache, report
+
 end
+
 
 
 end

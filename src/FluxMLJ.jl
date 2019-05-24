@@ -221,11 +221,9 @@ function MLJBase.fit(model::NeuralNetworkRegressor,
                      verbosity::Int,
                      X, y)
 
-    target_is_multivariate = y isa AbstractVector{<:Tuple}
-
-    # assemble as required by fit(chain,...) above:
-
     data = collate(X, y, model.batch_size)
+
+    target_is_multivariate = y isa AbstractVector{<:Tuple}
     
     n = MLJBase.schema(X).names |> length
     m = length(y[1])
@@ -239,7 +237,7 @@ function MLJBase.fit(model::NeuralNetworkRegressor,
     chain, history = fit!(chain, optimiser, model.loss, model.n, model.batch_size,
          model.lambda, model.alpha, verbosity, data)
 
-    cache = deepcopy(model) 
+    cache = (deepcopy(model), data) 
     fitresult = (chain, target_is_multivariate)
     report = (training_losses=history,)
     
@@ -260,7 +258,10 @@ function MLJBase.predict(model, fitresult, Xnew_)
     return [reformat(chain(Xnew[:,i]), Val(ismulti)) for i in 1:size(Xnew, 2)]
 end
 
-function MLJBase.update(model::NeuralNetworkRegressor, verbosity::Int, old_fitresult, old_model, X, y)
+function MLJBase.update(model::NeuralNetworkRegressor, verbosity::Int, old_fitresult, old_cache, X, y)
+
+    old_model, data = old_cache
+    old_chain, target_is_multivariate = old_fitresult
 
     if model.n >= old_model.n &&
         model.loss == old_model.loss &&
@@ -268,28 +269,33 @@ function MLJBase.update(model::NeuralNetworkRegressor, verbosity::Int, old_fitre
         model.lambda == old_model.lambda &&
         model.alpha == old_model.alpha &&
         model.builder == old_model.builder &&
-        (!model.optimiser_changes_trigger_retraining || model.optimiser == old_model.optimiser)
+        (!model.optimiser_changes_trigger_retraining ||
+         model.optimiser == old_model.optimiser)
 
-        chain, target_is_multivariate = old_fitresult
-        epoch_delta = model.n - old_model.n
-        data = collate(X, y, model.batch_size)
-
-        # fit!(chain,...) mutates optimisers!!
-        # MLJ does not allow fit to mutate models. So:
-        optimiser = deepcopy(model.optimiser)
-    
-        chain, delta_history = fit!(chain, optimiser, model.loss, epoch_delta,
-                                    model.batch_size, model.lambda, model.alpha,
-                                    verbosity, data)
-
-        fitresult = (chain, target_is_multivariate)
-        cache = deepcopy(model)
-        report = (training_losses=delta_history,)
-
-        return fitresult, cache, report
+        chain = old_chain
+        epochs = model.n - old_model.n
     else
-        return MLJBase.fit(model, verbosity, X, y)
+        n = MLJBase.schema(X).names |> length
+        m = length(y[1])
+
+        chain = fit(model.builder, n, m)
+        epochs = model.n
     end
+    
+    # fit!(chain,...) mutates optimisers!!
+    # MLJ does not allow fit to mutate models. So:
+    optimiser = deepcopy(model.optimiser)
+
+    chain, delta_history = fit!(chain, optimiser, model.loss, epochs,
+                                model.batch_size, model.lambda, model.alpha,
+                                verbosity, data)
+    
+    fitresult = (chain, target_is_multivariate)
+    cache = (deepcopy(model), data)
+    report = (training_losses=delta_history,)
+    
+    return fitresult, cache, report
+
 end
 
 

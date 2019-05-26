@@ -83,4 +83,10 @@ fitresult, cache, report =
 
 yhat = MLJBase.predict(model, fitresult, MLJBase.selectrows(X, test))
 
+# update the Classifier with same builder but different number of epochs:
+
+new_mod = FluxMLJ.NeuralNetworkClassifier(builder=builder, loss=Flux.crossentropy, n=20)
+fitresult_new, cache_new, report_new =
+    MLJBase.update(model, 1, fitresult, cache, MLJBase.selectrows(X,train), y[train])
+
 @test size(yhat) == (600,)

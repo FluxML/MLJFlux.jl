@@ -365,7 +365,7 @@ function MLJBase.fit(model::NeuralNetworkClassifier, verbosity::Int,
     model.lambda, model.alpha, verbosity, data)
 
     cache = deepcopy(model), data, history # track number of epochs trained for update method
-    fitresult = (chain, target_is_multivariate)
+    fitresult = (chain, target_is_multivariate, levels)
 
     report = (training_losses=history, epochs=model.n)
 
@@ -375,8 +375,9 @@ end
 function MLJBase.predict(model::NeuralNetworkClassifier, fitresult, Xnew_)
     chain = fitresult[1]
     ismulti = fitresult[2]
+    levels = fitresult[3]
     Xnew = MLJBase.matrix(Xnew_)'
-    return [chain(Xnew[:,i]).data for i in 1:size(Xnew, 2)]
+    return [MLJBase.UnivariateFinite(levels, Flux.softmax(chain(Xnew[:,i]).data)) for i in 1:size(Xnew, 2)]
 
 end
 

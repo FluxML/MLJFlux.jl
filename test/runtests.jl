@@ -5,6 +5,7 @@ import FluxMLJ
 using LinearAlgebra
 using CategoricalArrays
 using Statistics
+using StatsBase
 import Flux
 import Random.seed!
 seed!(123)
@@ -13,6 +14,8 @@ seed!(123)
 @test Flux.Momentum() == Flux.Momentum()
 @test Flux.Momentum(0.1) != Flux.Momentum(0.2)
 
+
+## NEURAL NETWORK REGRESSOR
 
 # in MLJ multivariate inputs are tables:
 N = 200
@@ -25,40 +28,50 @@ y = [Tuple(ymatrix[i,:]) for i in 1:size(ymatrix, 1)]
 train = 1:7N
 test = (7N+1):10N
 
-
 se(yhat, y) = sum((yhat .- y).^2)
 mse(yhat, y) = mean(broadcast(se, yhat, y))
 
 builder = FluxMLJ.Linear(σ=identity)
 model = FluxMLJ.NeuralNetworkRegressor(loss=mse, builder=builder)
+
 fitresult, cache, report =
     MLJBase.fit(model, 1, MLJBase.selectrows(X,train), y[train])
+model.n = 15
+fitresult, cache, report =
+    MLJBase.update(model, 1, fitresult, cache,
+                   MLJBase.selectrows(X,train), y[train])
 
 yhat = MLJBase.predict(model, fitresult, MLJBase.selectrows(X, test))
 @test mse(yhat, y[test]) <= 0.001
 
-# univariate targets are ordinary vectors.
-
-y_univariate = 1 .+ X.x1 - X.x2 .- 2X.x4 + X.x5
+# univariate targets are ordinary vectors:
+y = 1 .+ X.x1 - X.x2 .- 2X.x4 + X.x5
 
 uni_model = FluxMLJ.NeuralNetworkRegressor(loss=mse, builder=builder)
-fitresult, cache, report = MLJBase.fit(model, 1, MLJBase.selectrows(X,train), y_univariate[train])
 
-yhat_uni = MLJBase.predict(model, fitresult, MLJBase.selectrows(X, test))
+fitresult, cache, report =
+    MLJBase.fit(uni_model, 1, MLJBase.selectrows(X,train), y[train])
+model.n = 15
+fitresult, cache, report =
+    MLJBase.update(model, 1, fitresult, cache,
+                MLJBase.selectrows(X,train), y[train])
 
-@test mse(yhat_uni, y_univariate[test]) <= 0.001
+yhat = MLJBase.predict(uni_model, fitresult, MLJBase.selectrows(X, test))
 
-## Classifier test:
+@test mse(yhat, y[test]) <= 0.001
+
+
+## NEURAL NETWORK CLASSIFIER
+
 ## To Do: add test for loss function.
 
-N = 200
+N = 100
 X = MLJBase.table(randn(10N, 5))
 
-# while multivariate targets are vectors of tuples:
-ymatrix = hcat(1 .+ X.x1 - X.x2 .+ 1 .- 2X.x4 + X.x5)
+yvector = 1 .+ X.x1 - X.x2 .+ 1 .- 2X.x4 + X.x5
 train = 1:7N
 test = (7N+1):10N
-ymatrix = ymatrix ./ maximum(ymatrix)
+yvector = yvector ./ maximum(yvector)
 
 l = ["1", "2", "3", "4"]
 
@@ -74,19 +87,21 @@ function get_labels(ele)
     end
 end
 
-y = CategoricalArray(get_labels.(ymatrix));
+y = CategoricalArray(get_labels.(yvector));
 
 builder = FluxMLJ.Linear(σ=Flux.sigmoid)
-model = FluxMLJ.NeuralNetworkClassifier(loss=Flux.crossentropy, builder=builder)
+model = FluxMLJ.NeuralNetworkClassifier(loss=Flux.crossentropy,
+                                        builder=builder)
 fitresult, cache, report =
-    MLJBase.fit(model, 1, MLJBase.selectrows(X,train), y[train])
+    MLJBase.fit(model, 2, MLJBase.selectrows(X,train), y[train])
+model.n = 15
+fitresult, cache, report =
+    MLJBase.update(model, 1, fitresult, cache,
+                   MLJBase.selectrows(X,train), y[train])
 
 yhat = MLJBase.predict(model, fitresult, MLJBase.selectrows(X, test))
 
-# update the Classifier with same builder but different number of epochs:
+misclassification_rate = sum(mode.(yhat) .!= y[test])/length(test)
+@test misclassification_rate < 0.3
 
-new_mod = FluxMLJ.NeuralNetworkClassifier(builder=builder, loss=Flux.crossentropy, n=20)
-fitresult_new, cache_new, report_new =
-    MLJBase.update(model, 1, fitresult, cache, MLJBase.selectrows(X,train), y[train])
 
-@test size(yhat) == (600,)

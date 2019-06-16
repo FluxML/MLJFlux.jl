@@ -1,7 +1,7 @@
 # using Revise
 using Test
 import MLJBase
-import FluxMLJ
+import MLJFlux
 using LinearAlgebra
 using CategoricalArrays
 using Statistics
@@ -31,8 +31,8 @@ test = (7N+1):10N
 se(yhat, y) = sum((yhat .- y).^2)
 mse(yhat, y) = mean(broadcast(se, yhat, y))
 
-builder = FluxMLJ.Linear(σ=identity)
-model = FluxMLJ.NeuralNetworkRegressor(loss=mse, builder=builder)
+builder = MLJFlux.Linear(σ=identity)
+model = MLJFlux.NeuralNetworkRegressor(loss=mse, builder=builder)
 
 fitresult, cache, report =
     MLJBase.fit(model, 1, MLJBase.selectrows(X,train), y[train])
@@ -47,7 +47,7 @@ yhat = MLJBase.predict(model, fitresult, MLJBase.selectrows(X, test))
 # univariate targets are ordinary vectors:
 y = 1 .+ X.x1 - X.x2 .- 2X.x4 + X.x5
 
-uni_model = FluxMLJ.NeuralNetworkRegressor(loss=mse, builder=builder)
+uni_model = MLJFlux.NeuralNetworkRegressor(loss=mse, builder=builder)
 
 fitresult, cache, report =
     MLJBase.fit(uni_model, 1, MLJBase.selectrows(X,train), y[train])
@@ -89,8 +89,8 @@ end
 
 y = CategoricalArray(get_labels.(yvector));
 
-builder = FluxMLJ.Linear(σ=Flux.sigmoid)
-model = FluxMLJ.NeuralNetworkClassifier(loss=Flux.crossentropy,
+builder = MLJFlux.Linear(σ=Flux.sigmoid)
+model = MLJFlux.NeuralNetworkClassifier(loss=Flux.crossentropy,
                                         builder=builder)
 fitresult, cache, report =
     MLJBase.fit(model, 2, MLJBase.selectrows(X,train), y[train])

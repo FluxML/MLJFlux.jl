@@ -6,7 +6,7 @@
 # using Revise
 using MLJ
 import Flux
-using FluxMLJ
+using MLJFlux
 using CategoricalArrays
 
 task = load_boston()
@@ -25,7 +25,7 @@ fit!(stand)
 X = transform(stand, X_);
 
 # construct a neural network model and inspect all hyperparameters:
-builder = FluxMLJ.Short()
+builder = MLJFlux.Short()
 optimiser = Flux.Momentum(0.003)
 nnmodel = NeuralNetworkRegressor(builder=builder, optimiser=optimiser)
 params(nnmodel)
@@ -82,7 +82,7 @@ fit!(stand)
 X = transform(stand, X_);
 
 # construct a neural network model and inspect all hyperparameters:
-builder = FluxMLJ.Short()
+builder = MLJFlux.Short()
 optimiser = Flux.Momentum(0.003)
 nnmodel = NeuralNetworkClassifier(builder=builder, optimiser=optimiser)
 params(nnmodel)
@@ -128,8 +128,8 @@ end
 
 y = CategoricalArray(get_labels.(yvector));
 
-builder = FluxMLJ.Linear(σ=Flux.sigmoid)
-nnmodel = FluxMLJ.NeuralNetworkClassifier(loss=Flux.crossentropy,
+builder = MLJFlux.Linear(σ=Flux.sigmoid)
+nnmodel = MLJFlux.NeuralNetworkClassifier(loss=Flux.crossentropy,
                                         builder=builder)
 params(nnmodel)
 

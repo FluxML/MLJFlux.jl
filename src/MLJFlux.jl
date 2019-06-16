@@ -1,4 +1,4 @@
-module FluxMLJ
+module MLJFlux
 
 export NeuralNetworkRegressor, UnivariateNeuralNetworkRegressor
 export NeuralNetworkClassifier, UnivariateNeuralNetworkClassifier
@@ -186,6 +186,7 @@ mutable struct NeuralNetworkRegressor{B<:Builder,O,L} <: MLJBase.Deterministic
     lambda::Float64 # regularization strength
     alpha::Float64  # regularizaton mix (0 for all l2, 1 for all l1)
     optimiser_changes_trigger_retraining::Bool
+#   entity_embeddings_formula = root(n)
 end
 NeuralNetworkRegressor(; builder::B   = Linear()
               , optimiser::O = Flux.Optimise.ADAM()
@@ -229,6 +230,9 @@ end
 function MLJBase.fit(model::NeuralNetworkRegressor,
                      verbosity::Int,
                      X, y)
+
+                     # use eeformula to calculate ee for each categorical variable
+                    # scitypes() : to get levels
 
     data = collate(model, X, y, model.batch_size)
 

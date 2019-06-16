@@ -1,4 +1,4 @@
-name = "FluxMLJ"
+name = "MLJFlux"
 uuid = "094fc8d1-fd35-5302-93ea-dabda2abf845"
 
 [deps]

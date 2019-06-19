@@ -7,8 +7,9 @@ export NeuralNetworkClassifier, UnivariateNeuralNetworkClassifier
 import Flux
 import MLJBase
 import Base.==
+using Base.Iterators: partition
 using ProgressMeter
-
+include("univariate.jl")
 
 # CONSTANTS
 
@@ -205,9 +206,9 @@ NeuralNetworkRegressor(; builder::B   = Linear()
                                        , alpha
                                        , optimiser_changes_trigger_retraining)
 
-input_is_multivariate(::Type{<:NeuralNetworkRegressor}) = true
-input_scitype_union(::Type{<:NeuralNetworkRegressor}) = MLJBase.Continuous 
-target_scitype_union(::Type{<:NeuralNetworkRegressor}) =
+MLJBase.input_is_multivariate(::Type{<:NeuralNetworkRegressor}) = true
+MLJBase.input_scitype_union(::Type{<:NeuralNetworkRegressor}) = MLJBase.Continuous 
+MLJBase.target_scitype_union(::Type{<:NeuralNetworkRegressor}) =
     Union{MLJBase.Continuous,NTuple{<:MLJBase.Continuous}}
 
 # not type-stable:
@@ -347,9 +348,9 @@ NeuralNetworkClassifier(; builder::B   = Linear()
                                        , alpha
                                        , optimiser_changes_trigger_retraining)
 
-input_is_multivariate(::Type{<:NeuralNetworkClassifier}) = true
-input_scitype_union(::Type{<:NeuralNetworkClassifier}) = MLJBase.Continuous 
-target_scitype_union(::Type{<:NeuralNetworkClassifier}) = MLJBase.Multiclass
+MLJBase.input_is_multivariate(::Type{<:NeuralNetworkClassifier}) = true
+MLJBase.input_scitype_union(::Type{<:NeuralNetworkClassifier}) = MLJBase.Continuous 
+MLJBase.target_scitype_union(::Type{<:NeuralNetworkClassifier}) = MLJBase.Multiclass
 
 function collate(model::NeuralNetworkClassifier,
                  X, y, batch_size)
@@ -449,6 +450,139 @@ function MLJBase.update(model::NeuralNetworkClassifier, verbosity::Int, old_fitr
     return fitresult, cache, report
 
 end
+
+
+
+## Experimental code
+mutable struct UnivariateNeuralNetworkClassifier{B<:MLJFlux.Builder,O,L} <: MLJBase.Probabilistic
+    builder::B
+    optimiser::O    # mutable struct from Flux/src/optimise/optimisers.jl
+    loss::L         # can be called as in `loss(yhat, y)`
+    n::Int          # number of epochs
+    batch_size::Int # size of a batch
+    lambda::Float64 # regularization strength
+    alpha::Float64  # regularizaton mix (0 for all l2, 1 for all l1)
+    optimiser_changes_trigger_retraining::Bool
+end
+
+UnivariateNeuralNetworkClassifier(; builder::B   = Linear()
+              , optimiser::O = Flux.Optimise.ADAM()
+              , loss::L      = Flux.crossentropy
+              , n            = 10
+              , batch_size   = 1
+              , lambda       = 0
+              , alpha        = 0
+              , optimiser_changes_trigger_retraining = false) where {B,O,L} =
+                  UnivariateNeuralNetworkClassifier{B,O,L}(builder
+                                       , optimiser
+                                       , loss
+                                       , n
+                                       , batch_size
+                                       , lambda
+                                       , alpha
+                                       , optimiser_changes_trigger_retraining)
+
+MLJBase.input_is_multivariate(::Type{<:UnivariateNeuralNetworkClassifier}) = false
+MLJBase.input_scitype_union(::Type{<:UnivariateNeuralNetworkClassifier}) = MLJBase.GrayImage
+MLJBase.target_scitype_union(::Type{<:UnivariateNeuralNetworkClassifier}) = MLJBase.Multiclass
+
+function make_minibatch(X, Y, idxs)
+    X_batch = Array{Float32}(undef, size(X[1])..., 1, length(idxs))
+    for i in 1:length(idxs)
+        X_batch[:, :, :, i] = Float32.(X[idxs[i]])
+    end
+    Y_batch = Flux.onehotbatch(Y[idxs], 0:9)
+    return (X_batch, Y_batch)
+end
+
+# This will not only group into batches, but also convert to Flux compatible tensors
+function collate(model::UnivariateNeuralNetworkClassifier, X, Y, batch_size)
+    mb_idxs = partition(1:length(X), batch_size)
+    return [make_minibatch(X, Y, i) for i in mb_idxs]
+end
+
+function MLJBase.fit(model::UnivariateNeuralNetworkClassifier, verbosity::Int, X_, y_)
+
+    data = collate(model, X_, y_, model.batch_size)
+
+    target_is_multivariate = y_ isa AbstractVector{<:Tuple}
+
+    
+
+    a_target_element = first(y_)
+    levels = MLJBase.classes(a_target_element)
+    m = length(levels)
+    n = size(X_[1])
+    chain = fit(model.builder,n, m)
+
+    # fit!(chain,...) mutates optimisers!!
+    # MLJ does not allow fit to mutate models. So:
+    optimiser = deepcopy(model.optimiser)
+
+    chain, history = fit!(chain, optimiser, model.loss,
+        model.n, model.batch_size,
+        model.lambda, model.alpha,
+        verbosity, data)
+
+    cache = deepcopy(model), data, history 
+    fitresult = (chain, target_is_multivariate, levels)
+
+    report = (training_losses=history, )
+
+    return fitresult, cache, report
+end
+
+function MLJBase.predict(model::UnivariateNeuralNetworkClassifier, fitresult, Xnew)
+    chain = fitresult[1]
+    ismulti = fitresult[2]
+    levels = fitresult[3]
+    return [MLJBase.UnivariateFinite(levels, Flux.softmax(chain(Float64.(Xnew[i])).data)) for i in 1:length(Xnew)]
+
+end
+
+function MLJBase.update(model::UnivariateNeuralNetworkClassifier, verbosity::Int, old_fitresult, old_cache, X, y)
+
+    old_model, data, old_history = old_cache
+    old_chain, target_is_multivariate = old_fitresult
+    levels = old_fitresult[3]
+
+    keep_chain =  model.n >= old_model.n &&
+        model.loss == old_model.loss &&
+        model.batch_size == old_model.batch_size &&
+        model.lambda == old_model.lambda &&
+        model.alpha == old_model.alpha &&
+        model.builder == old_model.builder &&
+        (!model.optimiser_changes_trigger_retraining ||
+         model.optimiser == old_model.optimiser)
+    
+    if keep_chain
+        chain = old_chain
+        epochs = model.n - old_model.n
+    else
+        n = MLJBase.schema(X).names |> length
+        m = length(levels)
+        chain = fit(model.builder, n, m)
+        epochs = model.n
+    end
+
+    # fit!(chain,...) mutates optimisers!!
+    # MLJ does not allow fit to mutate models. So:
+    optimiser = deepcopy(model.optimiser)
+
+    chain, history = fit!(chain, optimiser, model.loss, epochs,
+                                model.batch_size, model.lambda, model.alpha,
+                                verbosity, data)
+    if keep_chain
+        history = vcat(old_history, history)
+    end
+    fitresult = (chain, target_is_multivariate, levels)
+    cache = (deepcopy(model), data, history)
+    report = (training_losses=history,)
+    
+    return fitresult, cache, report
+
+end
+
 
 end #module
 

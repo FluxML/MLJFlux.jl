@@ -9,8 +9,9 @@ mutable struct EmbeddingMatrix
     e
     levels
 
-    function EmbeddingMatrix(levels; dimension=4)
-        return new(Dense(length(levels), dimension), levels)
+    function EmbeddingMatrix(levels)
+        dimension = max(length(levels), 4)      # Dummy function for now
+        return new(Dense(length(levels), dimension), levels), dimension
     end
 
 end
@@ -31,8 +32,10 @@ end
 
 Flux.@treelike EntityEmbedding
 
+
+# ip is an array of tuples
 function (embed::EntityEmbedding)(ip)
-    return vcat((embed.embeddingmatrix[i](ip[i]) for i=1:length(ip))...)
+    return hcat((vcat((embed.embeddingmatrix[i](ip[idx][i]) for i=1:length(ip[idx]))...) for idx =1:length(ip))...)
 end
 
 

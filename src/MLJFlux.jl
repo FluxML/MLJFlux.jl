@@ -4,12 +4,14 @@ export NeuralNetworkRegressor, UnivariateNeuralNetworkRegressor
 export NeuralNetworkClassifier, ImageClassifier
 
 # import LossFunctions
+import MLJ
 import Flux
 import MLJBase
 import Base.==
 using Base.Iterators: partition
 using ProgressMeter
 using CategoricalArrays
+using Tables
 include("univariate.jl")
 
 # CONSTANTS
@@ -84,7 +86,7 @@ The training `data` is a vector of tuples of the form `(X, y)` where:
 The contribution to the optimised objective function of a single
 input/output instance `(X, y)` is
 
-    loss(chain(X), y) + lambda*(model.alpha*l1 + (1 - model.alpha)*l2
+    loss(chain(X), y) + lambda*(model.alpha*l1) + (1 - model.alpha)*l2
 
 where `l1 = sum(norm, params(chain)` and `l2 = sum(norm,
 params(chain))`.
@@ -215,69 +217,69 @@ MLJBase.target_scitype_union(::Type{<:NeuralNetworkRegressor}) =
     Union{MLJBase.Continuous,NTuple{<:MLJBase.Continuous}}
 
 function has_categorical_data(X)
-    for column_name in names(X)
-        if X[column_name] |> typeof <: CategoricalArray
-            return true
+    types = MLJBase.scitypes(X)
+    categorical_types = filter(keys(types)|>collect) do k
+        getproperty(types, k) <: MLJBase.Finite
         end
-    end
-    return false
+    return categorical_types
 end
-
-function generate_xmatrix(df)
-
-end
-
 
 # not type-stable:
 function collate(model::NeuralNetworkRegressor,
                  X, y, batch_size)
 
-    if has_categorical_data(X)
-        Xmatrix = generate_xmatrix(X)
-    else
-        Xmatrix = MLJBase.matrix(X)'  # TODO: later MLJBase.matrix(X_,
-    # transpose=true)
-    end
-
     ymatrix = reduce(hcat, [[tup...] for tup in y])
     row_batches = Base.Iterators.partition(1:length(y), batch_size)
 
-    if y isa AbstractVector{<:Tuple}
-        return [(Xmatrix[:, b], ymatrix[:, b]) for b in row_batches]
+    if length(has_categorical_data(X)) == 0
+        Xmatrix = MLJBase.matrix(X)'
+        if y isa AbstractVector{<:Tuple}
+            return [(Xmatrix[:, b], ymatrix[:, b]) for b in row_batches]
+        else
+            return [(Tuple(Xmatrix[:, b]), ymatrix[b]) for b in row_batches]
+        end
     else
-        return [(Xmatrix[:, b], ymatrix[b]) for b in row_batches]
+        Xmatrix = Tables.rowtable(X)
+        if y isa AbstractVector{<:Tuple}
+            return [(values.(Xmatrix[b]), ymatrix[:, b]) for b in row_batches]
+        else
+            return [(values.(Xmatrix[ele]), ymatrix[ele]) for ele in row_batches]
+        end
     end
 end
 
 function MLJBase.fit(model::NeuralNetworkRegressor,
                      verbosity::Int,
                      X, y)
-
-    if model.embedding_choice == :onehot
-        # Here we convert the categorical features to onehot
-        # vectors. We're using Flux's onehot vectorizer for now
-        for columns_name in names(X)
-            if X[columns_name] |> typeof <: CategoricalArray
-                temp = Flux.onehot()
-            end
+    # The case when data is purely categorical.
+    ee = []         # The final entity embedding list
+    n = 0
+    cat_columns = has_categorical_data(X)
+    if length(cat_columns) > 0
+        xmat = Tables.rowtable(X)
+        for col in cat_columns
+            em, temp = EmbeddingMatrix(MLJBase.classes(xmat[1][Symbol(col)]))
+            push!(ee, em)
+            n += temp
         end
-        Flux.onehot()
     end
 
-
+    ee = EntityEmbedding(ee...)
     data = collate(model, X, y, model.batch_size)
 
     target_is_multivariate = y isa AbstractVector{<:Tuple}
 
-    n = MLJBase.schema(X).names |> length
+    if (n == 0)
+        n = MLJBase.schema(X).names |> length
+    end
+
     m = length(y[1])
 
     chain = fit(model.builder, n, m)
-
+    chain = Chain(Tuple(pushfirst!(convert(Array{Any, T} where T, collect(chain.layers)), ee))...,)     #insert ee into the beginning of the chain
     # fit!(chain,...) mutates optimisers!!
     # MLJ does not allow fit to mutate models. So:
     optimiser = deepcopy(model.optimiser)
-
 
     chain, history = fit!(chain, optimiser, model.loss,
                           model.n, model.batch_size,

@@ -232,11 +232,12 @@ function collate(model::NeuralNetworkRegressor,
     row_batches = Base.Iterators.partition(1:length(y), batch_size)
 
     if length(has_categorical_data(X)) == 0
+
         Xmatrix = MLJBase.matrix(X)'
         if y isa AbstractVector{<:Tuple}
             return [(Xmatrix[:, b], ymatrix[:, b]) for b in row_batches]
         else
-            return [(Tuple(Xmatrix[:, b]), ymatrix[b]) for b in row_batches]
+            return [((Xmatrix[:, b]), ymatrix[b]) for b in row_batches]
         end
     else
         Xmatrix = Tables.rowtable(X)
@@ -251,34 +252,44 @@ end
 function MLJBase.fit(model::NeuralNetworkRegressor,
                      verbosity::Int,
                      X, y)
-    # The case when data is purely categorical.
-    ee = []         # The final entity embedding list
-    n = 0
-    cat_columns = has_categorical_data(X)
-    if length(cat_columns) > 0
-        xmat = Tables.rowtable(X)
-        for col in cat_columns
-            em, temp = EmbeddingMatrix(MLJBase.classes(xmat[1][Symbol(col)]))
-            push!(ee, em)
-            n += temp
+
+    if model.embedding_choice == :entity_embedding && length(has_categorical_data(X))
+        # The case when data is purely categorical.
+        ee = []         # The final entity embedding list
+        n = 0
+        cat_columns = has_categorical_data(X)
+        if length(cat_columns) > 0
+            xmat = Tables.rowtable(X)
+            for col in cat_columns
+                em, temp = EmbeddingMatrix(MLJBase.classes(xmat[1][Symbol(col)]))
+                push!(ee, em)
+                n += temp
+            end
         end
-    end
 
-    ee = EntityEmbedding(ee...)
-    data = collate(model, X, y, model.batch_size)
+        ee = EntityEmbedding(ee...)
 
-    target_is_multivariate = y isa AbstractVector{<:Tuple}
+        if (n == 0)
+            n = MLJBase.schema(X).names |> length
+        end
 
-    if (n == 0)
+        m = length(y[1])
+
+        chain = fit(model.builder, n, m)
+        chain = Chain(Tuple(pushfirst!(convert(Array{Any, T} where T, collect(chain.layers)), ee))...,)     #insert ee into the beginning of the chain
+
+    else
+        onehot = MLJ.OneHotEncoder()
+        hot = MLJ.machine(onehot, X)
+        MLJ.fit!(hot)
+        X = MLJ.transform(hot, X)
+        data = collate(model, X, y, model.batch_size)
         n = MLJBase.schema(X).names |> length
+        m = length(y[1])
+        chain = fit(model.builder, n, m)
     end
-
-    m = length(y[1])
-
-    chain = fit(model.builder, n, m)
-    chain = Chain(Tuple(pushfirst!(convert(Array{Any, T} where T, collect(chain.layers)), ee))...,)     #insert ee into the beginning of the chain
-    # fit!(chain,...) mutates optimisers!!
-    # MLJ does not allow fit to mutate models. So:
+    target_is_multivariate = y isa AbstractVector{<:Tuple}
+    #return chain, data
     optimiser = deepcopy(model.optimiser)
 
     chain, history = fit!(chain, optimiser, model.loss,

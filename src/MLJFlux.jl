@@ -253,7 +253,7 @@ function MLJBase.fit(model::NeuralNetworkRegressor,
                      verbosity::Int,
                      X, y)
 
-    if model.embedding_choice == :entity_embedding && length(has_categorical_data(X))
+    if model.embedding_choice == :entity_embedding && length(has_categorical_data(X)) != 0
         # The case when data is purely categorical.
         ee = []         # The final entity embedding list
         n = 0
@@ -278,18 +278,24 @@ function MLJBase.fit(model::NeuralNetworkRegressor,
         chain = fit(model.builder, n, m)
         chain = Chain(Tuple(pushfirst!(convert(Array{Any, T} where T, collect(chain.layers)), ee))...,)     #insert ee into the beginning of the chain
 
-    else
+    elseif model.embedding_choice == :onehot && length(has_categorical_data(X)) != 0
         onehot = MLJ.OneHotEncoder()
         hot = MLJ.machine(onehot, X)
         MLJ.fit!(hot)
         X = MLJ.transform(hot, X)
-        data = collate(model, X, y, model.batch_size)
+        n = MLJBase.schema(X).names |> length
+        m = length(y[1])
+        chain = fit(model.builder, n, m)
+
+    else
+        # When it has no categorical features
         n = MLJBase.schema(X).names |> length
         m = length(y[1])
         chain = fit(model.builder, n, m)
     end
+    data = collate(model, X, y, model.batch_size)
     target_is_multivariate = y isa AbstractVector{<:Tuple}
-    #return chain, data
+
     optimiser = deepcopy(model.optimiser)
 
     chain, history = fit!(chain, optimiser, model.loss,
@@ -329,6 +335,7 @@ function MLJBase.update(model::NeuralNetworkRegressor, verbosity::Int, old_fitre
         model.lambda == old_model.lambda &&
         model.alpha == old_model.alpha &&
         model.builder == old_model.builder &&
+        model.embedding_choice == old_model.embedding_choice &&
         (!model.optimiser_changes_trigger_retraining ||
          model.optimiser == old_model.optimiser)
 
@@ -336,9 +343,39 @@ function MLJBase.update(model::NeuralNetworkRegressor, verbosity::Int, old_fitre
         chain = old_chain
         epochs = model.n - old_model.n
     else
-        n = MLJBase.schema(X).names |> length
-        m = length(y[1])
-        chain = fit(model.builder, n, m)
+        if model.embedding_choice == :onehot
+            onehot = MLJ.OneHotEncoder()
+            hot = MLJ.machine(onehot, X)
+            MLJ.fit!(hot)
+            X = MLJ.transform(hot, X)
+            n = MLJBase.schema(X).names |> length
+            m = length(y[1])
+            chain = fit(model.builder, n, m)
+        elseif  model.embedding_choice == :entity_embedding
+            ee = []         # The final entity embedding list
+            n = 0
+            cat_columns = has_categorical_data(X)
+            if length(cat_columns) > 0
+                xmat = Tables.rowtable(X)
+                for col in cat_columns
+                    em, temp = EmbeddingMatrix(MLJBase.classes(xmat[1][Symbol(col)]))
+                    push!(ee, em)
+                    n += temp
+                end
+            end
+
+            ee = EntityEmbedding(ee...)
+
+            if (n == 0)
+                n = MLJBase.schema(X).names |> length
+            end
+
+            m = length(y[1])
+
+            chain = fit(model.builder, n, m)
+            chain = Chain(Tuple(pushfirst!(convert(Array{Any, T} where T, collect(chain.layers)), ee))...,)     #insert ee into the beginning of the chain
+        end
+        data = collate(model, X, y, model.batch_size)
         epochs = model.n
     end
 
@@ -372,6 +409,7 @@ mutable struct NeuralNetworkClassifier{B<:Builder,O,L} <: MLJBase.Probabilistic
     lambda::Float64 # regularization strength
     alpha::Float64  # regularizaton mix (0 for all l2, 1 for all l1)
     optimiser_changes_trigger_retraining::Bool
+    embedding_choice::Symbol
 end
 
 NeuralNetworkClassifier(; builder::B   = Linear()
@@ -381,7 +419,8 @@ NeuralNetworkClassifier(; builder::B   = Linear()
               , batch_size   = 1
               , lambda       = 0
               , alpha        = 0
-              , optimiser_changes_trigger_retraining = false) where {B,O,L} =
+              , optimiser_changes_trigger_retraining = false
+              , embedding_choice = :onehot) where {B,O,L} =
                   NeuralNetworkClassifier{B,O,L}(builder
                                        , optimiser
                                        , loss
@@ -389,7 +428,8 @@ NeuralNetworkClassifier(; builder::B   = Linear()
                                        , batch_size
                                        , lambda
                                        , alpha
-                                       , optimiser_changes_trigger_retraining)
+                                       , optimiser_changes_trigger_retraining
+                                       , embedding_choice)
 
 MLJBase.input_is_multivariate(::Type{<:NeuralNetworkClassifier}) = true
 MLJBase.input_scitype_union(::Type{<:NeuralNetworkClassifier}) = MLJBase.Continuous
@@ -398,35 +438,78 @@ MLJBase.target_scitype_union(::Type{<:NeuralNetworkClassifier}) = MLJBase.Multic
 function collate(model::NeuralNetworkClassifier,
                  X, y, batch_size)
 
-    Xmatrix = MLJBase.matrix(X)'  # TODO: later MLJBase.matrix(X_,
-    # transpose=true)
-
     row_batches = Base.Iterators.partition(1:length(y), batch_size)
 
-    a_target_element = first(y)
-    levels = MLJBase.classes(a_target_element)
+    levels = y |> first |> MLJBase.classes
     ymatrix = hcat([Flux.onehot(ele, levels) for ele in y]...,)
-    return [(Xmatrix[:, b], ymatrix[:, b]) for b in row_batches]
 
+    if length(has_categorical_data(X)) == 0
+
+        Xmatrix = MLJBase.matrix(X)'
+        if y isa AbstractVector{<:Tuple}
+            return [(Xmatrix[:, b], ymatrix[:, b]) for b in row_batches]
+        else
+            return [((Xmatrix[:, b]), ymatrix[:, b]) for b in row_batches]
+        end
+    else
+        Xmatrix = Tables.rowtable(X)
+        if y isa AbstractVector{<:Tuple}
+            return [(values.(Xmatrix[b]), ymatrix[:, b]) for b in row_batches]
+        else
+            return [(values.(Xmatrix[ele]), ymatrix[:, ele]) for ele in row_batches]
+        end
+    end
 end
 
+
 function MLJBase.fit(model::NeuralNetworkClassifier, verbosity::Int,
-                        X_, y_)
+                        X, y)
+    if model.embedding_choice == :entity_embedding && length(has_categorical_data(X)) != 0
+        # The case when data is purely categorical.
+        ee = []         # The final entity embedding list
+        n = 0
+        cat_columns = has_categorical_data(X)
+        if length(cat_columns) > 0
+            xmat = Tables.rowtable(X)
+            for col in cat_columns
+                em, temp = EmbeddingMatrix(MLJBase.classes(xmat[1][Symbol(col)]))
+                push!(ee, em)
+                n += temp
+            end
+        end
 
-    data = collate(model, X_, y_, model.batch_size)
-    #if model.embedding_dimensio
-    target_is_multivariate = y_ isa AbstractVector{<:Tuple}
+        ee = EntityEmbedding(ee...)
 
-    n = MLJBase.schema(X_).names |> length
+        if (n == 0)
+            n = MLJBase.schema(X).names |> length
+        end
 
-    a_target_element = first(y_)
-    levels = MLJBase.classes(a_target_element)
-    m = length(levels)
+        m = y |> first |> MLJBase.classes |> length
 
-    chain = fit(model.builder, n, m)
+        chain = fit(model.builder, n, m)
+        chain = Chain(Tuple(pushfirst!(convert(Array{Any, T} where T, collect(chain.layers)), ee))...,)     #insert ee into the beginning of the chain
 
-    # fit!(chain,...) mutates optimisers!!
-    # MLJ does not allow fit to mutate models. So:
+    elseif model.embedding_choice == :onehot && length(has_categorical_data(X)) != 0
+        onehot = MLJ.OneHotEncoder()
+        hot = MLJ.machine(onehot, X)
+        MLJ.fit!(hot)
+        X = MLJ.transform(hot, X)
+        n = MLJBase.schema(X).names |> length
+        m = levels(y) |> length
+        println(n)
+        println(m)
+        chain = fit(model.builder, n, m)
+
+    else
+        # When it has no categorical features
+        n = MLJBase.schema(X).names |> length
+        m = length(y[1])
+        chain = fit(model.builder, n, m)
+    end
+
+    data = collate(model, X, y, model.batch_size)
+    target_is_multivariate = y isa AbstractVector{<:Tuple}
+
     optimiser = deepcopy(model.optimiser)
 
     chain, history = fit!(chain, optimiser, model.loss,
@@ -434,10 +517,9 @@ function MLJBase.fit(model::NeuralNetworkClassifier, verbosity::Int,
                           model.lambda, model.alpha,
                           verbosity, data)
 
-    cache = deepcopy(model), data, history
-    fitresult = (chain, target_is_multivariate, levels)
-
-    report = (training_losses=history, )
+    cache = (deepcopy(model), data, history)
+    fitresult = (chain, target_is_multivariate)
+    report = (training_losses=history,)
 
     return fitresult, cache, report
 end
@@ -455,7 +537,6 @@ function MLJBase.update(model::NeuralNetworkClassifier, verbosity::Int, old_fitr
 
     old_model, data, old_history = old_cache
     old_chain, target_is_multivariate = old_fitresult
-    levels = old_fitresult[3]
 
     keep_chain =  model.n >= old_model.n &&
         model.loss == old_model.loss &&
@@ -463,6 +544,7 @@ function MLJBase.update(model::NeuralNetworkClassifier, verbosity::Int, old_fitr
         model.lambda == old_model.lambda &&
         model.alpha == old_model.alpha &&
         model.builder == old_model.builder &&
+        model.embedding_choice == old_model.embedding_choice &&
         (!model.optimiser_changes_trigger_retraining ||
          model.optimiser == old_model.optimiser)
 
@@ -470,23 +552,52 @@ function MLJBase.update(model::NeuralNetworkClassifier, verbosity::Int, old_fitr
         chain = old_chain
         epochs = model.n - old_model.n
     else
-        n = MLJBase.schema(X).names |> length
-        m = length(levels)
-        chain = fit(model.builder, n, m)
+        if model.embedding_choice == :onehot
+            onehot = MLJ.OneHotEncoder()
+            hot = MLJ.machine(onehot, X)
+            MLJ.fit!(hot)
+            X = MLJ.transform(hot, X)
+            n = MLJBase.schema(X).names |> length
+            m = y |> first |> MLJBase.classes |> length
+            chain = fit(model.builder, n, m)
+        elseif  model.embedding_choice == :entity_embedding
+            ee = []         # The final entity embedding list
+            n = 0
+            cat_columns = has_categorical_data(X)
+            if length(cat_columns) > 0
+                xmat = Tables.rowtable(X)
+                for col in cat_columns
+                    em, temp = EmbeddingMatrix(MLJBase.classes(xmat[1][Symbol(col)]))
+                    push!(ee, em)
+                    n += temp
+                end
+            end
+
+            ee = EntityEmbedding(ee...)
+
+            if (n == 0)
+                n = MLJBase.schema(X).names |> length
+            end
+
+            m = y |> first |> MLJBase.classes |> length
+
+            chain = fit(model.builder, n, m)
+            chain = Chain(Tuple(pushfirst!(convert(Array{Any, T} where T, collect(chain.layers)), ee))...,)     #insert ee into the beginning of the chain
+        end
+        data = collate(model, X, y, model.batch_size)
         epochs = model.n
     end
 
     # fit!(chain,...) mutates optimisers!!
     # MLJ does not allow fit to mutate models. So:
     optimiser = deepcopy(model.optimiser)
-
     chain, history = fit!(chain, optimiser, model.loss, epochs,
                                 model.batch_size, model.lambda, model.alpha,
                                 verbosity, data)
     if keep_chain
         history = vcat(old_history, history)
     end
-    fitresult = (chain, target_is_multivariate, levels)
+    fitresult = (chain, target_is_multivariate)
     cache = (deepcopy(model), data, history)
     report = (training_losses=history,)
 

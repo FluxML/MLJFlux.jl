@@ -104,4 +104,4 @@ yhat = MLJBase.predict(model, fitresult, MLJBase.selectrows(X, test))
 misclassification_rate = sum(mode.(yhat) .!= y[test])/length(test)
 @test misclassification_rate < 0.3
 
-
+include("embeddings.jl")

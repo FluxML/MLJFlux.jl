@@ -3,6 +3,7 @@ using MLJ
 using MLJBase
 using CategoricalArrays
 using Flux
+using Test
 
 n = 5
 N = 1000
@@ -21,11 +22,11 @@ struct testnn <: MLJFlux.Builder
 end
 
 function  MLJFlux.fit(model::testnn, ip, op)
-    return Chain(Dense(ip, op, identity))
+    return Chain(identity)
 end
 
 nn = testnn(5)
-nnmodel = NeuralNetworkRegressor(builder=nn, embedding_choice=:entity_embedding, optimiser=ADAM(0.0001), n=80, embeddingdimension=1)
+nnmodel = NeuralNetworkRegressor(builder=nn, embedding_choice=:entity_embedding, optimiser=ADAM(0.0001), n=120, embeddingdimension=1)
 
 fitresult, cache, report = MLJBase.fit(nnmodel, 2, X, y)
 
@@ -37,3 +38,5 @@ embedding_values = []
 for embedding_matrix in embeddings.embeddingmatrix
     push!(embedding_values, embedding_matrix.e)
 end
+
+@test sum(embedding_values[1].W .+ embedding_values[1].b .- [1; 2; 3; 4; 5]) ≈ 0

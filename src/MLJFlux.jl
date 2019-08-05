@@ -12,7 +12,7 @@ using Base.Iterators: partition
 using ProgressMeter
 using CategoricalArrays
 using Tables
-include("univariate.jl")
+include("entity_embedding.jl")
 
 # CONSTANTS
 
@@ -151,7 +151,7 @@ mutable struct Linear <: Builder
     σ
 end
 Linear(; σ=Flux.relu) = Linear(σ)
-fit(builder::Linear, n::Integer, m::Integer) = Flux.Dense(n, m, builder.σ)
+fit(builder::Linear, n::Integer, m::Integer) = chain(Flux.Dense(n, m, builder.σ))
 
 # baby example 2:
 mutable struct Short <: Builder
@@ -191,6 +191,7 @@ mutable struct NeuralNetworkRegressor{B<:Builder,O,L} <: MLJBase.Deterministic
     alpha::Float64  # regularizaton mix (0 for all l2, 1 for all l1)
     optimiser_changes_trigger_retraining::Bool
     embedding_choice::Symbol
+    embeddingdimension::Int
 end
 NeuralNetworkRegressor(; builder::B   = Linear()
               , optimiser::O = Flux.Optimise.ADAM()
@@ -199,8 +200,9 @@ NeuralNetworkRegressor(; builder::B   = Linear()
               , batch_size   = 1
               , lambda       = 0
               , alpha        = 0
-              , optimiser_changes_trigger_retraining=false,
-              embedding_choice=:onehot) where {B,O,L} =
+              , optimiser_changes_trigger_retraining=false
+              , embedding_choice=:onehot
+              , embeddingdimension = 4) where {B,O,L} =
                   NeuralNetworkRegressor{B,O,L}(builder
                                        , optimiser
                                        , loss
@@ -209,7 +211,8 @@ NeuralNetworkRegressor(; builder::B   = Linear()
                                        , lambda
                                        , alpha
                                        , optimiser_changes_trigger_retraining
-                                       , embedding_choice)
+                                       , embedding_choice
+                                       , embeddingdimension)
 
 MLJBase.input_is_multivariate(::Type{<:NeuralNetworkRegressor}) = true
 MLJBase.input_scitype_union(::Type{<:NeuralNetworkRegressor}) = MLJBase.Continuous
@@ -261,7 +264,7 @@ function MLJBase.fit(model::NeuralNetworkRegressor,
         if length(cat_columns) > 0
             xmat = Tables.rowtable(X)
             for col in cat_columns
-                em, temp = EmbeddingMatrix(MLJBase.classes(xmat[1][Symbol(col)]))
+                em, temp = EmbeddingMatrix(MLJBase.classes(xmat[1][Symbol(col)]); dim = model.embeddingdimension)
                 push!(ee, em)
                 n += temp
             end
@@ -320,8 +323,21 @@ reformat(ypred, ::Val{false}) = first(ypred.data)
 function MLJBase.predict(model, fitresult, Xnew_)
     chain = fitresult[1]
     ismulti = fitresult[2]
-    Xnew = MLJBase.matrix(Xnew_)'
-    return [reformat(chain(Xnew[:,i]), Val(ismulti)) for i in 1:size(Xnew, 2)]
+    if length(has_categorical_data(Xnew_)) != 0
+        if model.embedding_choice == :entity_embedding
+            Xnew_ = Tables.rowtable(Xnew_)
+        else
+            onehot = MLJ.OneHotEncoder()
+            hot = MLJ.machine(onehot, Xnew_)
+            MLJ.fit!(hot)
+            Xnew_ = MLJ.transform(hot, Xnew_)
+            Xnew_ = MLJBase.matrix(Xnew_)'
+            return [(chain(Xnew_[:, 1]), Val(ismulti)) for i in 1:size(Xnew_, 2)]
+        end
+    else
+        Xnew_ = MLJBase.matrix(Xnew_)'
+    end
+    return [(chain(values.(Xnew_[i, :])), Val(ismulti)) for i in 1:size(Xnew_, 1)]
 end
 
 function MLJBase.update(model::NeuralNetworkRegressor, verbosity::Int, old_fitresult, old_cache, X, y)
@@ -496,8 +512,6 @@ function MLJBase.fit(model::NeuralNetworkClassifier, verbosity::Int,
         X = MLJ.transform(hot, X)
         n = MLJBase.schema(X).names |> length
         m = levels(y) |> length
-        println(n)
-        println(m)
         chain = fit(model.builder, n, m)
 
     else
@@ -518,9 +532,8 @@ function MLJBase.fit(model::NeuralNetworkClassifier, verbosity::Int,
                           verbosity, data)
 
     cache = (deepcopy(model), data, history)
-    fitresult = (chain, target_is_multivariate)
+    fitresult = (chain, target_is_multivariate, levels(y))
     report = (training_losses=history,)
-
     return fitresult, cache, report
 end
 
@@ -528,8 +541,22 @@ function MLJBase.predict(model::NeuralNetworkClassifier, fitresult, Xnew_)
     chain = fitresult[1]
     ismulti = fitresult[2]
     levels = fitresult[3]
-    Xnew = MLJBase.matrix(Xnew_)'
-    return [MLJBase.UnivariateFinite(levels, Flux.softmax(chain(Xnew[:,i]).data)) for i in 1:size(Xnew, 2)]
+    if length(has_categorical_data(Xnew_)) != 0
+        if model.embedding_choice == :entity_embedding
+            Xnew_ = Tables.rowtable(Xnew_)
+        else
+            onehot = MLJ.OneHotEncoder()
+            hot = MLJ.machine(onehot, Xnew_)
+            MLJ.fit!(hot)
+            Xnew_ = MLJ.transform(hot, Xnew_)
+            Xnew_ = MLJBase.matrix(Xnew_)'
+            return [MLJBase.UnivariateFinite(levels, Flux.softmax(chain(Xnew_[:,i]).data)) for i in 1:size(Xnew_, 2)]
+        end
+    else
+        Xnew_ = MLJBase.matrix(Xnew_)'
+    end
+
+    return [MLJBase.UnivariateFinite(levels, Flux.softmax(chain(Xnew_[i, :]).data) |> vec) for i in 1:size(Xnew_, 1)]
 
 end
 
@@ -597,7 +624,7 @@ function MLJBase.update(model::NeuralNetworkClassifier, verbosity::Int, old_fitr
     if keep_chain
         history = vcat(old_history, history)
     end
-    fitresult = (chain, target_is_multivariate)
+    fitresult = (chain, target_is_multivariate, levels(y))
     cache = (deepcopy(model), data, history)
     report = (training_losses=history,)
 

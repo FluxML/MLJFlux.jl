@@ -30,8 +30,8 @@ test = (7N+1):10N
 
 se(yhat, y) = sum((yhat .- y).^2)
 mse(yhat, y) = mean(broadcast(se, yhat, y))
-
-builder = MLJFlux.Linear(σ=identity)
+using MLJFlux
+builder = MLJFlux.Short(σ=identity)
 model = MLJFlux.NeuralNetworkRegressor(loss=mse, builder=builder)
 
 fitresult, cache, report =

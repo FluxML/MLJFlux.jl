@@ -45,7 +45,7 @@ using Flux
 #ip = (x = rand("abcd", 100), y = rand("edf", 100), z=rand("hijk", 100)) |> MLJBase.table;
 op = rand("1234", 1456) |> CategoricalArray
 
-nnclassifier = NeuralNetworkClassifier(builder=MLJFlux.Short(), loss=Flux.mse, batch_size=2)
+nnclassifier = NeuralNetworkClassifier(builder=MLJFlux.Short(), loss=Flux.mse, batch_size=2, n = 3)
 
 nn_mach = machine(nnclassifier, x, op)
 fit!(nn_mach)

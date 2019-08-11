@@ -39,7 +39,7 @@ nn_regressor = NeuralNetworkRegressor(builder=MyNetwork(32, 16), loss=Flux.mse, 
 
 (For classification, use `NeuralNetworkClassifier` instead of `NeuralNetworkRegerssor`)
 
-`nn_regressor` is now any other MLJ model. This can be wrapped inside an MLJ `machine`, and you can do anything you'd do with 
+`nn_regressor` is now any other MLJ model. This can be wrapped inside an MLJ `machine`, and you can do anything you'd do with
 an MLJ machine.
 
 ```
@@ -62,4 +62,4 @@ NeuralNetworkRegressor / NeuralNetworkClassifier have a few hyperparameters:
 7. alpha = Regularization parameter. Default = 0
 8. optimiser_changes_trigger_retraining = Should changing the optimiser re-train the model. Default = false
 9. Embedding choice = The embedding to use for handling categorical features. Options = :onehot, :entity_embedding. Default = :onehot.
-10. Embedding dimension = Valid only when `embedding_choice = :entity_embedding`. The dimension is follows the formula `min(embedding_dimension, levels)`, where levels is the number of unique values in the feature. Default = 4.
+10. Embedding dimension = Valid only when `embedding_choice = :entity_embedding`. The dimension is follows the formula `min(embedding_dimension, levels)`, where levels is the number of unique values in the feature. If the value is <= 0, this means that the dimension will be equal to (the number of unique values of the feature) / 2. Default = -1.

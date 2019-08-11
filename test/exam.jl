@@ -17,10 +17,10 @@ struct mynn <: MLJFlux.Builder
 end
 
 function MLJFlux.fit(nn::mynn, ip, op)
-    return Chain(Dense(ip, nn.d1, sigmoid), Dense(nn.d1, nn.d2, sigmoid), Dense(nn.d2, nn.d3, sigmoid), Dense(nn.d3, op))
+    return Chain(Dense(ip, nn.d1, sigmoid), Dense(nn.d1, nn.d2, relu), Dense(nn.d2, nn.d3, sigmoid), Dense(nn.d3, op))
 end
 
-train, test = partition(eachindex(y), 0.7);
+train, test = partition(eachindex(y), 0.75);
 
 nn = mynn(128, 64, 32)
 

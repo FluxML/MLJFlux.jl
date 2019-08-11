@@ -10,8 +10,11 @@ mutable struct EmbeddingMatrix
     levels
 
     function EmbeddingMatrix(levels; dim=4)
-
-        dimension = min(length(levels), dim)      # Dummy function for now
+        if dim <= 0
+            dimension = div(length(levels), 2)
+        else
+            dimension = min(length(levels), dim)      # Dummy function for now
+        end
         return new(Dense(length(levels), dimension), levels), dimension
     end
 

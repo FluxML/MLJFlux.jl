@@ -202,7 +202,7 @@ NeuralNetworkRegressor(; builder::B   = Linear()
               , alpha        = 0
               , optimiser_changes_trigger_retraining=false
               , embedding_choice=:onehot
-              , embeddingdimension = 4) where {B,O,L} =
+              , embeddingdimension = -1) where {B,O,L} =
                   NeuralNetworkRegressor{B,O,L}(builder
                                        , optimiser
                                        , loss
@@ -426,6 +426,7 @@ mutable struct NeuralNetworkClassifier{B<:Builder,O,L} <: MLJBase.Probabilistic
     alpha::Float64  # regularizaton mix (0 for all l2, 1 for all l1)
     optimiser_changes_trigger_retraining::Bool
     embedding_choice::Symbol
+    embeddingdimension::Int
 end
 
 NeuralNetworkClassifier(; builder::B   = Linear()
@@ -436,7 +437,8 @@ NeuralNetworkClassifier(; builder::B   = Linear()
               , lambda       = 0
               , alpha        = 0
               , optimiser_changes_trigger_retraining = false
-              , embedding_choice = :onehot) where {B,O,L} =
+              , embedding_choice = :onehot
+              , embeddingdimension = -1) where {B,O,L} =
                   NeuralNetworkClassifier{B,O,L}(builder
                                        , optimiser
                                        , loss
@@ -445,7 +447,8 @@ NeuralNetworkClassifier(; builder::B   = Linear()
                                        , lambda
                                        , alpha
                                        , optimiser_changes_trigger_retraining
-                                       , embedding_choice)
+                                       , embedding_choice
+                                       , embeddingdimension)
 
 MLJBase.input_is_multivariate(::Type{<:NeuralNetworkClassifier}) = true
 MLJBase.input_scitype_union(::Type{<:NeuralNetworkClassifier}) = MLJBase.Continuous
@@ -488,7 +491,7 @@ function MLJBase.fit(model::NeuralNetworkClassifier, verbosity::Int,
         if length(cat_columns) > 0
             xmat = Tables.rowtable(X)
             for col in cat_columns
-                em, temp = EmbeddingMatrix(MLJBase.classes(xmat[1][Symbol(col)]))
+                em, temp = EmbeddingMatrix(MLJBase.classes(xmat[1][Symbol(col)]); dim=model.embeddingdimension)
                 push!(ee, em)
                 n += temp
             end

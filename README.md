@@ -35,7 +35,7 @@ Construction begins by defining an auxiliary struct called a
 model). The struct must be derived from MLJFlux.Builder, as in this
 example:
 
-```
+```julia
 mutable struct MyNetwork <: MLJFlux.Builder
     n1 :: Int
     n2 :: Int
@@ -58,14 +58,14 @@ end
 
 Now that we have a builder, we can instantiate an MLJ model. For example:
 
-```
+```julia
 nn_regressor = NeuralNetworkRegressor(builder=MyNetwork(32, 16), loss=Flux.mse, n=5)
 ```
 
 The object `nn_regressor` behaves like any other MLJ model. It can be wrapped inside an MLJ `machine`, and you can do anything you'd do with
 an MLJ machine.
 
-```
+```julia
 mach = machine(nn_regressor, X, y)
 fit!(mach, verbosity=2)
 yhat = predict(mach, rows = train)

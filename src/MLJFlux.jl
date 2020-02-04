@@ -95,7 +95,7 @@ params(chain))`.
 function  fit!(chain, optimiser, loss, epochs, batch_size,
                lambda, alpha, verbosity, data)
 
-    Flux.testmode!(chain, false)
+    #Flux.testmode!(chain, false)
     # intitialize and start progress meter:
     meter = Progress(epochs+1, dt=0, desc="Optimising neural net:",
                      barglyphs=BarGlyphs("[=> ]"), barlen=25, color=:yellow)
@@ -107,7 +107,7 @@ function  fit!(chain, optimiser, loss, epochs, batch_size,
         # We're taking data in a Flux-fashion.
         Flux.train!(loss_func, Flux.params(chain), data, optimiser)
         current_loss = sum(loss_func(data[i][1], data[i][2]) for i=1:length(data))
-        verbosity < 2 || println("Loss is $(current_loss.data)")
+        verbosity < 2 || println("Loss is $(current_loss)")
         push!(history, current_loss)
 
         # Early stopping is to be externally controlled.
@@ -122,8 +122,8 @@ function  fit!(chain, optimiser, loss, epochs, batch_size,
         verbosity != 1 || next!(meter)
 
     end
-    Flux.testmode!(chain, true)         # to use in inference mode
-    return chain, map(x->x.data, history)
+    #Flux.testmode!(chain, true)         # to use in inference mode
+    return chain, history
 
 end
 
@@ -151,7 +151,7 @@ mutable struct Linear <: Builder
     σ
 end
 Linear(; σ=Flux.relu) = Linear(σ)
-fit(builder::Linear, n::Integer, m::Integer) = chain(Flux.Dense(n, m, builder.σ))
+fit(builder::Linear, n::Integer, m::Integer) = Flux.Chain(Flux.Dense(n, m, builder.σ))
 
 # baby example 2:
 mutable struct Short <: Builder
@@ -209,11 +209,6 @@ NeuralNetworkRegressor(; builder::B   = Linear()
                                        , alpha
                                        , optimiser_changes_trigger_retraining)
 
-MLJBase.input_is_multivariate(::Type{<:NeuralNetworkRegressor}) = true
-MLJBase.input_scitype_union(::Type{<:NeuralNetworkRegressor}) = MLJBase.Continuous
-MLJBase.target_scitype_union(::Type{<:NeuralNetworkRegressor}) =
-    Union{MLJBase.Continuous,NTuple{<:MLJBase.Continuous}}
-
 # not type-stable:
 function collate(model::NeuralNetworkRegressor,
                  X, y, batch_size)
@@ -237,8 +232,9 @@ function MLJBase.fit(model::NeuralNetworkRegressor,
     n = MLJBase.schema(X).names |> length
     m = length(y[1])
     chain = fit(model.builder, n, m)
-    end
+
     data = collate(model, X, y, model.batch_size)
+
     target_is_multivariate = y isa AbstractVector{<:Tuple}
 
     optimiser = deepcopy(model.optimiser)
@@ -261,7 +257,7 @@ function MLJBase.predict(model, fitresult, Xnew_)
     chain = fitresult[1]
     ismulti = fitresult[2]
     
-    Xnew_ = MLJBase.matrix(Xnew_)'
+    Xnew_ = MLJBase.matrix(Xnew_)
 
     return [chain(values.(Xnew_[i, :])) for i in 1:size(Xnew_, 1)]
 end
@@ -277,7 +273,7 @@ function MLJBase.update(model::NeuralNetworkRegressor, verbosity::Int, old_fitre
         model.lambda == old_model.lambda &&
         model.alpha == old_model.alpha &&
         model.builder == old_model.builder &&
-        model.embedding_choice == old_model.embedding_choice &&
+        #model.embedding_choice == old_model.embedding_choice &&
         (!model.optimiser_changes_trigger_retraining ||
          model.optimiser == old_model.optimiser)
 
@@ -307,7 +303,7 @@ function MLJBase.update(model::NeuralNetworkRegressor, verbosity::Int, old_fitre
 
 end
 
-metadata_model(NeuralNetworkRegressor,
+MLJBase.metadata_model(NeuralNetworkRegressor,
                input=MLJBase.Table(MLJBase.Continuous),
                target=AbstractVector{<:MLJBase.Continuous},
                path="MLJFlux.NeuralNetworkRegressor",
@@ -347,9 +343,6 @@ NeuralNetworkClassifier(; builder::B   = Linear()
                                        , optimiser_changes_trigger_retraining
                                        )
 
-MLJBase.input_is_multivariate(::Type{<:NeuralNetworkClassifier}) = true
-MLJBase.input_scitype_union(::Type{<:NeuralNetworkClassifier}) = MLJBase.Continuous
-MLJBase.target_scitype_union(::Type{<:NeuralNetworkClassifier}) = MLJBase.Multiclass
 
 function collate(model::NeuralNetworkClassifier,
                  X, y, batch_size)
@@ -374,7 +367,7 @@ function MLJBase.fit(model::NeuralNetworkClassifier, verbosity::Int,
     
     # When it has no categorical features
     n = MLJBase.schema(X).names |> length
-    m = length(y[1])
+    m = length(levels(y))
     chain = fit(model.builder, n, m)
 
     data = collate(model, X, y, model.batch_size)
@@ -398,9 +391,9 @@ function MLJBase.predict(model::NeuralNetworkClassifier, fitresult, Xnew_)
     ismulti = fitresult[2]
     levels = fitresult[3]
     
-    Xnew_ = MLJBase.matrix(Xnew_)'
+    Xnew_ = MLJBase.matrix(Xnew_)
 
-    return [MLJBase.UnivariateFinite(levels, Flux.softmax(chain(Xnew_[i, :]).data) |> vec) for i in 1:size(Xnew_, 1)]
+    return [MLJBase.UnivariateFinite(CategoricalArray(levels), Flux.softmax(chain(Xnew_[i, :])) |> vec) for i in 1:size(Xnew_, 1)]
 
 end
 
@@ -415,7 +408,7 @@ function MLJBase.update(model::NeuralNetworkClassifier, verbosity::Int, old_fitr
         model.lambda == old_model.lambda &&
         model.alpha == old_model.alpha &&
         model.builder == old_model.builder &&
-        model.embedding_choice == old_model.embedding_choice &&
+        #model.embedding_choice == old_model.embedding_choice &&
         (!model.optimiser_changes_trigger_retraining ||
          model.optimiser == old_model.optimiser)
 
@@ -444,7 +437,7 @@ function MLJBase.update(model::NeuralNetworkClassifier, verbosity::Int, old_fitr
 
 end
 
-metadata_model(NeuralNetworkClassifier,
+MLJBase.metadata_model(NeuralNetworkClassifier,
                input=MLJBase.Table(MLJBase.Continuous),
                target=AbstractVector{<:MLJBase.Finite},
                path="MLJFlux.NeuralNetworkClassifier",
@@ -483,9 +476,6 @@ ImageClassifier(; builder::B   = Linear()
                                        , alpha
                                        , optimiser_changes_trigger_retraining)
 
-MLJBase.input_is_multivariate(::Type{<:ImageClassifier}) = false
-MLJBase.input_scitype_union(::Type{<:ImageClassifier}) = MLJBase.GrayImage
-MLJBase.target_scitype_union(::Type{<:ImageClassifier}) = MLJBase.Multiclass
 
 function make_minibatch(X, Y, idxs)
     X_batch = Array{Float32}(undef, size(X[1])..., 1, length(idxs))
@@ -584,9 +574,9 @@ function MLJBase.update(model::ImageClassifier, verbosity::Int, old_fitresult, o
 
 end
 
-metadata_model(ImageClassifier,
+MLJBase.metadata_model(ImageClassifier,
                input=MLJBase.Table(MLJBase.Continuous),
-               target=AbstractVector{<:GrayImage},
+               target=AbstractVector{<:MLJBase.GrayImage},
                path="MLJFlux.ImageClassifier",
                descr = descr="A neural network model for making probabilistic predictions of a `GreyImage` target,
                 given a table of `Continuous` features. ")
@@ -596,7 +586,7 @@ metadata_model(ImageClassifier,
 
 
 ### Package specific traits:
-MLJBase.metadata_pkg.((NeuralNetworkRegressor, MultivariateNeuralNetworkRegressor, NeuralNetworkClassifier,ImageClassifier),
+MLJBase.metadata_pkg.((NeuralNetworkRegressor, NeuralNetworkClassifier,ImageClassifier),
               name="MLJFlux",
               uuid="094fc8d1-fd35-5302-93ea-dabda2abf845",
               url="https://github.com/alan-turing-institute/MLJFlux.jl",

@@ -27,7 +27,7 @@ Flux "models" used in MLJFLux are `Flux.Chain` objects, we call them
 *chains*, and restrict use of "model" to models in the MLJ sense.
 
 
-### Constructing an model
+### Constructing a model
 
 Construction begins by defining an auxiliary struct called a
 *builder*, and an associated `fit` method, for generating a

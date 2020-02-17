@@ -2,10 +2,7 @@
 using Test
 import MLJBase
 import MLJFlux
-using LinearAlgebra
 using CategoricalArrays
-using Statistics
-using StatsBase
 import Flux
 import Random.seed!
 using MLJFlux
@@ -91,3 +88,4 @@ yhat = MLJBase.predict(model, fitresult, MLJBase.selectrows(X, test))
 
 #misclassification_rate = sum(mode.(yhat) .!= y[test])/length(test)
 #@test misclassification_rate < 0.3
+

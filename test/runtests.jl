@@ -9,7 +9,6 @@ using StatsBase
 import Flux
 import Random.seed!
 using MLJFlux
-using MLJ
 seed!(123)
 
 # test equality of optimisers:
@@ -92,5 +91,3 @@ yhat = MLJBase.predict(model, fitresult, MLJBase.selectrows(X, test))
 
 #misclassification_rate = sum(mode.(yhat) .!= y[test])/length(test)
 #@test misclassification_rate < 0.3
-
-m = machine()

@@ -108,7 +108,7 @@ function MLJBase.predict(model::Union{NeuralNetworkRegressor, MultivariateNeural
     ismulti = fitresult[2]
     
     Xnew_ = MLJBase.matrix(Xnew_)
-    println(ismulti)
+
     if ismulti
         ypred = [chain(values.(Xnew_[i, :])) for i in 1:size(Xnew_, 1)]
         return reduce(vcat, y for y in ypred)' |> MLJBase.table

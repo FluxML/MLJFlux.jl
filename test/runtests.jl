@@ -6,6 +6,7 @@ using CategoricalArrays
 import Flux
 import Random.seed!
 using MLJFlux
+using Statistics
 seed!(123)
 
 # test equality of optimisers:

@@ -4,7 +4,7 @@
 ## REGRESSOR DEMO
 
 # using Revise
-using MLJ
+using MLJBase
 import Flux
 using MLJFlux
 using CategoricalArrays
@@ -36,10 +36,10 @@ nn = machine(nnmodel, X, y)
 r = range(nnmodel, :n, lower=1, upper=50)
 curve = learning_curve!(nn, nested_range=(n=r,), n=4)
 
-using Plots
-plotly()
+# using Plots
+# plotly()
 
-plot(curve.parameter_values, curve.measurements,
+# plot(curve.parameter_values, curve.measurements,
      xlab=curve.parameter_name)
 
 

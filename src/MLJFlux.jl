@@ -1,6 +1,5 @@
 module MLJFlux
 
-import MLJ
 import Flux
 import MLJBase
 import Base.==

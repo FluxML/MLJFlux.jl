@@ -2,7 +2,7 @@ mutable struct NeuralNetworkRegressor{B<:Builder,O,L} <: MLJBase.Deterministic
     builder::B
     optimiser::O    # mutable struct from Flux/src/optimise/optimisers.jl
     loss::L         # can be called as in `loss(yhat, y)`
-    n::Int          # number of epochs
+    epochs::Int          # number of epochs
     batch_size::Int # size of a batch
     lambda::Float64 # regularization strength
     alpha::Float64  # regularizaton mix (0 for all l2, 1 for all l1)
@@ -12,7 +12,7 @@ end
 NeuralNetworkRegressor(; builder::B   = Linear()
               , optimiser::O = Flux.Optimise.ADAM()
               , loss::L      = Flux.mse
-              , n            = 10
+              , epochs       = 10
               , batch_size   = 1
               , lambda       = 0
               , alpha        = 0
@@ -21,7 +21,7 @@ NeuralNetworkRegressor(; builder::B   = Linear()
                   NeuralNetworkRegressor{B,O,L}(builder
                                        , optimiser
                                        , loss
-                                       , n
+                                       , epochs
                                        , batch_size
                                        , lambda
                                        , alpha
@@ -32,7 +32,7 @@ mutable struct MultivariateNeuralNetworkRegressor{B<:Builder,O,L} <: MLJBase.Det
     builder::B
     optimiser::O    # mutable struct from Flux/src/optimise/optimisers.jl
     loss::L         # can be called as in `loss(yhat, y)`
-    n::Int          # number of epochs
+    epochs::Int          # number of epochs
     batch_size::Int # size of a batch
     lambda::Float64 # regularization strength
     alpha::Float64  # regularizaton mix (0 for all l2, 1 for all l1)
@@ -42,7 +42,7 @@ end
 MultivariateNeuralNetworkRegressor(; builder::B   = Linear()
               , optimiser::O = Flux.Optimise.ADAM()
               , loss::L      = Flux.mse
-              , n            = 10
+              , epochs       = 10
               , batch_size   = 1
               , lambda       = 0
               , alpha        = 0
@@ -51,7 +51,7 @@ MultivariateNeuralNetworkRegressor(; builder::B   = Linear()
                   MultivariateNeuralNetworkRegressor{B,O,L}(builder
                                        , optimiser
                                        , loss
-                                       , n
+                                       , epochs
                                        , batch_size
                                        , lambda
                                        , alpha
@@ -77,9 +77,9 @@ function MLJBase.fit(model::Union{NeuralNetworkRegressor, MultivariateNeuralNetw
                      X, y)
 
     # When it has no categorical features
-    n = MLJBase.schema(X).names |> length
-    m = length(y[1])
-    chain = fit(model.builder, n, m)
+    n_input = MLJBase.schema(X).names |> length
+    n_output = length(y[1])
+    chain = fit(model.builder, n_input, n_output)
 
     data = collate(model, X, y, model.batch_size)
 
@@ -88,7 +88,7 @@ function MLJBase.fit(model::Union{NeuralNetworkRegressor, MultivariateNeuralNetw
     optimiser = deepcopy(model.optimiser)
 
     chain, history = fit!(chain, optimiser, model.loss,
-                          model.n, model.batch_size,
+                          model.epochs, model.batch_size,
                           model.lambda, model.alpha,
                           verbosity, data)
 
@@ -104,8 +104,7 @@ end
 function MLJBase.predict(model::Union{NeuralNetworkRegressor, MultivariateNeuralNetworkRegressor},
          fitresult, Xnew_)
 
-    chain = fitresult[1]
-    ismulti = fitresult[2]
+    chain , ismulti = fitresult
     
     Xnew_ = MLJBase.matrix(Xnew_)
 
@@ -123,7 +122,7 @@ function MLJBase.update(model::Union{NeuralNetworkRegressor, MultivariateNeuralN
     old_model, data, old_history = old_cache
     old_chain, target_is_multivariate = old_fitresult
 
-    keep_chain =  model.n >= old_model.n &&
+    keep_chain =  model.epochs >= old_model.epochs &&
         model.loss == old_model.loss &&
         model.batch_size == old_model.batch_size &&
         model.lambda == old_model.lambda &&
@@ -135,10 +134,13 @@ function MLJBase.update(model::Union{NeuralNetworkRegressor, MultivariateNeuralN
 
     if keep_chain
         chain = old_chain
-        epochs = model.n - old_model.n
+        epochs = model.epochs - old_model.epochs
     else
+        n_input = MLJBase.schema(X).names |> length
+        n_output = length(y[1])
+        chain = fit(model.builder, n_input, n_output)
         data = collate(model, X, y, model.batch_size)
-        epochs = model.n
+        epochs = model.epochs
     end
 
     optimiser = deepcopy(model.optimiser)

@@ -2,7 +2,7 @@ mutable struct NeuralNetworkClassifier{B<:Builder,O,L} <: MLJBase.Probabilistic
     builder::B
     optimiser::O    # mutable struct from Flux/src/optimise/optimisers.jl
     loss::L         # can be called as in `loss(yhat, y)`
-    n::Int          # number of epochs
+    epochs::Int          # number of epochs
     batch_size::Int # size of a batch
     lambda::Float64 # regularization strength
     alpha::Float64  # regularizaton mix (0 for all l2, 1 for all l1)
@@ -12,7 +12,7 @@ end
 NeuralNetworkClassifier(; builder::B   = Linear()
               , optimiser::O = Flux.Optimise.ADAM()
               , loss::L      = Flux.crossentropy
-              , n            = 10
+              , epochs       = 10
               , batch_size   = 1
               , lambda       = 0
               , alpha        = 0
@@ -21,7 +21,7 @@ NeuralNetworkClassifier(; builder::B   = Linear()
                   NeuralNetworkClassifier{B,O,L}(builder
                                        , optimiser
                                        , loss
-                                       , n
+                                       , epochs
                                        , batch_size
                                        , lambda
                                        , alpha
@@ -51,9 +51,9 @@ function MLJBase.fit(model::NeuralNetworkClassifier, verbosity::Int,
                         X, y)
     
     # When it has no categorical features
-    n = MLJBase.schema(X).names |> length
-    m = length(levels(y))
-    chain = fit(model.builder, n, m)
+    n_input = MLJBase.schema(X).names |> length
+    n_output = length(levels(y))
+    chain = fit(model.builder, n_input, n_output)
 
     data = collate(model, X, y, model.batch_size)
     target_is_multivariate = y isa AbstractVector{<:Tuple}
@@ -61,24 +61,22 @@ function MLJBase.fit(model::NeuralNetworkClassifier, verbosity::Int,
     optimiser = deepcopy(model.optimiser)
 
     chain, history = fit!(chain, optimiser, model.loss,
-                          model.n, model.batch_size,
+                          model.epochs, model.batch_size,
                           model.lambda, model.alpha,
                           verbosity, data)
 
     cache = (deepcopy(model), data, history)
-    fitresult = (chain, target_is_multivariate, levels(y))
+    fitresult = (chain, target_is_multivariate, y[1])
     report = (training_losses=history,)
     return fitresult, cache, report
 end
 
 function MLJBase.predict(model::NeuralNetworkClassifier, fitresult, Xnew_)
-    chain = fitresult[1]
-    ismulti = fitresult[2]
-    levels = fitresult[3]
+    chain , ismulti, levels = fitresult
     
     Xnew_ = MLJBase.matrix(Xnew_)
 
-    return [MLJBase.UnivariateFinite(CategoricalArray(levels), Flux.softmax(chain(Xnew_[i, :])) |> vec) for i in 1:size(Xnew_, 1)]
+    return [MLJBase.UnivariateFinite(MLJBase.classes(levels), Flux.softmax(chain(Xnew_[i, :])) |> vec) for i in 1:size(Xnew_, 1)]
 
 end
 
@@ -87,7 +85,7 @@ function MLJBase.update(model::NeuralNetworkClassifier, verbosity::Int, old_fitr
     old_model, data, old_history = old_cache
     old_chain, target_is_multivariate = old_fitresult
 
-    keep_chain =  model.n >= old_model.n &&
+    keep_chain =  model.epochs >= old_model.epochs &&
         model.loss == old_model.loss &&
         model.batch_size == old_model.batch_size &&
         model.lambda == old_model.lambda &&
@@ -99,10 +97,13 @@ function MLJBase.update(model::NeuralNetworkClassifier, verbosity::Int, old_fitr
 
     if keep_chain
         chain = old_chain
-        epochs = model.n - old_model.n
+        epochs = model.epochs - old_model.epochs
     else
+        n_input = MLJBase.schema(X).names |> length
+        n_output = length(MLJBase.classes(y[1]))
+        chain = fit(model.builder, n_input, n_output)
         data = collate(model, X, y, model.batch_size)
-        epochs = model.n
+        epochs = model.epochs
     end
 
     optimiser = deepcopy(model.optimiser)

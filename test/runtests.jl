@@ -5,7 +5,6 @@ import MLJFlux
 using CategoricalArrays
 import Flux
 import Random.seed!
-using MLJFlux
 using Statistics
 seed!(123)
 
@@ -13,80 +12,5 @@ seed!(123)
 @test Flux.Momentum() == Flux.Momentum()
 @test Flux.Momentum(0.1) != Flux.Momentum(0.2)
 
-
-## NEURAL NETWORK REGRESSOR
-
-# in MLJ multivariate inputs are tables:
-N = 200
-X = MLJBase.table(randn(10N, 5))
-y = rand(2000, 1)
-# while multivariate targets are vectors of tuples:
-ymatrix = hcat(1 .+ X.x1 - X.x2, 1 .- 2X.x4 + X.x5)
-y = [Tuple(ymatrix[i,:]) for i in 1:size(ymatrix, 1)]
-
-train = 1:7N
-test = (7N+1):10N
-
-se(yhat, y) = sum((yhat .- y).^2)
-mse(yhat, y) = mean(broadcast(se, yhat, y))
-
-builder = MLJFlux.Short(σ=identity)
-model = MLJFlux.MultivariateNeuralNetworkRegressor(loss=mse, builder=builder)
-
-fitresult, cache, report =
-    MLJBase.fit(model, 1, MLJBase.selectrows(X,train), y[train])
-#model.n = 15
-##fitresult, cache, report =
-#    MLJBase.update(model, 1, fitresult, cache,
-#                   MLJBase.selectrows(X,train), y[train])
-
-yhat = MLJBase.predict(model, fitresult, MLJBase.selectrows(X, test))
-
-
-#@test mse(yhat, y[test]) <= 0.1
-
-# univariate targets are ordinary vectors:
-y = 1 .+ X.x1 - X.x2 .- 2X.x4 + X.x5
-
-uni_model = MLJFlux.NeuralNetworkRegressor(loss=mse, builder=builder)
-
-fitresult, cache, report =
-    MLJBase.fit(uni_model, 1, MLJBase.selectrows(X,train), y[train])
-#model.n = 15
-#fitresult, cache, report =
-#    MLJBase.update(model, 1, fitresult, cache,
-#                MLJBase.selectrows(X,train), y[train])
-
-yhat = MLJBase.predict(uni_model, fitresult, MLJBase.selectrows(X, test))
-
-#@test mse(yhat, y[test]) <= 1
-
-
-## NEURAL NETWORK CLASSIFIER
-
-## To Do: add test for loss function.
-
-N = 100
-X = MLJBase.table(randn(10N, 5))
-
-yvector = 1 .+ X.x1 - X.x2 .+ 1 .- 2X.x4 + X.x5
-train = 1:7N
-test = (7N+1):10N
-
-y = CategoricalArray(rand("abcd", 1000));
-
-builder = MLJFlux.Linear(σ=Flux.sigmoid)
-model = MLJFlux.NeuralNetworkClassifier(loss=Flux.crossentropy, builder=builder)
-
-fitresult, cache, report =
-    MLJBase.fit(model, 2, MLJBase.selectrows(X,train), y[train])
-#model.n = 15
-#fitresult, cache, report =
-#    MLJBase.update(model, 1, fitresult, cache,
-#                   MLJBase.selectrows(X,train), y[train])
-
-yhat = MLJBase.predict(model, fitresult, MLJBase.selectrows(X, test))
-
-#misclassification_rate = sum(mode.(yhat) .!= y[test])/length(test)
-#@test misclassification_rate < 0.3
-
+include("classifier.jl")
+include("regressor.jl")

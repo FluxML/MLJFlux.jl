@@ -1,4 +1,4 @@
-mutable struct NeuralNetworkClassifier{B<:Builder,O,L} <: MLJBase.Probabilistic
+mutable struct NeuralNetworkClassifier{B<:Builder,O,L} <: MLJModelInterface.Probabilistic
     builder::B
     optimiser::O    # mutable struct from Flux/src/optimise/optimisers.jl
     loss::L         # can be called as in `loss(yhat, y)`
@@ -34,10 +34,10 @@ function collate(model::NeuralNetworkClassifier,
 
     row_batches = Base.Iterators.partition(1:length(y), batch_size)
 
-    levels = y |> first |> MLJBase.classes
+    levels = y |> first |> MLJModelInterface.classes
     ymatrix = hcat([Flux.onehot(ele, levels) for ele in y]...,)
 
-    Xmatrix = MLJBase.matrix(X)'
+    Xmatrix = MLJModelInterface.matrix(X)'
     if y isa AbstractVector{<:Tuple}
         return [(Xmatrix[:, b], ymatrix[:, b]) for b in row_batches]
     else
@@ -47,11 +47,11 @@ function collate(model::NeuralNetworkClassifier,
 end
 
 
-function MLJBase.fit(model::NeuralNetworkClassifier, verbosity::Int,
+function MLJModelInterface.fit(model::NeuralNetworkClassifier, verbosity::Int,
                         X, y)
     
     # When it has no categorical features
-    n_input = MLJBase.schema(X).names |> length
+    n_input = Tables.schema(X).names |> length
     n_output = length(levels(y))
     chain = fit(model.builder, n_input, n_output)
 
@@ -71,16 +71,16 @@ function MLJBase.fit(model::NeuralNetworkClassifier, verbosity::Int,
     return fitresult, cache, report
 end
 
-function MLJBase.predict(model::NeuralNetworkClassifier, fitresult, Xnew_)
+function MLJModelInterface.predict(model::NeuralNetworkClassifier, fitresult, Xnew_)
     chain , ismulti, levels = fitresult
     
-    Xnew_ = MLJBase.matrix(Xnew_)
+    Xnew_ = MLJModelInterface.matrix(Xnew_)
 
-    return [MLJBase.UnivariateFinite(MLJBase.classes(levels), Flux.softmax(chain(Xnew_[i, :])) |> vec) for i in 1:size(Xnew_, 1)]
+    return [MLJModelInterface.UnivariateFinite(MLJModelInterface.classes(levels), Flux.softmax(chain(Xnew_[i, :])) |> vec) for i in 1:size(Xnew_, 1)]
 
 end
 
-function MLJBase.update(model::NeuralNetworkClassifier, verbosity::Int, old_fitresult, old_cache, X, y)
+function MLJModelInterface.update(model::NeuralNetworkClassifier, verbosity::Int, old_fitresult, old_cache, X, y)
 
     old_model, data, old_history = old_cache
     old_chain, target_is_multivariate = old_fitresult
@@ -99,8 +99,8 @@ function MLJBase.update(model::NeuralNetworkClassifier, verbosity::Int, old_fitr
         chain = old_chain
         epochs = model.epochs - old_model.epochs
     else
-        n_input = MLJBase.schema(X).names |> length
-        n_output = length(MLJBase.classes(y[1]))
+        n_input = Tables.schema(X).names |> length
+        n_output = length(MLJModelInterface.classes(y[1]))
         chain = fit(model.builder, n_input, n_output)
         data = collate(model, X, y, model.batch_size)
         epochs = model.epochs
@@ -121,9 +121,9 @@ function MLJBase.update(model::NeuralNetworkClassifier, verbosity::Int, old_fitr
 
 end
 
-MLJBase.metadata_model(NeuralNetworkClassifier,
-               input=MLJBase.Table(MLJBase.Continuous),
-               target=AbstractVector{<:MLJBase.Finite},
+MLJModelInterface.metadata_model(NeuralNetworkClassifier,
+               input=MLJModelInterface.Table(MLJModelInterface.Continuous),
+               target=AbstractVector{<:MLJModelInterface.Finite},
                path="MLJFlux.NeuralNetworkClassifier",
                descr="A neural network model for making probabilistic predictions of a `Mutliclass` 
                or `OrderedFactor` target, given a table of `Continuous` features. ")

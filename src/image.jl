@@ -1,4 +1,4 @@
-mutable struct ImageClassifier{B<:MLJFlux.Builder,O,L} <: MLJBase.Probabilistic
+mutable struct ImageClassifier{B<:MLJFlux.Builder,O,L} <: MLJModelInterface.Probabilistic
     builder::B
     optimiser::O    # mutable struct from Flux/src/optimise/optimisers.jl
     loss::L         # can be called as in `loss(yhat, y)`
@@ -43,7 +43,7 @@ function collate(model::ImageClassifier, X, Y, batch_size)
     return [make_minibatch(X, Y, i) for i in mb_idxs]
 end
 
-function MLJBase.fit(model::ImageClassifier, verbosity::Int, X_, y_)
+function MLJModelInterface.fit(model::ImageClassifier, verbosity::Int, X_, y_)
 
     data = collate(model, X_, y_, model.batch_size)
 
@@ -52,10 +52,10 @@ function MLJBase.fit(model::ImageClassifier, verbosity::Int, X_, y_)
 
 
     a_target_element = first(y_)
-    levels = MLJBase.classes(a_target_element)
-    m = length(levels)
-    n = size(X_[1])
-    chain = fit(model.builder,n, m)
+    levels = MLJModelInterface.classes(a_target_element)
+    n_output = length(levels)
+    n_input = size(X_[1])
+    chain = fit(model.builder,n_input, n_output)
 
     optimiser = deepcopy(model.optimiser)
 
@@ -72,15 +72,15 @@ function MLJBase.fit(model::ImageClassifier, verbosity::Int, X_, y_)
     return fitresult, cache, report
 end
 
-function MLJBase.predict(model::ImageClassifier, fitresult, Xnew)
+function MLJModelInterface.predict(model::ImageClassifier, fitresult, Xnew)
     chain = fitresult[1]
     ismulti = fitresult[2]
     levels = fitresult[3]
-    return [MLJBase.UnivariateFinite(levels, Flux.softmax(chain(Float64.(Xnew[i])).data)) for i in 1:length(Xnew)]
+    return [MLJModelInterface.UnivariateFinite(levels, Flux.softmax(chain(Float64.(Xnew[i])).data)) for i in 1:length(Xnew)]
 
 end
 
-function MLJBase.update(model::ImageClassifier, verbosity::Int, old_fitresult, old_cache, X, y)
+function MLJModelInterface.update(model::ImageClassifier, verbosity::Int, old_fitresult, old_cache, X, y)
 
     old_model, data, old_history = old_cache
     old_chain, target_is_multivariate = old_fitresult
@@ -99,9 +99,9 @@ function MLJBase.update(model::ImageClassifier, verbosity::Int, old_fitresult, o
         chain = old_chain
         epochs = model.n - old_model.n
     else
-        n = MLJBase.schema(X).names |> length
-        m = length(levels)
-        chain = fit(model.builder, n, m)
+        n_input = Tables.schema(X).names |> length
+        n_output = length(levels)
+        chain = fit(model.builder, n_input, n_output)
         epochs = model.n
     end
 
@@ -121,9 +121,9 @@ function MLJBase.update(model::ImageClassifier, verbosity::Int, old_fitresult, o
 
 end
 
-MLJBase.metadata_model(ImageClassifier,
-               input=MLJBase.Table(MLJBase.Continuous),
-               target=AbstractVector{<:MLJBase.GrayImage},
+MLJModelInterface.metadata_model(ImageClassifier,
+               input=MLJModelInterface.Table(MLJModelInterface.Continuous),
+               target=AbstractVector{<:MLJModelInterface.GrayImage},
                path="MLJFlux.ImageClassifier",
                descr = descr="A neural network model for making probabilistic predictions of a `GreyImage` target,
                 given a table of `Continuous` features. ")

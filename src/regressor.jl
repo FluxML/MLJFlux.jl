@@ -1,4 +1,4 @@
-mutable struct NeuralNetworkRegressor{B<:Builder,O,L} <: MLJBase.Deterministic
+mutable struct NeuralNetworkRegressor{B<:Builder,O,L} <: MLJModelInterface.Deterministic
     builder::B
     optimiser::O    # mutable struct from Flux/src/optimise/optimisers.jl
     loss::L         # can be called as in `loss(yhat, y)`
@@ -28,7 +28,7 @@ NeuralNetworkRegressor(; builder::B   = Linear()
                                        , optimiser_changes_trigger_retraining)
 
 
-mutable struct MultivariateNeuralNetworkRegressor{B<:Builder,O,L} <: MLJBase.Deterministic
+mutable struct MultivariateNeuralNetworkRegressor{B<:Builder,O,L} <: MLJModelInterface.Deterministic
     builder::B
     optimiser::O    # mutable struct from Flux/src/optimise/optimisers.jl
     loss::L         # can be called as in `loss(yhat, y)`
@@ -64,7 +64,7 @@ function collate(model::Union{NeuralNetworkRegressor, MultivariateNeuralNetworkR
     ymatrix = reduce(hcat, [[tup...] for tup in y])
     row_batches = Base.Iterators.partition(1:length(y), batch_size)
 
-    Xmatrix = MLJBase.matrix(X)'
+    Xmatrix = MLJModelInterface.matrix(X)'
     if y isa AbstractVector{<:Tuple}
         return [(Xmatrix[:, b], ymatrix[:, b]) for b in row_batches]
     else
@@ -72,12 +72,12 @@ function collate(model::Union{NeuralNetworkRegressor, MultivariateNeuralNetworkR
     end
 end
 
-function MLJBase.fit(model::Union{NeuralNetworkRegressor, MultivariateNeuralNetworkRegressor},
+function MLJModelInterface.fit(model::Union{NeuralNetworkRegressor, MultivariateNeuralNetworkRegressor},
                      verbosity::Int,
                      X, y)
 
     # When it has no categorical features
-    n_input = MLJBase.schema(X).names |> length
+    n_input = Tables.schema(X).names |> length
     n_output = length(y[1])
     chain = fit(model.builder, n_input, n_output)
 
@@ -101,22 +101,22 @@ function MLJBase.fit(model::Union{NeuralNetworkRegressor, MultivariateNeuralNetw
 end
 
 # for univariate targets:
-function MLJBase.predict(model::Union{NeuralNetworkRegressor, MultivariateNeuralNetworkRegressor},
+function MLJModelInterface.predict(model::Union{NeuralNetworkRegressor, MultivariateNeuralNetworkRegressor},
          fitresult, Xnew_)
 
     chain , ismulti = fitresult
     
-    Xnew_ = MLJBase.matrix(Xnew_)
+    Xnew_ = MLJModelInterface.matrix(Xnew_)
 
     if ismulti
         ypred = [chain(values.(Xnew_[i, :])) for i in 1:size(Xnew_, 1)]
-        return reduce(vcat, y for y in ypred)' |> MLJBase.table
+        return reduce(vcat, y for y in ypred)' |> MLJModelInterface.table
     else
         return [chain(values.(Xnew_[i, :]))[1] for i in 1:size(Xnew_, 1)]
     end
 end
 
-function MLJBase.update(model::Union{NeuralNetworkRegressor, MultivariateNeuralNetworkRegressor},
+function MLJModelInterface.update(model::Union{NeuralNetworkRegressor, MultivariateNeuralNetworkRegressor},
              verbosity::Int, old_fitresult, old_cache, X, y)
 
     old_model, data, old_history = old_cache
@@ -136,7 +136,7 @@ function MLJBase.update(model::Union{NeuralNetworkRegressor, MultivariateNeuralN
         chain = old_chain
         epochs = model.epochs - old_model.epochs
     else
-        n_input = MLJBase.schema(X).names |> length
+        n_input = Tables.schema(X).names |> length
         n_output = length(y[1])
         chain = fit(model.builder, n_input, n_output)
         data = collate(model, X, y, model.batch_size)
@@ -159,17 +159,17 @@ function MLJBase.update(model::Union{NeuralNetworkRegressor, MultivariateNeuralN
 
 end
 
-MLJBase.metadata_model(NeuralNetworkRegressor,
-               input=MLJBase.Table(MLJBase.Continuous),
-               target=AbstractVector{<:MLJBase.Continuous},
+MLJModelInterface.metadata_model(NeuralNetworkRegressor,
+               input=MLJModelInterface.Table(MLJModelInterface.Continuous),
+               target=AbstractVector{<:MLJModelInterface.Continuous},
                path="MLJFlux.NeuralNetworkRegressor",
                descr = "A neural network model for making deterministic predictions of a 
                `Continuous` multi-target, presented as a table,  given a table of `Continuous` features. ")
 
 
-MLJBase.metadata_model(MultivariateNeuralNetworkRegressor,
-               input=MLJBase.Table(MLJBase.Continuous),
-               target=MLJBase.Table(MLJBase.Continuous),
+MLJModelInterface.metadata_model(MultivariateNeuralNetworkRegressor,
+               input=MLJModelInterface.Table(MLJModelInterface.Continuous),
+               target=MLJModelInterface.Table(MLJModelInterface.Continuous),
                path="MLJFlux.NeuralNetworkRegressor",
                descr = "A neural network model for making deterministic predictions of a 
                     `Continuous` mutli-target, presented as a table,  given a table of `Continuous` features.")

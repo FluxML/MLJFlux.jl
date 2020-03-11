@@ -7,7 +7,9 @@ nrows(X::AbstractMatrix) = size(X, 2)
 # Here we: (i) Make the optimiser structs "transarent" so that their
 # field values are exposed by calls to MLJ.params (needed for tuning);
 # and (ii) Overload `==` for optimisers, so that we can detect when
-# their parameters remain unchanged on calls to MLJModelInterface.update methods.
+# their parameters remain unchanged on calls to
+# MLJModelInterface.update methods.
+
 
 # We define optimisers of to be `==` if: (i) They have identical type
 # AND (ii) their defined field values are `==`. (Note that our `fit`
@@ -21,7 +23,11 @@ for opt in (:Descent, :Momentum, :Nesterov, :RMSProp, :ADAM, :AdaMax,
 
     @eval begin
 
-        #MLJModelInterface.istransparent(m::Flux.$opt) = true
+# TODO: Uncomment next line when 
+# https://github.com/alan-turing-institute/MLJModelInterface.jl/issues/28
+# is resolved:
+
+        # MLJModelInterface.istransparent(m::Flux.$opt) = true
 
         function ==(m1::Flux.$opt, m2::Flux.$opt)
             same_values = true

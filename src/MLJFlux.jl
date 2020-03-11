@@ -13,7 +13,7 @@ include("regressor.jl")
 include("classifier.jl")
 include("image.jl")
 
-### Package specific traits:
+### Package specific model traits:
 MLJModelInterface.metadata_pkg.((NeuralNetworkRegressor, NeuralNetworkClassifier,ImageClassifier, MultivariateNeuralNetworkRegressor),
               name="MLJFlux",
               uuid="094fc8d1-fd35-5302-93ea-dabda2abf845",

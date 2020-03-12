@@ -17,7 +17,7 @@ builder = MLJFlux.Short(σ=identity)
 model = MLJFlux.MultivariateNeuralNetworkRegressor(loss=mse, builder=builder)
 
 fitresult, cache, report =
-        MLJBase.fit(model, 1, MLJBase.selectrows(X,train), y[train])
+    MLJBase.fit(model, 1, MLJBase.selectrows(X,train), y[train])
 
 # Update model without retraining
 model.epochs = 15

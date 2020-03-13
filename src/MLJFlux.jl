@@ -1,7 +1,7 @@
 module MLJFlux
 
 import Flux
-import MLJBase
+import MLJModelInterface
 import Base.==
 using Base.Iterators: partition
 using ProgressMeter
@@ -13,8 +13,8 @@ include("regressor.jl")
 include("classifier.jl")
 include("image.jl")
 
-### Package specific traits:
-MLJBase.metadata_pkg.((NeuralNetworkRegressor, NeuralNetworkClassifier,ImageClassifier, MultivariateNeuralNetworkRegressor),
+### Package specific model traits:
+MLJModelInterface.metadata_pkg.((NeuralNetworkRegressor, NeuralNetworkClassifier,ImageClassifier, MultivariateNeuralNetworkRegressor),
               name="MLJFlux",
               uuid="094fc8d1-fd35-5302-93ea-dabda2abf845",
               url="https://github.com/alan-turing-institute/MLJFlux.jl",

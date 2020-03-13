@@ -2,12 +2,14 @@ nrows(X::AbstractMatrix) = size(X, 2)
 
 ## EXPOSE OPTIMISERS TO MLJ (for eg, tuning)
 
-## Need MLJBase >=0.2.1 for this.
+## Need MLJModelInterface >=0.2.1 for this.
 
 # Here we: (i) Make the optimiser structs "transarent" so that their
 # field values are exposed by calls to MLJ.params (needed for tuning);
 # and (ii) Overload `==` for optimisers, so that we can detect when
-# their parameters remain unchanged on calls to MLJBase.update methods.
+# their parameters remain unchanged on calls to
+# MLJModelInterface.update methods.
+
 
 # We define optimisers of to be `==` if: (i) They have identical type
 # AND (ii) their defined field values are `==`. (Note that our `fit`
@@ -21,7 +23,11 @@ for opt in (:Descent, :Momentum, :Nesterov, :RMSProp, :ADAM, :AdaMax,
 
     @eval begin
 
-        MLJBase.istransparent(m::Flux.$opt) = true
+# TODO: Uncomment next line when 
+# https://github.com/alan-turing-institute/MLJModelInterface.jl/issues/28
+# is resolved:
+
+        # MLJModelInterface.istransparent(m::Flux.$opt) = true
 
         function ==(m1::Flux.$opt, m2::Flux.$opt)
             same_values = true
@@ -120,7 +126,7 @@ end
 # Below n or (n1, n2) etc refers to network inputs, while m or (m1,
 # m2) etc refers to outputs.
 
-abstract type Builder <: MLJBase.Model end
+abstract type Builder <: MLJModelInterface.Model end
 
 # baby example 1:
 mutable struct Linear <: Builder

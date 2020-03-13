@@ -2,7 +2,7 @@
 
 An interface to Flux deep learning models for the [MLJ](https://github.com/alan-turing-institute/MLJ.jl) machine learning framework
 
-[![Build Status](https://travis-ci.com/alan-turing-institute/MLJFlux.svg?branch=master)](https://travis-ci.com/alan-turing-institute/MLJFlux.jl)
+[![Build Status](https://travis-ci.com/alan-turing-institute/MLJFlux.jl.svg?branch=master)](https://travis-ci.com/alan-turing-institute/MLJFlux.jl)
 
 MLJFlux.jl makes a variety of deep learning models available to users
 of the MLJ machine learning toolbox by providing an interface to
@@ -17,10 +17,9 @@ chain.
 In MLJ a *model* is a mutable struct storing hyperparameters for some learning algorithm indicated by the model name. MLJFlux provides three such models:
 
 - `NeuralNetworkRegressor`
+- `MultivariateNeuralNetworkRegressor`
 - `NeuralNetworkClassifier`
 - `ImageClassifier`
-
-The first two models are for tabular data, the second for images.
 
 *Warning:* In Flux the term "model" has another meaning. However, as all
 Flux "models" used in MLJFLux are `Flux.Chain` objects, we call them
@@ -85,7 +84,7 @@ and so on.
 
 3. `loss`: The loss function used. Default = `Flux.mse`
 
-4. `n`: Number of epochs to train for. Default = `10`
+4. `n_epochs`: Number of epochs to train for. Default = `10`
 
 5. `batch_size`: The batch_size for the data. Default = 1
 

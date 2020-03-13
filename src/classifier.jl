@@ -76,7 +76,7 @@ function MLJModelInterface.predict(model::NeuralNetworkClassifier, fitresult, Xn
     
     Xnew_ = MLJModelInterface.matrix(Xnew_)
 
-    return [MLJModelInterface.UnivariateFinite(MLJModelInterface.classes(levels), Flux.softmax(chain(Xnew_[i, :])) |> vec) for i in 1:size(Xnew_, 1)]
+    return [MLJModelInterface.UnivariateFinite(MLJModelInterface.classes(levels), map(x->x.data, Flux.softmax(chain(Xnew_[i, :]))) |> vec) for i in 1:size(Xnew_, 1)]
 
 end
 

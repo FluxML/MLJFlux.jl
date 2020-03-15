@@ -61,13 +61,14 @@ MultivariateNeuralNetworkRegressor(; builder::B   = Linear()
 function collate(model::Union{NeuralNetworkRegressor, MultivariateNeuralNetworkRegressor},
                  X, y, batch_size)
 
-    ymatrix = reduce(hcat, [[tup...] for tup in y])
     row_batches = Base.Iterators.partition(1:length(y), batch_size)
 
     Xmatrix = MLJModelInterface.matrix(X)'
-    if y isa AbstractVector{<:Tuple}
+    if Tables.istable(y)
+        ymatrix = MLJModelInterface.matrix(y)'
         return [(Xmatrix[:, b], ymatrix[:, b]) for b in row_batches]
     else
+        ymatrix = reduce(hcat, [[tup...] for tup in y])
         return [((Xmatrix[:, b]), ymatrix[b]) for b in row_batches]
     end
 end
@@ -78,12 +79,17 @@ function MLJModelInterface.fit(model::Union{NeuralNetworkRegressor, Multivariate
 
     # When it has no categorical features
     n_input = Tables.schema(X).names |> length
-    n_output = length(y[1])
-    chain = fit(model.builder, n_input, n_output)
-
     data = collate(model, X, y, model.batch_size)
 
-    target_is_multivariate = y isa AbstractVector{<:Tuple}
+    target_is_multivariate = Tables.istable(y)
+    if target_is_multivariate
+        target_columns = Tables.schema(y).names
+    else
+        target_columns = [""] # We won't be using this
+    end
+
+    n_output = length(target_columns)
+    chain = fit(model.builder, n_input, n_output)
 
     optimiser = deepcopy(model.optimiser)
 
@@ -93,24 +99,23 @@ function MLJModelInterface.fit(model::Union{NeuralNetworkRegressor, Multivariate
                           verbosity, data)
 
     cache = (deepcopy(model), data, history)
-    fitresult = (chain, target_is_multivariate)
+    fitresult = (chain, target_is_multivariate, target_columns)
     report = (training_losses=history,)
 
     return fitresult, cache, report
 
 end
 
-# for univariate targets:
 function MLJModelInterface.predict(model::Union{NeuralNetworkRegressor, MultivariateNeuralNetworkRegressor},
          fitresult, Xnew_)
 
-    chain , ismulti = fitresult
+    chain , ismulti, target_columns = fitresult
     
     Xnew_ = MLJModelInterface.matrix(Xnew_)
 
     if ismulti
-        ypred = [chain(values.(Xnew_[i, :])) for i in 1:size(Xnew_, 1)]
-        return reduce(vcat, y for y in ypred)' |> MLJModelInterface.table
+        ypred = [map(x->x.data, chain(values.(Xnew_[i, :]))) for i in 1:size(Xnew_, 1)]
+        return MLJModelInterface.table(reduce(hcat, y for y in ypred)', names=target_columns) 
     else
         return [chain(values.(Xnew_[i, :]))[1] for i in 1:size(Xnew_, 1)]
     end
@@ -120,7 +125,7 @@ function MLJModelInterface.update(model::Union{NeuralNetworkRegressor, Multivari
              verbosity::Int, old_fitresult, old_cache, X, y)
 
     old_model, data, old_history = old_cache
-    old_chain, target_is_multivariate = old_fitresult
+    old_chain, target_is_multivariate, target_columns = old_fitresult
 
     keep_chain =  model.epochs >= old_model.epochs &&
         model.loss == old_model.loss &&
@@ -137,7 +142,12 @@ function MLJModelInterface.update(model::Union{NeuralNetworkRegressor, Multivari
         epochs = model.epochs - old_model.epochs
     else
         n_input = Tables.schema(X).names |> length
-        n_output = length(y[1])
+        if target_is_multivariate
+            target_columns = Tables.schema(y).names
+        else
+            target_columns = [""] # We won't be using this
+        end
+        n_output = length(target_columns)
         chain = fit(model.builder, n_input, n_output)
         data = collate(model, X, y, model.batch_size)
         epochs = model.epochs
@@ -151,7 +161,7 @@ function MLJModelInterface.update(model::Union{NeuralNetworkRegressor, Multivari
     if keep_chain
         history = vcat(old_history, history)
     end
-    fitresult = (chain, target_is_multivariate)
+    fitresult = (chain, target_is_multivariate, target_columns)
     cache = (deepcopy(model), data, history)
     report = (training_losses=history,)
 

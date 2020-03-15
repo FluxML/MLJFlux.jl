@@ -5,7 +5,7 @@ X = MLJBase.table(randn(10N, 5))
 y = rand(2000, 1)
 # while multivariate targets are vectors of tuples:
 ymatrix = hcat(1 .+ X.x1 - X.x2, 1 .- 2X.x4 + X.x5)
-y = [Tuple(ymatrix[i,:]) for i in 1:size(ymatrix, 1)]
+y = Tables.table(ymatrix)
 
 train = 1:7N
 test = (7N+1):10N
@@ -17,13 +17,13 @@ builder = MLJFlux.Short(σ=identity)
 model = MLJFlux.MultivariateNeuralNetworkRegressor(loss=mse, builder=builder)
 
 fitresult, cache, report =
-    MLJBase.fit(model, 1, MLJBase.selectrows(X,train), y[train])
+    MLJBase.fit(model, 1, MLJBase.selectrows(X,train), MLJBase.selectrows(y, train))
 
 # Update model without retraining
 model.epochs = 15
 fitresult, cache, report =
     MLJBase.update(model, 1, fitresult, cache,
-                   MLJBase.selectrows(X,train), y[train])
+                   MLJBase.selectrows(X,train), MLJBase.selectrows(y, train))
 
 yhat = MLJBase.predict(model, fitresult, MLJBase.selectrows(X, test))
 
@@ -31,7 +31,7 @@ yhat = MLJBase.predict(model, fitresult, MLJBase.selectrows(X, test))
 model.batch_size = 2
 fitresult, cache, report =
     MLJBase.update(model, 1, fitresult, cache,
-                   MLJBase.selectrows(X,train), y[train])
+                   MLJBase.selectrows(X,train), MLJBase.selectrows(y, train))
 
 yhat = MLJBase.predict(model, fitresult, MLJBase.selectrows(X, test))
 

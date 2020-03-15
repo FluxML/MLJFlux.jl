@@ -1,5 +1,6 @@
 # using Revise
 using Test
+using Tables
 import MLJBase
 import MLJFlux
 using CategoricalArrays

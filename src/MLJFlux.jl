@@ -24,4 +24,5 @@ MLJModelInterface.metadata_pkg.((NeuralNetworkRegressor, NeuralNetworkClassifier
 export NeuralNetworkRegressor, MultivariateNeuralNetworkRegressor
 export NeuralNetworkClassifier, ImageClassifier
 
+
 end #module

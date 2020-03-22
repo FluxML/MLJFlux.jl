@@ -1,4 +1,4 @@
-module MLJFlux
+module MLJFlux 
 
 import Flux
 import MLJModelInterface

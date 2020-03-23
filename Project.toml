@@ -17,7 +17,7 @@ Flux = "^0.8.3"
 LossFunctions = "^0.5"
 MLJModelInterface = "^0.2"
 ProgressMeter = "^1.1"
-Tables = "^0.2"
+Tables = "^1.0"
 julia = "1"
 
 [extras]

@@ -7,6 +7,7 @@ using Base.Iterators: partition
 using ProgressMeter
 using CategoricalArrays
 using Tables
+using Statistics
 
 include("core.jl")
 include("regressor.jl")

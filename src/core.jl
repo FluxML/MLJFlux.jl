@@ -88,7 +88,7 @@ function  fit!(chain, optimiser, loss, epochs, batch_size,
     for i in 1:epochs
         # We're taking data in a Flux-fashion.
         Flux.train!(loss_func, Flux.params(chain), data, optimiser)
-        current_loss = sum(loss_func(data[i][1], data[i][2]) for i=1:length(data))
+        current_loss = mean(loss_func(data[i][1], data[i][2]) for i=1:length(data))
         verbosity < 2 || println("Loss is $(current_loss)")
         push!(history, current_loss)
 

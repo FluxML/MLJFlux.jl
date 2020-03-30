@@ -1,9 +1,9 @@
 # Multitarget NN Regressor
-# in MLJ multivariate inputs are tables:
+
 N = 200
 X = MLJBase.table(randn(10N, 5))
-y = rand(2000, 1)
-# while multivariate targets are vectors of tuples:
+
+# multitargets are tables:
 ymatrix = hcat(1 .+ X.x1 - X.x2, 1 .- 2X.x4 + X.x5)
 y = Tables.table(ymatrix)
 
@@ -35,8 +35,6 @@ fitresult, cache, report =
 
 yhat = MLJBase.predict(model, fitresult, MLJBase.selectrows(X, test))
 
-
-# univariate targets are ordinary vectors:
 y = 1 .+ X.x1 - X.x2 .- 2X.x4 + X.x5
 
 uni_model = MLJFlux.NeuralNetworkRegressor(loss=mse, builder=builder)

@@ -1,5 +1,3 @@
-nrows(X::AbstractMatrix) = size(X, 2)
-
 ## EXPOSE OPTIMISERS TO MLJ (for eg, tuning)
 
 ## Need MLJModelInterface >=0.2.1 for this.

@@ -1,4 +1,4 @@
-module MLJFlux 
+module MLJFlux
 
 import Flux
 import MLJModelInterface
@@ -15,15 +15,17 @@ include("classifier.jl")
 include("image.jl")
 
 ### Package specific model traits:
-MLJModelInterface.metadata_pkg.((NeuralNetworkRegressor, NeuralNetworkClassifier,ImageClassifier, MultivariateNeuralNetworkRegressor),
+MLJModelInterface.metadata_pkg.((NeuralNetworkRegressor,
+                                 MultitargetNeuralNetworkRegressor,
+                                 NeuralNetworkClassifier,
+                                 ImageClassifier),
               name="MLJFlux",
               uuid="094fc8d1-fd35-5302-93ea-dabda2abf845",
               url="https://github.com/alan-turing-institute/MLJFlux.jl",
               julia=true,
               license="MIT")
 
-export NeuralNetworkRegressor, MultivariateNeuralNetworkRegressor
+export NeuralNetworkRegressor, MultitargetNeuralNetworkRegressor
 export NeuralNetworkClassifier, ImageClassifier
-
 
 end #module

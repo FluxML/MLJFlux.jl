@@ -1,4 +1,4 @@
-# Multivariate NN Regressor
+# Multitarget NN Regressor
 # in MLJ multivariate inputs are tables:
 N = 200
 X = MLJBase.table(randn(10N, 5))
@@ -14,7 +14,7 @@ se(yhat, y) = sum((yhat .- y).^2)
 mse(yhat, y) = mean(broadcast(se, yhat, y))
 
 builder = MLJFlux.Short(σ=identity)
-model = MLJFlux.MultivariateNeuralNetworkRegressor(loss=mse, builder=builder)
+model = MLJFlux.MultitargetNeuralNetworkRegressor(loss=mse, builder=builder)
 
 fitresult, cache, report =
     MLJBase.fit(model, 1, MLJBase.selectrows(X,train), MLJBase.selectrows(y, train))

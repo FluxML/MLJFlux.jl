@@ -28,7 +28,7 @@ NeuralNetworkRegressor(; builder::B   = Linear()
                                        , optimiser_changes_trigger_retraining)
 
 
-mutable struct MultivariateNeuralNetworkRegressor{B<:Builder,O,L} <: MLJModelInterface.Deterministic
+mutable struct MultitargetNeuralNetworkRegressor{B<:Builder,O,L} <: MLJModelInterface.Deterministic
     builder::B
     optimiser::O    # mutable struct from Flux/src/optimise/optimisers.jl
     loss::L         # can be called as in `loss(yhat, y)`
@@ -39,7 +39,7 @@ mutable struct MultivariateNeuralNetworkRegressor{B<:Builder,O,L} <: MLJModelInt
     optimiser_changes_trigger_retraining::Bool
 end
 
-MultivariateNeuralNetworkRegressor(; builder::B   = Linear()
+MultitargetNeuralNetworkRegressor(; builder::B   = Linear()
               , optimiser::O = Flux.Optimise.ADAM()
               , loss::L      = Flux.mse
               , epochs       = 10
@@ -48,7 +48,7 @@ MultivariateNeuralNetworkRegressor(; builder::B   = Linear()
               , alpha        = 0
               , optimiser_changes_trigger_retraining=false
               ) where {B,O,L} =
-                  MultivariateNeuralNetworkRegressor{B,O,L}(builder
+                  MultitargetNeuralNetworkRegressor{B,O,L}(builder
                                        , optimiser
                                        , loss
                                        , epochs
@@ -58,7 +58,7 @@ MultivariateNeuralNetworkRegressor(; builder::B   = Linear()
                                        , optimiser_changes_trigger_retraining)
 
 
-function collate(model::Union{NeuralNetworkRegressor, MultivariateNeuralNetworkRegressor},
+function collate(model::Union{NeuralNetworkRegressor, MultitargetNeuralNetworkRegressor},
                  X, y, batch_size)
 
     row_batches = Base.Iterators.partition(1:length(y), batch_size)
@@ -73,7 +73,7 @@ function collate(model::Union{NeuralNetworkRegressor, MultivariateNeuralNetworkR
     end
 end
 
-function MLJModelInterface.fit(model::Union{NeuralNetworkRegressor, MultivariateNeuralNetworkRegressor},
+function MLJModelInterface.fit(model::Union{NeuralNetworkRegressor, MultitargetNeuralNetworkRegressor},
                      verbosity::Int,
                      X, y)
 
@@ -106,7 +106,7 @@ function MLJModelInterface.fit(model::Union{NeuralNetworkRegressor, Multivariate
 
 end
 
-function MLJModelInterface.predict(model::Union{NeuralNetworkRegressor, MultivariateNeuralNetworkRegressor},
+function MLJModelInterface.predict(model::Union{NeuralNetworkRegressor, MultitargetNeuralNetworkRegressor},
          fitresult, Xnew_)
 
     chain , ismulti, target_columns = fitresult
@@ -121,7 +121,7 @@ function MLJModelInterface.predict(model::Union{NeuralNetworkRegressor, Multivar
     end
 end
 
-function MLJModelInterface.update(model::Union{NeuralNetworkRegressor, MultivariateNeuralNetworkRegressor},
+function MLJModelInterface.update(model::Union{NeuralNetworkRegressor, MultitargetNeuralNetworkRegressor},
              verbosity::Int, old_fitresult, old_cache, X, y)
 
     old_model, data, old_history = old_cache
@@ -177,7 +177,7 @@ MLJModelInterface.metadata_model(NeuralNetworkRegressor,
                `Continuous` multi-target, presented as a table,  given a table of `Continuous` features. ")
 
 
-MLJModelInterface.metadata_model(MultivariateNeuralNetworkRegressor,
+MLJModelInterface.metadata_model(MultitargetNeuralNetworkRegressor,
                input=MLJModelInterface.Table(MLJModelInterface.Continuous),
                target=MLJModelInterface.Table(MLJModelInterface.Continuous),
                path="MLJFlux.NeuralNetworkRegressor",

@@ -60,16 +60,6 @@ MultitargetNeuralNetworkRegressor(; builder::B   = Linear()
 const Regressor =
     Union{NeuralNetworkRegressor, MultitargetNeuralNetworkRegressor}
 
-function nrows(X)
-    Tables.istable(X) || throw(ArgumentError)
-    Tables.columnaccess(X) || return length(collect(X))
-    # if has columnaccess
-    cols = Tables.columntable(X)
-    !isempty(cols) || return 0
-    return length(cols[1])
-end
-nrows(y::AbstractVector) = length(y)
-
 function collate(model::Regressor, X, y, batch_size)
 
     row_batches = Base.Iterators.partition(1:nrows(y), batch_size)

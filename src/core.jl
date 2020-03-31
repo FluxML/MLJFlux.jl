@@ -152,3 +152,17 @@ function fit(builder::Short, n, m)
                       Flux.Dropout(builder.dropout),
                        Flux.Dense(n_hidden, m))
 end
+
+
+## HELPERS
+
+function nrows(X)
+    Tables.istable(X) || throw(ArgumentError)
+    Tables.columnaccess(X) || return length(collect(X))
+    # if has columnaccess
+    cols = Tables.columntable(X)
+    !isempty(cols) || return 0
+    return length(cols[1])
+end
+nrows(y::AbstractVector) = length(y)
+

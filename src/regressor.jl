@@ -86,7 +86,7 @@ end
 
 function MLJModelInterface.fit(model::Regressor, verbosity::Int, X, y)
 
-    # When it has no categorical features
+    # (assumes  no categorical features)
     n_input = Tables.schema(X).names |> length
     data = collate(model, X, y, model.batch_size)
 
@@ -176,13 +176,17 @@ MLJModelInterface.metadata_model(NeuralNetworkRegressor,
                input=MLJModelInterface.Table(MLJModelInterface.Continuous),
                target=AbstractVector{<:MLJModelInterface.Continuous},
                path="MLJFlux.NeuralNetworkRegressor",
-               descr = "A neural network model for making deterministic predictions of a
-               `Continuous` multi-target, presented as a table,  given a table of `Continuous` features. ")
-
+               descr="A neural network model for making "*
+                     "deterministic predictions of a "*
+                     "`Continuous` target, given a table of "*
+                     "`Continuous` features. ")
 
 MLJModelInterface.metadata_model(MultitargetNeuralNetworkRegressor,
                input=MLJModelInterface.Table(MLJModelInterface.Continuous),
                target=MLJModelInterface.Table(MLJModelInterface.Continuous),
                path="MLJFlux.NeuralNetworkRegressor",
-               descr = "A neural network model for making deterministic predictions of a
-                    `Continuous` mutli-target, presented as a table,  given a table of `Continuous` features.")
+               descr = "A neural network model for making "*
+                       "deterministic predictions of a "*
+                       "`Continuous` multi-target, presented "*
+                       "as a table, given a table of "*
+                       "`Continuous` features. ")

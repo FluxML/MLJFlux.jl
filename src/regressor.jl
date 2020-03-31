@@ -107,7 +107,7 @@ function MLJModelInterface.fit(model::Regressor, verbosity::Int, X, y)
                           model.lambda, model.alpha,
                           verbosity, data)
 
-    cache = (deepcopy(model), data, history)
+    cache = (deepcopy(model), data, history, n_input, n_output)
     fitresult = (chain, target_is_multivariate, target_column_names)
     report = (training_losses=history,)
 
@@ -138,26 +138,19 @@ function MLJModelInterface.update(model::Regressor,
                                   X,
                                   y)
 
-    old_model, data, old_history = old_cache
+    old_model, data, old_history, n_input, n_output = old_cache
     old_chain, target_is_multivariate, target_column_names = old_fitresult
 
     optimiser_flag = model.optimiser_changes_trigger_retraining &&
         model.optimiser != old_model.optimiser
 
-    keep_chain = !optimiser_flag &&
+    keep_chain = !optimiser_flag && model.epochs >= old_model.epochs &&
         MLJModelInterface.is_same_except(model, old_model, :optimizer, :epochs)
 
     if keep_chain
         chain = old_chain
         epochs = model.epochs - old_model.epochs
     else
-        n_input = Tables.schema(X).names |> length
-        if target_is_multivariate
-            target_column_names = Tables.schema(y).names
-        else
-            target_column_names = [""] # We won't be using this
-        end
-        n_output = length(target_column_names)
         chain = fit(model.builder, n_input, n_output)
         data = collate(model, X, y, model.batch_size)
         epochs = model.epochs
@@ -172,7 +165,7 @@ function MLJModelInterface.update(model::Regressor,
         history = vcat(old_history, history)
     end
     fitresult = (chain, target_is_multivariate, target_column_names)
-    cache = (deepcopy(model), data, history)
+    cache = (deepcopy(model), data, history, n_input, n_output)
     report = (training_losses=history,)
 
     return fitresult, cache, report

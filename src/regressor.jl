@@ -92,12 +92,12 @@ function MLJModelInterface.fit(model::Regressor, verbosity::Int, X, y)
 
     target_is_multivariate = Tables.istable(y)
     if target_is_multivariate
-        target_columns = Tables.schema(y).names
+        target_column_names = Tables.schema(y).names
     else
-        target_columns = [""] # We won't be using this
+        target_column_names = [""] # We won't be using this
     end
 
-    n_output = length(target_columns)
+    n_output = length(target_column_names)
     chain = fit(model.builder, n_input, n_output)
 
     optimiser = deepcopy(model.optimiser)
@@ -108,43 +108,44 @@ function MLJModelInterface.fit(model::Regressor, verbosity::Int, X, y)
                           verbosity, data)
 
     cache = (deepcopy(model), data, history)
-    fitresult = (chain, target_is_multivariate, target_columns)
+    fitresult = (chain, target_is_multivariate, target_column_names)
     report = (training_losses=history,)
 
     return fitresult, cache, report
 
 end
 
-function MLJModelInterface.predict(model::Union{NeuralNetworkRegressor, MultitargetNeuralNetworkRegressor},
-         fitresult, Xnew_)
+function MLJModelInterface.predict(model::Regressor, fitresult, Xnew_)
 
-    chain , ismulti, target_columns = fitresult
+    chain , target_is_multivariate, target_column_names = fitresult
 
     Xnew_ = MLJModelInterface.matrix(Xnew_)
 
-    if ismulti
-        ypred = [map(x->x.data, chain(values.(Xnew_[i, :]))) for i in 1:size(Xnew_, 1)]
-        return MLJModelInterface.table(reduce(hcat, y for y in ypred)', names=target_columns)
+    if target_is_multivariate
+        ypred = [map(x->x.data, chain(values.(Xnew_[i, :])))
+                 for i in 1:size(Xnew_, 1)]
+        return MLJModelInterface.table(reduce(hcat, y for y in ypred)',
+                                       names=target_column_names)
     else
         return [chain(values.(Xnew_[i, :]))[1] for i in 1:size(Xnew_, 1)]
     end
 end
 
-function MLJModelInterface.update(model::Union{NeuralNetworkRegressor, MultitargetNeuralNetworkRegressor},
-             verbosity::Int, old_fitresult, old_cache, X, y)
+function MLJModelInterface.update(model::Regressor,
+                                  verbosity::Int,
+                                  old_fitresult,
+                                  old_cache,
+                                  X,
+                                  y)
 
     old_model, data, old_history = old_cache
-    old_chain, target_is_multivariate, target_columns = old_fitresult
+    old_chain, target_is_multivariate, target_column_names = old_fitresult
 
-    keep_chain =  model.epochs >= old_model.epochs &&
-        model.loss == old_model.loss &&
-        model.batch_size == old_model.batch_size &&
-        model.lambda == old_model.lambda &&
-        model.alpha == old_model.alpha &&
-        model.builder == old_model.builder &&
-        #model.embedding_choice == old_model.embedding_choice &&
-        (!model.optimiser_changes_trigger_retraining ||
-         model.optimiser == old_model.optimiser)
+    optimiser_flag = model.optimiser_changes_trigger_retraining &&
+        model.optimiser != old_model.optimiser
+
+    keep_chain = !optimiser_flag &&
+        MLJModelInterface.is_same_except(model, old_model, :optimizer, :epochs)
 
     if keep_chain
         chain = old_chain
@@ -152,11 +153,11 @@ function MLJModelInterface.update(model::Union{NeuralNetworkRegressor, Multitarg
     else
         n_input = Tables.schema(X).names |> length
         if target_is_multivariate
-            target_columns = Tables.schema(y).names
+            target_column_names = Tables.schema(y).names
         else
-            target_columns = [""] # We won't be using this
+            target_column_names = [""] # We won't be using this
         end
-        n_output = length(target_columns)
+        n_output = length(target_column_names)
         chain = fit(model.builder, n_input, n_output)
         data = collate(model, X, y, model.batch_size)
         epochs = model.epochs
@@ -170,7 +171,7 @@ function MLJModelInterface.update(model::Union{NeuralNetworkRegressor, Multitarg
     if keep_chain
         history = vcat(old_history, history)
     end
-    fitresult = (chain, target_is_multivariate, target_columns)
+    fitresult = (chain, target_is_multivariate, target_column_names)
     cache = (deepcopy(model), data, history)
     report = (training_losses=history,)
 

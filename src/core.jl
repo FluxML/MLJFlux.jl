@@ -1,15 +1,9 @@
-nrows(X::AbstractMatrix) = size(X, 2)
-
 ## EXPOSE OPTIMISERS TO MLJ (for eg, tuning)
 
-## Need MLJModelInterface >=0.2.1 for this.
-
 # Here we: (i) Make the optimiser structs "transarent" so that their
-# field values are exposed by calls to MLJ.params (needed for tuning);
-# and (ii) Overload `==` for optimisers, so that we can detect when
-# their parameters remain unchanged on calls to
-# MLJModelInterface.update methods.
-
+# field values are exposed by calls to MLJ.params; and (ii) Overload
+# `==` for optimisers, so that we can detect when their parameters
+# remain unchanged on calls to MLJModelInterface.update methods.
 
 # We define optimisers of to be `==` if: (i) They have identical type
 # AND (ii) their defined field values are `==`. (Note that our `fit`
@@ -23,7 +17,7 @@ for opt in (:Descent, :Momentum, :Nesterov, :RMSProp, :ADAM, :AdaMax,
 
     @eval begin
 
-# TODO: Uncomment next line when 
+# TODO: Uncomment next line when
 # https://github.com/alan-turing-institute/MLJModelInterface.jl/issues/28
 # is resolved:
 
@@ -46,11 +40,20 @@ end
 ## GENERAL METHOD TO OPTIMIZE A CHAIN
 
 """
-    fit!(chain, optimiser, loss, epochs, batch_size, lambda, alpha, verbosity, data)
+    fit!(chain, 
+         optimiser,
+         loss,
+         epochs,
+         batch_size,
+         lambda,
+         alpha,
+         verbosity,
+         data)
 
 Optimize a Flux model `chain` using the regularization parameters
 `lambda` (strength) and `alpha` (l2/l1 mix), where `loss(yhat, y) ` is
-the supervised loss for instances of the target `yhat` and `y`.
+the supervised loss for instances (or vectors of instances) of the
+target predictions `yhat` and target observations `y`.
 
 Here `chain` is a `Flux.Chain` object, or other "Flux model" such that
 `Flux.params(chain)` returns the parameters to be optimised.
@@ -65,13 +68,12 @@ The training `data` is a vector of tuples of the form `(X, y)` where:
 - the shape of `y` is `(m1, m2, ..., mk, batch_size)` where `(m1, m2,
   ..., mk)` is the shape of the `chain` outputs.
 
-The contribution to the optimised objective function of a single
-input/output instance `(X, y)` is
+The contribution to the objective function of a single input/output
+instance `(X, y)` is
 
     loss(chain(X), y) + lambda*(model.alpha*l1) + (1 - model.alpha)*l2
 
-where `l1 = sum(norm, params(chain)` and `l2 = sum(norm,
-params(chain))`.
+where `l1 = sum(norm, params(chain)` and `l2 = sum(norm, params(chain))`.
 
 """
 function  fit!(chain, optimiser, loss, epochs, batch_size,
@@ -88,8 +90,9 @@ function  fit!(chain, optimiser, loss, epochs, batch_size,
     for i in 1:epochs
         # We're taking data in a Flux-fashion.
         Flux.train!(loss_func, Flux.params(chain), data, optimiser)
-        current_loss = mean(loss_func(data[i][1], data[i][2]) for i=1:length(data))
-        verbosity < 2 || println("Loss is $(current_loss)")
+        current_loss =
+            mean(loss_func(data[i][1], data[i][2]) for i=1:length(data))
+        verbosity < 2 || @info "Loss is $(current_loss)"
         push!(history, current_loss)
 
         # Early stopping is to be externally controlled.
@@ -109,8 +112,7 @@ function  fit!(chain, optimiser, loss, epochs, batch_size,
 
 end
 
-
-# TODO: add automatic stopping and callback functionality to above.
+# TODO: add callback functionality to above.
 
 
 ## BUILDING CHAINS A FROM HYPERPARAMETERS + INPUT/OUTPUT SHAPE
@@ -133,7 +135,8 @@ mutable struct Linear <: Builder
     σ
 end
 Linear(; σ=Flux.relu) = Linear(σ)
-fit(builder::Linear, n::Integer, m::Integer) = Flux.Chain(Flux.Dense(n, m, builder.σ))
+fit(builder::Linear, n::Integer, m::Integer) =
+    Flux.Chain(Flux.Dense(n, m, builder.σ))
 
 # baby example 2:
 mutable struct Short <: Builder
@@ -149,3 +152,17 @@ function fit(builder::Short, n, m)
                       Flux.Dropout(builder.dropout),
                        Flux.Dense(n_hidden, m))
 end
+
+
+## HELPERS
+
+function nrows(X)
+    Tables.istable(X) || throw(ArgumentError)
+    Tables.columnaccess(X) || return length(collect(X))
+    # if has columnaccess
+    cols = Tables.columntable(X)
+    !isempty(cols) || return 0
+    return length(cols[1])
+end
+nrows(y::AbstractVector) = length(y)
+

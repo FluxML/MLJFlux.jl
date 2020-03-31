@@ -1,9 +1,49 @@
-# Multivariate NN Regressor
-# in MLJ multivariate inputs are tables:
+# Multitarget NN Regressor
+
+@testset "nrows" begin
+    Xmatrix = rand(10, 3)
+    X = MLJBase.table(Xmatrix)
+    @test MLJFlux.nrows(X) == 10
+    @test MLJFlux.nrows(Tables.columntable(X)) == 10
+end
+
+@testset "collate" begin
+    # NeuralNetworRegressor:
+    Xmatrix = rand(10, 3)
+    # convert to a column table:
+    X = MLJBase.table(Xmatrix)
+
+    y = rand(10)
+    model = MLJFlux.NeuralNetworkRegressor()
+    batch_size= 3
+    @test MLJFlux.collate(model, X, y, batch_size) ==
+        [(Xmatrix'[:,1:3], y[1:3]),
+         (Xmatrix'[:,4:6], y[4:6]),
+         (Xmatrix'[:,7:9], y[7:9]),
+         (Xmatrix'[:,10:10], y[10:10])]
+
+    # MultitargetNeuralNetworRegressor:
+    ymatrix = rand(10, 2)
+    y = MLJBase.table(ymatrix) # a rowaccess table
+    model = MLJFlux.NeuralNetworkRegressor()
+    batch_size= 3
+    @test MLJFlux.collate(model, X, y, batch_size) ==
+        [(Xmatrix'[:,1:3], ymatrix'[:,1:3]),
+         (Xmatrix'[:,4:6], ymatrix'[:,4:6]),
+         (Xmatrix'[:,7:9], ymatrix'[:,7:9]),
+         (Xmatrix'[:,10:10], ymatrix'[:,10:10])]
+    y = Tables.columntable(y) # try a columnaccess table
+    @test MLJFlux.collate(model, X, y, batch_size) ==
+        [(Xmatrix'[:,1:3], ymatrix'[:,1:3]),
+         (Xmatrix'[:,4:6], ymatrix'[:,4:6]),
+         (Xmatrix'[:,7:9], ymatrix'[:,7:9]),
+         (Xmatrix'[:,10:10], ymatrix'[:,10:10])]
+end
+
 N = 200
 X = MLJBase.table(randn(10N, 5))
-y = rand(2000, 1)
-# while multivariate targets are vectors of tuples:
+
+# multitargets are tables:
 ymatrix = hcat(1 .+ X.x1 - X.x2, 1 .- 2X.x4 + X.x5)
 y = Tables.table(ymatrix)
 
@@ -14,7 +54,7 @@ se(yhat, y) = sum((yhat .- y).^2)
 mse(yhat, y) = mean(broadcast(se, yhat, y))
 
 builder = MLJFlux.Short(σ=identity)
-model = MLJFlux.MultivariateNeuralNetworkRegressor(loss=mse, builder=builder)
+model = MLJFlux.MultitargetNeuralNetworkRegressor(loss=mse, builder=builder)
 
 fitresult, cache, report =
     MLJBase.fit(model, 1, MLJBase.selectrows(X,train), MLJBase.selectrows(y, train))
@@ -35,8 +75,6 @@ fitresult, cache, report =
 
 yhat = MLJBase.predict(model, fitresult, MLJBase.selectrows(X, test))
 
-
-# univariate targets are ordinary vectors:
 y = 1 .+ X.x1 - X.x2 .- 2X.x4 + X.x5
 
 uni_model = MLJFlux.NeuralNetworkRegressor(loss=mse, builder=builder)

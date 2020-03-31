@@ -99,7 +99,7 @@ function MLJModelInterface.fit(model::Regressor, verbosity::Int, X, y)
 
     cache = (deepcopy(model), data, history, n_input, n_output)
     fitresult = (chain, target_is_multivariate, target_column_names)
-    report = (training_losses=history,)
+    report = (training_losses=[loss.data for loss in history],)
 
     return fitresult, cache, report
 
@@ -156,7 +156,7 @@ function MLJModelInterface.update(model::Regressor,
     end
     fitresult = (chain, target_is_multivariate, target_column_names)
     cache = (deepcopy(model), data, history, n_input, n_output)
-    report = (training_losses=history,)
+    report = (training_losses=[loss.data for loss in history],)
 
     return fitresult, cache, report
 

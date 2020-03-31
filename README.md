@@ -58,7 +58,8 @@ end
 Now that we have a builder, we can instantiate an MLJ model. For example:
 
 ```julia
-nn_regressor = NeuralNetworkRegressor(builder=MyNetwork(32, 16), loss=Flux.mse, n=5)
+nn_regressor = NeuralNetworkRegressor(builder=MyNetwork(32, 16), 
+loss=Flux.mse, epochs=5)
 ```
 
 The object `nn_regressor` behaves like any other MLJ model. It can be wrapped inside an MLJ `machine`, and you can do anything you'd do with
@@ -72,6 +73,18 @@ yhat = predict(mach, rows = train)
 and so on.
 
 
+### Loss functions.
+
+The loss function specified by `loss=...` is applied internally by
+Flux and needs to conform to the Flux API. You cannot, for example,
+supply one of MLJ's probablistic loss functions, such as
+`MLJ.cross_entropy` to one of the classifiers.  Unless, you are
+familiar with this API, it is recommended you use one of the [loss
+functions provided by
+Flux](https://github.com/FluxML/Flux.jl/blob/v0.8.3/src/layers/stateless.jl)
+	or leave `loss` unspecified to invoke the default. For a binary classification problem you might also consider `Flux.binarycrossentropy`, while for a classification problem with more than two classes (most image problems) consider `Flux.logitbinarycrossentropy`, as these have better numerical stability than vanilla `Flux.crossentropy`. 
+
+
 ### Hyperparameters.
 
 `NeuralNetworkRegressor` and `NeuralNetworkClassifier` have the following hyperparameters:
@@ -82,7 +95,7 @@ and so on.
 2. `optimiser`: The optimiser to use for training. Default =
    `Flux.ADAM()`
 
-3. `loss`: The loss function used. Default = `Flux.mse`
+3. `loss`: The loss function used for training. Default = `Flux.mse` (regressors) and `Flux.crossentropy` (classifiers)
 
 4. `n_epochs`: Number of epochs to train for. Default = `10`
 

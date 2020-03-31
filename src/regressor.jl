@@ -114,7 +114,7 @@ function MLJModelInterface.predict(model::Union{NeuralNetworkRegressor, Multivar
     Xnew_ = MLJModelInterface.matrix(Xnew_)
 
     if ismulti
-        ypred = [map(x->x.data, chain(values.(Xnew_[i, :]))) for i in 1:size(Xnew_, 1)]
+        ypred = [chain(values.(Xnew_[i, :])) for i in 1:size(Xnew_, 1)]
         return MLJModelInterface.table(reduce(hcat, y for y in ypred)', names=target_columns) 
     else
         return [chain(values.(Xnew_[i, :]))[1] for i in 1:size(Xnew_, 1)]

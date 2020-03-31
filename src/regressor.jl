@@ -2,7 +2,7 @@ mutable struct NeuralNetworkRegressor{B<:Builder,O,L} <: MLJModelInterface.Deter
     builder::B
     optimiser::O    # mutable struct from Flux/src/optimise/optimisers.jl
     loss::L         # can be called as in `loss(yhat, y)`
-    epochs::Int          # number of epochs
+    epochs::Int     # number of epochs
     batch_size::Int # size of a batch
     lambda::Float64 # regularization strength
     alpha::Float64  # regularizaton mix (0 for all l2, 1 for all l1)
@@ -57,9 +57,11 @@ MultitargetNeuralNetworkRegressor(; builder::B   = Linear()
                                        , alpha
                                        , optimiser_changes_trigger_retraining)
 
+const Regressor =
+    Union{NeuralNetworkRegressor, MultitargetNeuralNetworkRegressor}
 
-function collate(model::Union{NeuralNetworkRegressor, MultitargetNeuralNetworkRegressor},
-                 X, y, batch_size)
+function collate(model::Regressor, X, y, batch_size)
+    
 
     row_batches = Base.Iterators.partition(1:length(y), batch_size)
 
@@ -73,9 +75,7 @@ function collate(model::Union{NeuralNetworkRegressor, MultitargetNeuralNetworkRe
     end
 end
 
-function MLJModelInterface.fit(model::Union{NeuralNetworkRegressor, MultitargetNeuralNetworkRegressor},
-                     verbosity::Int,
-                     X, y)
+function MLJModelInterface.fit(model::Regressor, verbosity::Int, X, y)
 
     # When it has no categorical features
     n_input = Tables.schema(X).names |> length
@@ -110,12 +110,12 @@ function MLJModelInterface.predict(model::Union{NeuralNetworkRegressor, Multitar
          fitresult, Xnew_)
 
     chain , ismulti, target_columns = fitresult
-    
+
     Xnew_ = MLJModelInterface.matrix(Xnew_)
 
     if ismulti
         ypred = [map(x->x.data, chain(values.(Xnew_[i, :]))) for i in 1:size(Xnew_, 1)]
-        return MLJModelInterface.table(reduce(hcat, y for y in ypred)', names=target_columns) 
+        return MLJModelInterface.table(reduce(hcat, y for y in ypred)', names=target_columns)
     else
         return [chain(values.(Xnew_[i, :]))[1] for i in 1:size(Xnew_, 1)]
     end
@@ -173,7 +173,7 @@ MLJModelInterface.metadata_model(NeuralNetworkRegressor,
                input=MLJModelInterface.Table(MLJModelInterface.Continuous),
                target=AbstractVector{<:MLJModelInterface.Continuous},
                path="MLJFlux.NeuralNetworkRegressor",
-               descr = "A neural network model for making deterministic predictions of a 
+               descr = "A neural network model for making deterministic predictions of a
                `Continuous` multi-target, presented as a table,  given a table of `Continuous` features. ")
 
 
@@ -181,5 +181,5 @@ MLJModelInterface.metadata_model(MultitargetNeuralNetworkRegressor,
                input=MLJModelInterface.Table(MLJModelInterface.Continuous),
                target=MLJModelInterface.Table(MLJModelInterface.Continuous),
                path="MLJFlux.NeuralNetworkRegressor",
-               descr = "A neural network model for making deterministic predictions of a 
+               descr = "A neural network model for making deterministic predictions of a
                     `Continuous` mutli-target, presented as a table,  given a table of `Continuous` features.")

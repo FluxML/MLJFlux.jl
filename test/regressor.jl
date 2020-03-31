@@ -1,5 +1,31 @@
 # Multitarget NN Regressor
 
+@testset "collate" begin
+
+    # NeuralNetworRegressor:
+    Xmatrix = rand(10, 3)
+    X = MLJBase.table(Xmatrix)
+    y = rand(10)
+    model = MLJFlux.NeuralNetworkRegressor()
+    batch_size= 3
+    @test MLJFlux.collate(model, X, y, batch_size) ==
+        [(Xmatrix'[:,1:3], y[1:3]),
+         (Xmatrix'[:,4:6], y[4:6]),
+         (Xmatrix'[:,7:9], y[7:9]),
+         (Xmatrix'[:,10:10], y[10:10])]
+
+    # MultitargetNeuralNetworRegressor:
+    ymatrix = rand(10, 2)
+    y = MLJBase.table(ymatrix)
+    model = MLJFlux.NeuralNetworkRegressor()
+    batch_size= 3
+    @test MLJFlux.collate(model, X, y, batch_size) ==
+        [(Xmatrix'[:,1:3], ymatrix'[:,1:3]),
+         (Xmatrix'[:,4:6], ymatrix'[:,4:6]),
+         (Xmatrix'[:,7:9], ymatrix'[:,7:9]),
+         (Xmatrix'[:,10:10], ymatrix'[:,10:10])]
+end
+
 N = 200
 X = MLJBase.table(randn(10N, 5))
 

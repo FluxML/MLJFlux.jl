@@ -67,7 +67,7 @@ function MLJModelInterface.fit(model::NeuralNetworkClassifier, verbosity::Int,
 
     cache = (deepcopy(model), data, history)
     fitresult = (chain, target_is_multivariate, y[1])
-    report = (training_losses=history,)
+    report = (training_losses=[loss.data for loss in history])
     return fitresult, cache, report
 end
 
@@ -115,7 +115,7 @@ function MLJModelInterface.update(model::NeuralNetworkClassifier, verbosity::Int
     end
     fitresult = (chain, target_is_multivariate, levels(y))
     cache = (deepcopy(model), data, history)
-    report = (training_losses=history,)
+    report = (training_losses=[loss.data for loss in history])
 
     return fitresult, cache, report
 

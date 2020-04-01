@@ -28,3 +28,4 @@ fitresult, cache, report =
     MLJBase.update(model, 3, fitresult, cache,
                    MLJBase.selectrows(X,train), y[train])
 
+true

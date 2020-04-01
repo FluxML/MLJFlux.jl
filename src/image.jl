@@ -9,7 +9,6 @@ mutable struct ImageClassifier{B<:MLJFlux.Builder,O,L} <: MLJModelInterface.Prob
     optimiser_changes_trigger_retraining::Bool
 end
 
-
 ImageClassifier(; builder::B   = Linear()
               , optimiser::O = Flux.Optimise.ADAM()
               , loss::L      = Flux.crossentropy
@@ -67,7 +66,7 @@ function MLJModelInterface.fit(model::ImageClassifier, verbosity::Int, X_, y_)
     cache = deepcopy(model), data, history
     fitresult = (chain, target_is_multivariate, levels)
 
-    report = (training_losses=history, )
+    report = (training_losses=[loss.data for loss in history])
 
     return fitresult, cache, report
 end
@@ -115,7 +114,7 @@ function MLJModelInterface.update(model::ImageClassifier, verbosity::Int, old_fi
     end
     fitresult = (chain, target_is_multivariate, levels)
     cache = (deepcopy(model), data, history)
-    report = (training_losses=history,)
+    report = (training_losses=[loss.data for loss in history])
 
     return fitresult, cache, report
 

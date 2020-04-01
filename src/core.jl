@@ -92,7 +92,8 @@ function  fit!(chain, optimiser, loss, epochs, batch_size,
         Flux.train!(loss_func, Flux.params(chain), data, optimiser)
         current_loss =
             mean(loss_func(data[i][1], data[i][2]) for i=1:length(data))
-        verbosity < 2 || @info "Loss is $(current_loss)"
+        verbosity < 2 ||
+            @info "Loss is $(round(current_loss.data; sigdigits=4))"
         push!(history, current_loss)
 
         # Early stopping is to be externally controlled.

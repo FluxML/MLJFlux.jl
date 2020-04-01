@@ -105,22 +105,6 @@ function MLJModelInterface.fit(model::Regressor, verbosity::Int, X, y)
 
 end
 
-function MLJModelInterface.predict(model::Regressor, fitresult, Xnew_)
-
-    chain , target_is_multivariate, target_column_names = fitresult
-
-    Xnew_ = MLJModelInterface.matrix(Xnew_)
-
-    if target_is_multivariate
-        ypred = [map(x->x.data, chain(values.(Xnew_[i, :])))
-                 for i in 1:size(Xnew_, 1)]
-        return MLJModelInterface.table(reduce(hcat, y for y in ypred)',
-                                       names=target_column_names)
-    else
-        return [chain(values.(Xnew_[i, :]))[1] for i in 1:size(Xnew_, 1)]
-    end
-end
-
 function MLJModelInterface.update(model::Regressor,
                                   verbosity::Int,
                                   old_fitresult,
@@ -135,7 +119,7 @@ function MLJModelInterface.update(model::Regressor,
         model.optimiser != old_model.optimiser
 
     keep_chain = !optimiser_flag && model.epochs >= old_model.epochs &&
-        MLJModelInterface.is_same_except(model, old_model, :optimizer, :epochs)
+        MLJModelInterface.is_same_except(model, old_model, :optimiser, :epochs)
 
     if keep_chain
         chain = old_chain
@@ -160,6 +144,22 @@ function MLJModelInterface.update(model::Regressor,
 
     return fitresult, cache, report
 
+end
+
+function MLJModelInterface.predict(model::Regressor, fitresult, Xnew_)
+
+    chain , target_is_multivariate, target_column_names = fitresult
+
+    Xnew_ = MLJModelInterface.matrix(Xnew_)
+
+    if target_is_multivariate
+        ypred = [map(x->x.data, chain(values.(Xnew_[i, :])))
+                 for i in 1:size(Xnew_, 1)]
+        return MLJModelInterface.table(reduce(hcat, y for y in ypred)',
+                                       names=target_column_names)
+    else
+        return [chain(values.(Xnew_[i, :]))[1] for i in 1:size(Xnew_, 1)]
+    end
 end
 
 MLJModelInterface.metadata_model(NeuralNetworkRegressor,

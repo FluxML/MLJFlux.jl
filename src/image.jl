@@ -9,7 +9,6 @@ mutable struct ImageClassifier{B<:MLJFlux.Builder,O,L} <: MLJModelInterface.Prob
     optimiser_changes_trigger_retraining::Bool
 end
 
-
 ImageClassifier(; builder::B   = Linear()
               , optimiser::O = Flux.Optimise.ADAM()
               , loss::L      = Flux.crossentropy

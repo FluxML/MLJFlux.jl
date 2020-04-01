@@ -1,17 +1,22 @@
-# using Revise
 using Test
 using Tables
 import MLJBase
 import MLJFlux
 using CategoricalArrays
 import Flux
+import Random
 import Random.seed!
 using Statistics
 seed!(123)
 
-# test equality of optimisers:
-@test Flux.Momentum() == Flux.Momentum()
-@test Flux.Momentum(0.1) != Flux.Momentum(0.2)
+@testset "core" begin
+    include("core.jl")
+end
 
-include("classifier.jl")
-include("regressor.jl")
+@testset "regressor" begin
+    include("regressor.jl")
+end
+
+@testset "classifier" begin
+    include("classifier.jl")
+end

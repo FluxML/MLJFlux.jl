@@ -3,6 +3,8 @@
 Random.seed!(123)
 N = 20
 X = MLJBase.table(randn(Float32, 10N, 5));
+train = 1:7N
+test = (7N+1):10N
 
 @testset "Regressors" begin
 
@@ -26,9 +28,6 @@ X = MLJBase.table(randn(Float32, 10N, 5));
         eval(quote
 
              @info "Testing $($ModelType). "
-
-             train = 1:7N
-             test = (7N+1):10N
 
              model = $ModelType(builder=$builder)
 
@@ -62,7 +61,7 @@ X = MLJBase.table(randn(Float32, 10N, 5));
 
              # is at least a bit better than constant predictor:
              if $ModelType <: MLJFlux.Regressor
-                 goal =0.9*model.loss(truth .- mean(truth), 0)
+                 goal =0.9*model.loss($truth .- mean($truth), 0)
                  if $ModelType <: MLJFlux.MultitargetNeuralNetworkRegressor
                      @test model.loss(Tables.matrix(yhat), $truth) < goal
                  else

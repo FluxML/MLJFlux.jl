@@ -37,8 +37,8 @@ function make_minibatch(X, Y, idxs)
 end
 
 # This will not only group into batches, but also convert to Flux compatible tensors
-function collate(model::ImageClassifier, X, Y, batch_size)
-    mb_idxs = partition(1:length(X), batch_size)
+function collate(model::ImageClassifier, X, Y)
+    mb_idxs = partition(1:length(X), model.batch_size)
     return [make_minibatch(X, Y, i) for i in mb_idxs]
 end
 
@@ -59,8 +59,7 @@ function MLJModelInterface.fit(model::ImageClassifier, verbosity::Int, X_, y_)
     optimiser = deepcopy(model.optimiser)
 
     chain, history = fit!(chain, optimiser, model.loss,
-        model.n, model.batch_size,
-        model.lambda, model.alpha,
+        model.n, model.lambda, model.alpha,
         verbosity, data)
 
     cache = deepcopy(model), data, history

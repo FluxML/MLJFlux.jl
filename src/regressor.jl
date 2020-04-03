@@ -60,9 +60,9 @@ MultitargetNeuralNetworkRegressor(; builder::B   = Linear()
 const Regressor =
     Union{NeuralNetworkRegressor, MultitargetNeuralNetworkRegressor}
 
-function collate(model::Regressor, X, y, batch_size)
+function collate(model::Regressor, X, y)
 
-    row_batches = Base.Iterators.partition(1:nrows(y), batch_size)
+    row_batches = Base.Iterators.partition(1:nrows(y), model.batch_size)
 
     Xmatrix = MLJModelInterface.matrix(X)'
     if Tables.istable(y)
@@ -78,7 +78,7 @@ function MLJModelInterface.fit(model::Regressor, verbosity::Int, X, y)
 
     # (assumes  no categorical features)
     n_input = Tables.schema(X).names |> length
-    data = collate(model, X, y, model.batch_size)
+    data = collate(model, X, y)
 
     target_is_multivariate = Tables.istable(y)
     if target_is_multivariate
@@ -93,9 +93,8 @@ function MLJModelInterface.fit(model::Regressor, verbosity::Int, X, y)
     optimiser = deepcopy(model.optimiser)
 
     chain, history = fit!(chain, optimiser, model.loss,
-                          model.epochs, model.batch_size,
-                          model.lambda, model.alpha,
-                          verbosity, data)
+                          model.epochs, model.lambda, 
+                          model.alpha, verbosity, data)
 
     cache = (deepcopy(model), data, history, n_input, n_output)
     fitresult = (chain, target_is_multivariate, target_column_names)
@@ -126,14 +125,14 @@ function MLJModelInterface.update(model::Regressor,
         epochs = model.epochs - old_model.epochs
     else
         chain = fit(model.builder, n_input, n_output)
-        data = collate(model, X, y, model.batch_size)
+        data = collate(model, X, y)
         epochs = model.epochs
     end
 
     optimiser = deepcopy(model.optimiser)
 
     chain, history = fit!(chain, optimiser, model.loss, epochs,
-                                model.batch_size, model.lambda, model.alpha,
+                                model.lambda, model.alpha,
                                 verbosity, data)
     if keep_chain
         history = vcat(old_history, history)

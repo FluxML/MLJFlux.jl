@@ -19,8 +19,8 @@ end
 
     y = rand(10)
     model = MLJFlux.NeuralNetworkRegressor()
-    batch_size= 3
-    @test MLJFlux.collate(model, X, y, batch_size) ==
+    model.batch_size= 3
+    @test MLJFlux.collate(model, X, y) ==
         [(Xmatrix'[:,1:3], y[1:3]),
          (Xmatrix'[:,4:6], y[4:6]),
          (Xmatrix'[:,7:9], y[7:9]),
@@ -30,14 +30,14 @@ end
     ymatrix = rand(10, 2)
     y = MLJBase.table(ymatrix) # a rowaccess table
     model = MLJFlux.NeuralNetworkRegressor()
-    batch_size= 3
-    @test MLJFlux.collate(model, X, y, batch_size) ==
+    model.batch_size= 3
+    @test MLJFlux.collate(model, X, y) ==
         [(Xmatrix'[:,1:3], ymatrix'[:,1:3]),
          (Xmatrix'[:,4:6], ymatrix'[:,4:6]),
          (Xmatrix'[:,7:9], ymatrix'[:,7:9]),
          (Xmatrix'[:,10:10], ymatrix'[:,10:10])]
     y = Tables.columntable(y) # try a columnaccess table
-    @test MLJFlux.collate(model, X, y, batch_size) ==
+    @test MLJFlux.collate(model, X, y) ==
         [(Xmatrix'[:,1:3], ymatrix'[:,1:3]),
          (Xmatrix'[:,4:6], ymatrix'[:,4:6]),
          (Xmatrix'[:,7:9], ymatrix'[:,7:9]),

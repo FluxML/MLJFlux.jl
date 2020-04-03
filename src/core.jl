@@ -44,7 +44,6 @@ end
          optimiser,
          loss,
          epochs,
-         batch_size,
          lambda,
          alpha,
          verbosity,
@@ -76,7 +75,7 @@ instance `(X, y)` is
 where `l1 = sum(norm, params(chain)` and `l2 = sum(norm, params(chain))`.
 
 """
-function  fit!(chain, optimiser, loss, epochs, batch_size,
+function  fit!(chain, optimiser, loss, epochs,
                lambda, alpha, verbosity, data)
 
     Flux.testmode!(chain, false)

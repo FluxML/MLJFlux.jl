@@ -29,10 +29,9 @@ NeuralNetworkClassifier(; builder::B   = Linear()
                                        )
 
 
-function collate(model::NeuralNetworkClassifier,
-                 X, y, batch_size)
+function collate(model::NeuralNetworkClassifier, X, y)
 
-    row_batches = Base.Iterators.partition(1:length(y), batch_size)
+    row_batches = Base.Iterators.partition(1:length(y), model.batch_size)
 
     levels = y |> first |> MLJModelInterface.classes
     ymatrix = hcat([Flux.onehot(ele, levels) for ele in y]...,)
@@ -55,15 +54,14 @@ function MLJModelInterface.fit(model::NeuralNetworkClassifier, verbosity::Int,
     n_output = length(levels(y))
     chain = fit(model.builder, n_input, n_output)
 
-    data = collate(model, X, y, model.batch_size)
+    data = collate(model, X, y)
     target_is_multivariate = y isa AbstractVector{<:Tuple}
 
     optimiser = deepcopy(model.optimiser)
 
     chain, history = fit!(chain, optimiser, model.loss,
-                          model.epochs, model.batch_size,
-                          model.lambda, model.alpha,
-                          verbosity, data)
+                          model.epochs, model.lambda,
+                          model.alpha, verbosity, data)
 
     cache = (deepcopy(model), data, history)
     fitresult = (chain, target_is_multivariate, y[1])
@@ -102,13 +100,13 @@ function MLJModelInterface.update(model::NeuralNetworkClassifier, verbosity::Int
         n_input = Tables.schema(X).names |> length
         n_output = length(MLJModelInterface.classes(y[1]))
         chain = fit(model.builder, n_input, n_output)
-        data = collate(model, X, y, model.batch_size)
+        data = collate(model, X, y)
         epochs = model.epochs
     end
 
     optimiser = deepcopy(model.optimiser)
     chain, history = fit!(chain, optimiser, model.loss, epochs,
-                                model.batch_size, model.lambda, model.alpha,
+                                model.lambda, model.alpha,
                                 verbosity, data)
     if keep_chain
         history = vcat(old_history, history)

@@ -28,17 +28,18 @@ NeuralNetworkClassifier(; builder::B   = Linear()
                                        , optimiser_changes_trigger_retraining
                                        )
 
-function MLJModelInterface.fit(model::NeuralNetworkClassifier, verbosity::Int,
-                        X, y)
+function MLJModelInterface.fit(model::NeuralNetworkClassifier,
+                               verbosity::Int,
+                               X,
+                               y)
 
-    # When it has no categorical features
+    # (No categorical features)
     n_input = Tables.schema(X).names |> length
-    n_output = length(levels(y))
+    levels = MLJModelInterface.classes(y[1])
+    n_output = length(levels)
     chain = fit(model.builder, n_input, n_output)
 
     data = collate(model, X, y)
-    target_is_multivariate = y isa AbstractVector{<:Tuple}
-
     optimiser = deepcopy(model.optimiser)
 
     chain, history = fit!(chain, optimiser, model.loss,
@@ -46,24 +47,31 @@ function MLJModelInterface.fit(model::NeuralNetworkClassifier, verbosity::Int,
                           model.alpha, verbosity, data)
 
     cache = (deepcopy(model), data, history)
-    fitresult = (chain, target_is_multivariate, y[1])
+    fitresult = (chain, levels)
     report = (training_losses=[loss.data for loss in history])
     return fitresult, cache, report
 end
 
-function MLJModelInterface.predict(model::NeuralNetworkClassifier, fitresult, Xnew_)
-    chain , ismulti, levels = fitresult
-
-    Xnew_ = MLJModelInterface.matrix(Xnew_)
-
-    return [MLJModelInterface.UnivariateFinite(MLJModelInterface.classes(levels), map(x->x.data, Flux.softmax(chain(Xnew_[i, :]))) |> vec) for i in 1:size(Xnew_, 1)]
-
+function MLJModelInterface.predict(model::NeuralNetworkClassifier,
+                                   fitresult,
+                                   Xnew_)
+    chain , levels = fitresult
+    Xnew = MLJModelInterface.matrix(Xnew_)
+    return map(1:size(Xnew, 1)) do i
+        probs = map(x->x.data, Flux.softmax(chain(Xnew[i, :]))) |> vec
+        MLJModelInterface.UnivariateFinite(levels, probs)
+    end
 end
 
-function MLJModelInterface.update(model::NeuralNetworkClassifier, verbosity::Int, old_fitresult, old_cache, X, y)
+function MLJModelInterface.update(model::NeuralNetworkClassifier,
+                                  verbosity::Int,
+                                  old_fitresult,
+                                  old_cache,
+                                  X,
+                                  y)
 
     old_model, data, old_history = old_cache
-    old_chain, target_is_multivariate = old_fitresult
+    old_chain, levels = old_fitresult
 
     keep_chain =  model.epochs >= old_model.epochs &&
         model.loss == old_model.loss &&

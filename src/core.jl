@@ -171,3 +171,31 @@ function nrows(X)
     return length(cols[1])
 end
 nrows(y::AbstractVector) = length(y)
+
+reformat(X) = reformat(X, scitype(X))
+reformat(X, ::Type{<:Table}) = MLJModelInterface.matrix(X)'
+reformat(y, ::Type{<:AbstractVector{<:Continuous}}) = y
+function reformat(y, ::Type{<:AbstractVector{<:Finite}})
+    levels = y |> first |> MLJModelInterface.classes
+    return hcat([Flux.onehot(ele, levels) for ele in y]...,)
+end
+
+get(Xmatrix::AbstractMatrix, b) = Xmatrix[:, b]
+get(y::AbstractVector, b) = y[b]
+
+"""
+    collate(model, X, y)
+
+Return the Flux-friendly data object required by `MLJFlux.fit!`, given
+input `X` and target `y` in the form required by
+`MLJModelInterface.input_scitype(X)` and
+`MLJModelInterface.target_sictype(y)`. (The batch size used is given
+by `model.batch_size`.)
+
+"""
+function collate(model, X, y)
+    row_batches = Base.Iterators.partition(1:nrows(y), model.batch_size)
+    Xmatrix = reformat(X)
+    ymatrix = reformat(y)
+    return [(get(Xmatrix, b), get(ymatrix, b)) for b in row_batches]
+end

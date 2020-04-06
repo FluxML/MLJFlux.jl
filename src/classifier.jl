@@ -28,27 +28,9 @@ NeuralNetworkClassifier(; builder::B   = Linear()
                                        , optimiser_changes_trigger_retraining
                                        )
 
-
-function collate(model::NeuralNetworkClassifier, X, y)
-
-    row_batches = Base.Iterators.partition(1:nrows(y), model.batch_size)
-
-    levels = y |> first |> MLJModelInterface.classes
-    ymatrix = hcat([Flux.onehot(ele, levels) for ele in y]...,)
-
-    Xmatrix = MLJModelInterface.matrix(X)'
-    if y isa AbstractVector{<:Tuple}
-        return [(Xmatrix[:, b], ymatrix[:, b]) for b in row_batches]
-    else
-        return [((Xmatrix[:, b]), ymatrix[:, b]) for b in row_batches]
-    end
-    
-end
-
-
 function MLJModelInterface.fit(model::NeuralNetworkClassifier, verbosity::Int,
                         X, y)
-    
+
     # When it has no categorical features
     n_input = Tables.schema(X).names |> length
     n_output = length(levels(y))
@@ -71,7 +53,7 @@ end
 
 function MLJModelInterface.predict(model::NeuralNetworkClassifier, fitresult, Xnew_)
     chain , ismulti, levels = fitresult
-    
+
     Xnew_ = MLJModelInterface.matrix(Xnew_)
 
     return [MLJModelInterface.UnivariateFinite(MLJModelInterface.classes(levels), map(x->x.data, Flux.softmax(chain(Xnew_[i, :]))) |> vec) for i in 1:size(Xnew_, 1)]
@@ -123,6 +105,5 @@ MLJModelInterface.metadata_model(NeuralNetworkClassifier,
                input=MLJModelInterface.Table(MLJModelInterface.Continuous),
                target=AbstractVector{<:MLJModelInterface.Finite},
                path="MLJFlux.NeuralNetworkClassifier",
-               descr="A neural network model for making probabilistic predictions of a `Mutliclass` 
+               descr="A neural network model for making probabilistic predictions of a `Mutliclass`
                or `OrderedFactor` target, given a table of `Continuous` features. ")
-

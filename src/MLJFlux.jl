@@ -2,6 +2,7 @@ module MLJFlux
 
 import Flux
 import MLJModelInterface
+using ScientificTypes
 import Base.==
 using ProgressMeter
 using CategoricalArrays

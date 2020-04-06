@@ -60,20 +60,6 @@ MultitargetNeuralNetworkRegressor(; builder::B   = Linear()
 const Regressor =
     Union{NeuralNetworkRegressor, MultitargetNeuralNetworkRegressor}
 
-function collate(model::Regressor, X, y)
-
-    row_batches = Base.Iterators.partition(1:nrows(y), model.batch_size)
-
-    Xmatrix = MLJModelInterface.matrix(X)'
-    if Tables.istable(y)
-        ymatrix = MLJModelInterface.matrix(y)'
-        return [(Xmatrix[:, b], ymatrix[:, b]) for b in row_batches]
-    else
-        ymatrix = reduce(hcat, [[tup...] for tup in y])
-        return [((Xmatrix[:, b]), ymatrix[b]) for b in row_batches]
-    end
-end
-
 function MLJModelInterface.fit(model::Regressor, verbosity::Int, X, y)
 
     # (assumes  no categorical features)
@@ -162,8 +148,8 @@ function MLJModelInterface.predict(model::Regressor, fitresult, Xnew_)
 end
 
 MLJModelInterface.metadata_model(NeuralNetworkRegressor,
-               input=MLJModelInterface.Table(MLJModelInterface.Continuous),
-               target=AbstractVector{<:MLJModelInterface.Continuous},
+               input=Table(Continuous),
+               target=AbstractVector{<:Continuous},
                path="MLJFlux.NeuralNetworkRegressor",
                descr="A neural network model for making "*
                      "deterministic predictions of a "*
@@ -171,8 +157,8 @@ MLJModelInterface.metadata_model(NeuralNetworkRegressor,
                      "`Continuous` features. ")
 
 MLJModelInterface.metadata_model(MultitargetNeuralNetworkRegressor,
-               input=MLJModelInterface.Table(MLJModelInterface.Continuous),
-               target=MLJModelInterface.Table(MLJModelInterface.Continuous),
+               input=Table(Continuous),
+               target=Table(Continuous),
                path="MLJFlux.NeuralNetworkRegressor",
                descr = "A neural network model for making "*
                        "deterministic predictions of a "*

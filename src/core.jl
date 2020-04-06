@@ -40,7 +40,7 @@ end
 ## GENERAL METHOD TO OPTIMIZE A CHAIN
 
 """
-    fit!(chain, 
+    fit!(chain,
          optimiser,
          loss,
          epochs,
@@ -156,6 +156,12 @@ end
 
 ## HELPERS
 
+"""
+    nrows(X)
+
+Find the number of rows of `X`, where `X` is an `AbstractVector or
+Tables.jl table.
+"""
 function nrows(X)
     Tables.istable(X) || throw(ArgumentError)
     Tables.columnaccess(X) || return length(collect(X))
@@ -165,4 +171,3 @@ function nrows(X)
     return length(cols[1])
 end
 nrows(y::AbstractVector) = length(y)
-

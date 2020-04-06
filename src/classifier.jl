@@ -31,7 +31,7 @@ NeuralNetworkClassifier(; builder::B   = Linear()
 
 function collate(model::NeuralNetworkClassifier, X, y)
 
-    row_batches = Base.Iterators.partition(1:length(y), model.batch_size)
+    row_batches = Base.Iterators.partition(1:nrows(y), model.batch_size)
 
     levels = y |> first |> MLJModelInterface.classes
     ymatrix = hcat([Flux.onehot(ele, levels) for ele in y]...,)

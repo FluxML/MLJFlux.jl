@@ -1,11 +1,10 @@
 ## NEURAL NETWORK CLASSIFIER
 
-
 @testset "NeuralNetworkClassifier" begin
     seed!(1234)
-    N = 100
+    N = 300
     X = MLJBase.table(rand(Float32, N, 4));
-    ycont = 2*X.x1 - X.x3 + 0.6*rand(N)
+    ycont = 2*X.x1 - X.x3 + 0.1*rand(N)
     m, M = minimum(ycont), maximum(ycont)
     _, a, b, _ = range(m, M, length=4) |> collect
     y = map(ycont) do η
@@ -18,16 +17,14 @@
         end
     end |> categorical;
 
-    builder = MLJFlux.Linear(σ=Flux.sigmoid)
-    optimiser = Flux.Optimise.ADAM(0.001)
+    builder = MLJFlux.Short()
+    optimiser = Flux.Optimise.ADAM(0.01)
 
-    # model = MLJFlux.NeuralNetworkClassifier()
-    # MLJBase.fit(model, 3, X, y)
+    optimiser = Flux.Optimise.ADAM(0.01)
+
+    basictest(MLJFlux.NeuralNetworkClassifier, X, y, builder, optimiser)
 
     train, test = MLJBase.partition(1:N, 0.7)
-
-    # uncomment next line when tests below it are working:
-    basictest(MLJFlux.NeuralNetworkClassifier, X, y, builder, optimiser)
 
     # baseline loss (predict constant probability distribution):
     dict = StatsBase.countmap(y[train])
@@ -39,11 +36,12 @@
     loss_baseline =
         MLJBase.cross_entropy(fill(dist, length(test)), y[test]) |> mean
 
-    # check flux model performance:
-    model = MLJFlux.NeuralNetworkClassifier()
-    mach = fit!(machine(model, X, y), rows=train, verbosity=3)
-    yhat = predict(mach, rows=test)
-    @test MLJBase.cross_entropy(yhat, y[test]) < 0.8*loss_baseline
+    # check flux model is an improvement on predicting constant
+    # distributioin:
+    model = MLJFlux.NeuralNetworkClassifier(epochs=150)
+    mach = fit!(machine(model, X, y), rows=train, verbosity=0)
+    yhat = MLJBase.predict(mach, rows=test);
+    @test mean(MLJBase.cross_entropy(yhat, y[test])) < 0.9*loss_baseline
 end
 
 
@@ -54,7 +52,8 @@ end
 
 
 # builder = MLJFlux.Linear(σ=Flux.sigmoid)
-# model = MLJFlux.NeuralNetworkClassifier(loss=Flux.crossentropy, builder=builder)
+# model = MLJFlux.NeuralNetworkClassifier(loss=Flux.crossentropy,
+#                                         builder=builder)
 
 # fitresult, cache, report =
 #     MLJBase.fit(model, 2, MLJBase.selectrows(X,train), y[train])
@@ -72,5 +71,6 @@ end
 # fitresult, cache, report =
 #     MLJBase.update(model, 3, fitresult, cache,
 #                    MLJBase.selectrows(X,train), y[train])
+
 
 true

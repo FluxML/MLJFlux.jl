@@ -53,6 +53,7 @@ function MLJModelInterface.fit(model::NeuralNetworkClassifier,
     cache = (deepcopy(model), data, history, n_input, n_output)
     fitresult = (chain, levels)
     report = (training_losses=[loss.data for loss in history], )
+
     return fitresult, cache, report
 end
 

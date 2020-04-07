@@ -21,6 +21,7 @@ function basictest(ModelType, X, y, builder, optimiser)
 
          # increase iterations and check update is incremental:
          model.epochs =+ 3
+
          fitresult, cache, report =
          @test_logs((:info, r""), # one line of :info per extra epoch
                     (:info, r""),

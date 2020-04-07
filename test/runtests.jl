@@ -7,6 +7,8 @@ import Flux
 import Random
 import Random.seed!
 using Statistics
+import StatsBase
+
 seed!(123)
 
 include("test_utils.jl")

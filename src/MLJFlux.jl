@@ -2,8 +2,8 @@ module MLJFlux
 
 import Flux
 import MLJModelInterface
+using ScientificTypes
 import Base.==
-using Base.Iterators: partition
 using ProgressMeter
 using CategoricalArrays
 using Tables

@@ -36,10 +36,11 @@ function make_minibatch(X, Y, idxs)
     return (X_batch, Y_batch)
 end
 
-# This will not only group into batches, but also convert to Flux compatible tensors
+# This will not only group into batches, but also convert to Flux
+# compatible tensors
 function collate(model::ImageClassifier, X, Y)
-    mb_idxs = partition(1:length(X), model.batch_size)
-    return [make_minibatch(X, Y, i) for i in mb_idxs]
+    row_batches = Base.iterators.partition(1:length(X), model.batch_size)
+    return [make_minibatch(X, Y, i) for i in row_batches]
 end
 
 function MLJModelInterface.fit(model::ImageClassifier, verbosity::Int, X_, y_)
@@ -120,8 +121,8 @@ function MLJModelInterface.update(model::ImageClassifier, verbosity::Int, old_fi
 end
 
 MLJModelInterface.metadata_model(ImageClassifier,
-               input=MLJModelInterface.Table(MLJModelInterface.Continuous),
-               target=AbstractVector{<:MLJModelInterface.GrayImage},
+               input=AbstractVector{<:MLJModelInterface.GrayImage},
+               target=AbstractVector{<:Multiclass},
                path="MLJFlux.ImageClassifier",
                descr = descr="A neural network model for making probabilistic predictions of a `GreyImage` target,
                 given a table of `Continuous` features. ")

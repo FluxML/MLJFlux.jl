@@ -28,91 +28,77 @@ NeuralNetworkClassifier(; builder::B   = Linear()
                                        , optimiser_changes_trigger_retraining
                                        )
 
+function MLJModelInterface.fit(model::NeuralNetworkClassifier,
+                               verbosity::Int,
+                               X,
+                               y)
 
-function collate(model::NeuralNetworkClassifier, X, y)
-
-    row_batches = Base.Iterators.partition(1:length(y), model.batch_size)
-
-    levels = y |> first |> MLJModelInterface.classes
-    ymatrix = hcat([Flux.onehot(ele, levels) for ele in y]...,)
-
-    Xmatrix = MLJModelInterface.matrix(X)'
-    if y isa AbstractVector{<:Tuple}
-        return [(Xmatrix[:, b], ymatrix[:, b]) for b in row_batches]
-    else
-        return [((Xmatrix[:, b]), ymatrix[:, b]) for b in row_batches]
-    end
-    
-end
-
-
-function MLJModelInterface.fit(model::NeuralNetworkClassifier, verbosity::Int,
-                        X, y)
-    
-    # When it has no categorical features
+    # (No categorical features)
     n_input = Tables.schema(X).names |> length
-    n_output = length(levels(y))
+    levels = MLJModelInterface.classes(y[1])
+    n_output = length(levels)
     chain = fit(model.builder, n_input, n_output)
 
     data = collate(model, X, y)
-    target_is_multivariate = y isa AbstractVector{<:Tuple}
-
     optimiser = deepcopy(model.optimiser)
 
     chain, history = fit!(chain, optimiser, model.loss,
                           model.epochs, model.lambda,
                           model.alpha, verbosity, data)
 
-    cache = (deepcopy(model), data, history)
-    fitresult = (chain, target_is_multivariate, y[1])
+    cache = (deepcopy(model), data, history, n_input, n_output)
+    fitresult = (chain, levels)
     report = (training_losses=[loss.data for loss in history])
     return fitresult, cache, report
 end
 
-function MLJModelInterface.predict(model::NeuralNetworkClassifier, fitresult, Xnew_)
-    chain , ismulti, levels = fitresult
-    
-    Xnew_ = MLJModelInterface.matrix(Xnew_)
-
-    return [MLJModelInterface.UnivariateFinite(MLJModelInterface.classes(levels), map(x->x.data, Flux.softmax(chain(Xnew_[i, :]))) |> vec) for i in 1:size(Xnew_, 1)]
-
+function MLJModelInterface.predict(model::NeuralNetworkClassifier,
+                                   fitresult,
+                                   Xnew_)
+    chain , levels = fitresult
+    Xnew = MLJModelInterface.matrix(Xnew_)
+    return map(1:size(Xnew, 1)) do i
+        probs = map(x->x.data, Flux.softmax(chain(Xnew[i, :]))) |> vec
+        MLJModelInterface.UnivariateFinite(levels, probs)
+    end
 end
 
-function MLJModelInterface.update(model::NeuralNetworkClassifier, verbosity::Int, old_fitresult, old_cache, X, y)
+function MLJModelInterface.update(model::NeuralNetworkClassifier,
+                                  verbosity::Int,
+                                  old_fitresult,
+                                  old_cache,
+                                  X,
+                                  y)
 
-    old_model, data, old_history = old_cache
-    old_chain, target_is_multivariate = old_fitresult
+    old_model, data, old_history, n_input, n_output = old_cache
+    old_chain, levels = old_fitresult
 
-    keep_chain =  model.epochs >= old_model.epochs &&
-        model.loss == old_model.loss &&
-        model.batch_size == old_model.batch_size &&
-        model.lambda == old_model.lambda &&
-        model.alpha == old_model.alpha &&
-        model.builder == old_model.builder &&
-        #model.embedding_choice == old_model.embedding_choice &&
-        (!model.optimiser_changes_trigger_retraining ||
-         model.optimiser == old_model.optimiser)
+    optimiser_flag = model.optimiser_changes_trigger_retraining &&
+        model.optimiser != old_model.optimiser
+
+    keep_chain = !optimiser_flag && model.epochs >= old_model.epochs &&
+        MLJModelInterface.is_same_except(model, old_model, :optimiser, :epochs)
 
     if keep_chain
         chain = old_chain
         epochs = model.epochs - old_model.epochs
     else
-        n_input = Tables.schema(X).names |> length
-        n_output = length(MLJModelInterface.classes(y[1]))
         chain = fit(model.builder, n_input, n_output)
         data = collate(model, X, y)
         epochs = model.epochs
     end
 
     optimiser = deepcopy(model.optimiser)
+
     chain, history = fit!(chain, optimiser, model.loss, epochs,
                                 model.lambda, model.alpha,
                                 verbosity, data)
     if keep_chain
         history = vcat(old_history, history)
     end
-    fitresult = (chain, target_is_multivariate, levels(y))
-    cache = (deepcopy(model), data, history)
+
+    fitresult = (chain, levels)
+    cache = (deepcopy(model), data, history, n_input, n_output)
     report = (training_losses=[loss.data for loss in history])
 
     return fitresult, cache, report
@@ -120,9 +106,10 @@ function MLJModelInterface.update(model::NeuralNetworkClassifier, verbosity::Int
 end
 
 MLJModelInterface.metadata_model(NeuralNetworkClassifier,
-               input=MLJModelInterface.Table(MLJModelInterface.Continuous),
-               target=AbstractVector{<:MLJModelInterface.Finite},
-               path="MLJFlux.NeuralNetworkClassifier",
-               descr="A neural network model for making probabilistic predictions of a `Mutliclass` 
-               or `OrderedFactor` target, given a table of `Continuous` features. ")
-
+                                 input=Table(Continuous),
+                                 target=AbstractVector{<:Finite},
+                                 path="MLJFlux.NeuralNetworkClassifier",
+                                 descr="A neural network model for making "*
+                                 "probabilistic predictions of a "*
+                                 "`Mutliclass` or `OrderedFactor` target, "*
+                                 "given a table of `Continuous` features. ")

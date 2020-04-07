@@ -1,6 +1,6 @@
 using Test
 using Tables
-import MLJBase
+using MLJBase
 import MLJFlux
 using CategoricalArrays
 import Flux
@@ -8,6 +8,8 @@ import Random
 import Random.seed!
 using Statistics
 seed!(123)
+
+include("test_utils.jl")
 
 @testset "core" begin
     include("core.jl")

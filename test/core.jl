@@ -60,7 +60,8 @@ end
 
     Xmatrix = rand(100, 5)
     X = MLJBase.table(Xmatrix)
-    y = Xmatrix[:, 1] + Xmatrix[:, 2] + Xmatrix[:, 3] + Xmatrix[:, 4] + Xmatrix[:, 5]
+    y = Xmatrix[:, 1] + Xmatrix[:, 2] + Xmatrix[:, 3] +
+        Xmatrix[:, 4] + Xmatrix[:, 5]
 
     data = [(Xmatrix'[:,1:20], y[1:20]),
             (Xmatrix'[:,21:40], y[21:40]),
@@ -68,11 +69,15 @@ end
             (Xmatrix'[:,61:80], y[61:80]),
             (Xmatrix'[:, 81:100], y[81:100])]
 
-    initial_chain = Flux.Chain(Flux.Dense(5, 15), Flux.Dropout(0.2), Flux.Dense(15, 8), Flux.Dense(8, 1))
+    initial_chain = Flux.Chain(Flux.Dense(5, 15),
+                               Flux.Dropout(0.2),
+                               Flux.Dense(15, 8),
+                               Flux.Dense(8, 1))
     test_input = rand(5, 1)
 
-    chain, history = MLJFlux.fit!(initial_chain, Flux.Optimise.ADAM(0.001), Flux.mse, 10,
-                0, 0, 3, data)
+    chain, history = MLJFlux.fit!(initial_chain,
+                                  Flux.Optimise.ADAM(0.001),
+                                  Flux.mse, 10, 0, 0, 3, data)
 
     @test length(history) == 10
 

@@ -174,6 +174,8 @@ nrows(y::AbstractVector) = length(y)
 
 reformat(X) = reformat(X, scitype(X))
 reformat(X, ::Type{<:Table}) = MLJModelInterface.matrix(X)'
+reformat(X, ::Type{<:AbstractVector{<:GrayImage}}) = X
+
 reformat(y, ::Type{<:AbstractVector{<:Continuous}}) = y
 function reformat(y, ::Type{<:AbstractVector{<:Finite}})
     levels = y |> first |> MLJModelInterface.classes
@@ -182,6 +184,14 @@ end
 
 get(Xmatrix::AbstractMatrix, b) = Xmatrix[:, b]
 get(y::AbstractVector, b) = y[b]
+
+function get(X::AbstractVector{<:AbstractMatrix{<:GrayImage}}, b)
+    ret = Array{Float32}(undef, size(first(X)..., 1, length(b))
+    for i in eachindex(b)
+        ret[:, :, :, i] = Float32.(X[b[i]])
+    end
+    return ret
+end
 
 """
     collate(model, X, y)

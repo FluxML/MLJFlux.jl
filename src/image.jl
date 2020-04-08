@@ -1,8 +1,9 @@
-mutable struct ImageClassifier{B<:MLJFlux.Builder,O,L} <: MLJModelInterface.Probabilistic
+mutable struct ImageClassifier{B<:MLJFlux.Builder,F,O,L} <: MLJModelInterface.Probabilistic
     builder::B
+    finalizer::F
     optimiser::O    # mutable struct from Flux/src/optimise/optimisers.jl
     loss::L         # can be called as in `loss(yhat, y)`
-    n::Int          # number of epochs
+    epochs::Int          # number of epochs
     batch_size::Int # size of a batch
     lambda::Float64 # regularization strength
     alpha::Float64  # regularizaton mix (0 for all l2, 1 for all l1)
@@ -10,23 +11,26 @@ mutable struct ImageClassifier{B<:MLJFlux.Builder,O,L} <: MLJModelInterface.Prob
 end
 
 ImageClassifier(; builder::B   = Linear()
+              , finalizer::F = Flux.softmax
               , optimiser::O = Flux.Optimise.ADAM()
               , loss::L      = Flux.crossentropy
-              , n            = 10
+              , epochs       = 10
               , batch_size   = 1
               , lambda       = 0
               , alpha        = 0
               , optimiser_changes_trigger_retraining = false) where {B,O,L} =
                   ImageClassifier{B,O,L}(builder
+                                       , finalizer
                                        , optimiser
                                        , loss
-                                       , n
+                                       , epochs
                                        , batch_size
                                        , lambda
                                        , alpha
                                        , optimiser_changes_trigger_retraining)
 
 
+                                       #=
 function make_minibatch(X, Y, idxs)
     X_batch = Array{Float32}(undef, size(X[1])..., 1, length(idxs))
     for i in 1:length(idxs)
@@ -42,20 +46,17 @@ function collate(model::ImageClassifier, X, Y)
     row_batches = Base.iterators.partition(1:length(X), model.batch_size)
     return [make_minibatch(X, Y, i) for i in row_batches]
 end
+=#
 
 function MLJModelInterface.fit(model::ImageClassifier, verbosity::Int, X_, y_)
 
     data = collate(model, X_, y_, model.batch_size)
 
-    target_is_multivariate = y_ isa AbstractVector{<:Tuple}
-
-
-
     a_target_element = first(y_)
     levels = MLJModelInterface.classes(a_target_element)
     n_output = length(levels)
     n_input = size(X_[1])
-    chain = fit(model.builder,n_input, n_output)
+    chain = Flux.Chain(fit(model.builder,n_input, n_output), model.finalizer)
 
     optimiser = deepcopy(model.optimiser)
 
@@ -64,7 +65,7 @@ function MLJModelInterface.fit(model::ImageClassifier, verbosity::Int, X_, y_)
         verbosity, data)
 
     cache = deepcopy(model), data, history
-    fitresult = (chain, target_is_multivariate, levels)
+    fitresult = (chain, levels)
 
     report = (training_losses=[loss.data for loss in history])
 
@@ -72,11 +73,8 @@ function MLJModelInterface.fit(model::ImageClassifier, verbosity::Int, X_, y_)
 end
 
 function MLJModelInterface.predict(model::ImageClassifier, fitresult, Xnew)
-    chain = fitresult[1]
-    ismulti = fitresult[2]
-    levels = fitresult[3]
-    return [MLJModelInterface.UnivariateFinite(levels, Flux.softmax(chain(Float64.(Xnew[i])).data)) for i in 1:length(Xnew)]
-
+    chain, levels = fitresult
+    [MLJModelInterface.UnivariateFinite(levels, map(x -> x.data, chain(Xnew[:, :, :, i]))) for i in 1:size(Xnew, 4)]
 end
 
 function MLJModelInterface.update(model::ImageClassifier, verbosity::Int, old_fitresult, old_cache, X, y)

@@ -1,4 +1,4 @@
-# To run a battery of tests checking: (i) fit, predict, update calls
+# To run a battery of tests checking: (i) fit, predict & update calls
 # work; (ii) update logic is correct; (iii) training loss after 10
 # epochs is 70% or better than initial loss:
 function basictest(ModelType, X, y, builder, optimiser)
@@ -19,8 +19,9 @@ function basictest(ModelType, X, y, builder, optimiser)
          # test improvement in training loss:
          history[end] < 0.7*history[1]
 
-         # Update model without retraining and check no restart:
-         model.epochs = 3
+         # increase iterations and check update is incremental:
+         model.epochs =+ 3
+
          fitresult, cache, report =
          @test_logs((:info, r""), # one line of :info per extra epoch
                     (:info, r""),
@@ -59,5 +60,6 @@ function basictest(ModelType, X, y, builder, optimiser)
                     MLJBase.update(model, 2, fitresult, cache, $X, $y));
 
          end)
+
     return nothing
 end

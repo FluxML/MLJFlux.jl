@@ -1,5 +1,6 @@
-mutable struct NeuralNetworkClassifier{B<:Builder,O,L} <: MLJModelInterface.Probabilistic
+mutable struct NeuralNetworkClassifier{B<:Builder,F,O,L} <: MLJModelInterface.Probabilistic
     builder::B
+    finaliser::F
     optimiser::O    # mutable struct from Flux/src/optimise/optimisers.jl
     loss::L         # can be called as in `loss(yhat, y)`
     epochs::Int          # number of epochs
@@ -9,7 +10,8 @@ mutable struct NeuralNetworkClassifier{B<:Builder,O,L} <: MLJModelInterface.Prob
     optimiser_changes_trigger_retraining::Bool
 end
 
-NeuralNetworkClassifier(; builder::B   = Linear()
+NeuralNetworkClassifier(; builder::B   = Short()
+              , finaliser::F = Flux.softmax
               , optimiser::O = Flux.Optimise.ADAM()
               , loss::L      = Flux.crossentropy
               , epochs       = 10
@@ -17,8 +19,9 @@ NeuralNetworkClassifier(; builder::B   = Linear()
               , lambda       = 0
               , alpha        = 0
               , optimiser_changes_trigger_retraining = false
-              ) where {B,O,L} =
-                  NeuralNetworkClassifier{B,O,L}(builder
+              ) where {B,F,O,L} =
+                  NeuralNetworkClassifier{B,F,O,L}(builder
+                                       , finaliser
                                        , optimiser
                                        , loss
                                        , epochs
@@ -35,9 +38,10 @@ function MLJModelInterface.fit(model::NeuralNetworkClassifier,
 
     # (No categorical features)
     n_input = Tables.schema(X).names |> length
-    levels = MLJModelInterface.classes(y[1])
+    levels = MLJModelInterface.classes(y[1]) 
     n_output = length(levels)
-    chain = fit(model.builder, n_input, n_output)
+    chain = Flux.Chain(fit(model.builder, n_input, n_output),
+                       model.finaliser)
 
     data = collate(model, X, y)
     optimiser = deepcopy(model.optimiser)
@@ -48,7 +52,8 @@ function MLJModelInterface.fit(model::NeuralNetworkClassifier,
 
     cache = (deepcopy(model), data, history, n_input, n_output)
     fitresult = (chain, levels)
-    report = (training_losses=[loss.data for loss in history])
+    report = (training_losses=[loss.data for loss in history], )
+
     return fitresult, cache, report
 end
 
@@ -58,7 +63,7 @@ function MLJModelInterface.predict(model::NeuralNetworkClassifier,
     chain , levels = fitresult
     Xnew = MLJModelInterface.matrix(Xnew_)
     return map(1:size(Xnew, 1)) do i
-        probs = map(x->x.data, Flux.softmax(chain(Xnew[i, :]))) |> vec
+        probs = map(x->x.data, chain(Xnew[i, :])) |> vec
         MLJModelInterface.UnivariateFinite(levels, probs)
     end
 end
@@ -83,7 +88,8 @@ function MLJModelInterface.update(model::NeuralNetworkClassifier,
         chain = old_chain
         epochs = model.epochs - old_model.epochs
     else
-        chain = fit(model.builder, n_input, n_output)
+        chain = Flux.Chain(fit(model.builder, n_input, n_output),
+                           model.finaliser)
         data = collate(model, X, y)
         epochs = model.epochs
     end
@@ -99,7 +105,7 @@ function MLJModelInterface.update(model::NeuralNetworkClassifier,
 
     fitresult = (chain, levels)
     cache = (deepcopy(model), data, history, n_input, n_output)
-    report = (training_losses=[loss.data for loss in history])
+    report = (training_losses=[loss.data for loss in history], )
 
     return fitresult, cache, report
 

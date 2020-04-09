@@ -24,3 +24,7 @@ end
 @testset "classifier" begin
     include("classifier.jl")
 end
+
+@testset "image" begin
+    include("image.jl")
+end

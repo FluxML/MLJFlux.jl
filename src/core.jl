@@ -174,7 +174,7 @@ nrows(y::AbstractVector) = length(y)
 
 reformat(X) = reformat(X, scitype(X))
 reformat(X, ::Type{<:Table}) = MLJModelInterface.matrix(X)'
-reformat(X, ::Type{<:AbstractVector{<:GrayImage}}) = X
+reformat(X, ::Type{AbstractArray{AbstractArray{T,3},1}} where T) = X
 
 reformat(y, ::Type{<:AbstractVector{<:Continuous}}) = y
 function reformat(y, ::Type{<:AbstractVector{<:Finite}})
@@ -182,13 +182,24 @@ function reformat(y, ::Type{<:AbstractVector{<:Finite}})
     return hcat([Flux.onehot(ele, levels) for ele in y]...,)
 end
 
+function reformat(y, ::Type{<:AbstractVector{<:Count}})
+    levels = y |> first |> MLJModelInterface.classes
+    return hcat([Flux.onehot(ele, levels) for ele in y]...,)
+end
+
+function reformat(y, ::Type{<:AbstractVector{<:Multiclass}})
+    levels = y |> first |> MLJModelInterface.classes
+    return hcat([Flux.onehot(ele, levels) for ele in y]...,)
+end
+
 get(Xmatrix::AbstractMatrix, b) = Xmatrix[:, b]
 get(y::AbstractVector, b) = y[b]
 
-function get(X::AbstractVector{<:AbstractMatrix{<:GrayImage}}, b)
-    ret = Array{Float32}(undef, size(first(X)..., 1, length(b))
+# each element in X is a single image of size (w, h, c)
+function get(X::Array{Array{T ,3},1} where T, b)
+    ret = zeros(Float32, size(first(X))..., length(b))
     for i in eachindex(b)
-        ret[:, :, :, i] = Float32.(X[b[i]])
+        ret[:, :, :, i] .= Float32.(X[b[i]])
     end
     return ret
 end
@@ -199,7 +210,7 @@ end
 Return the Flux-friendly data object required by `MLJFlux.fit!`, given
 input `X` and target `y` in the form required by
 `MLJModelInterface.input_scitype(X)` and
-`MLJModelInterface.target_sictype(y)`. (The batch size used is given
+`MLJModelInterface.target_scitype(y)`. (The batch size used is given
 by `model.batch_size`.)
 
 """

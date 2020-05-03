@@ -128,7 +128,7 @@ end
 # Below n or (n1, n2) etc refers to network inputs, while m or (m1,
 # m2) etc refers to outputs.
 
-abstract type Builder <: MLJModelInterface.Model end
+abstract type Builder <: MLJModelInterface.Supervised end
 
 # baby example 1:
 mutable struct Linear <: Builder

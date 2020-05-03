@@ -56,17 +56,18 @@ end
          (Xmatrix'[:,10:10], ymatrix'[:,10:10])]
 
     # ImageClassifier
-    Xmatrix = [rand(Float32, 6,6,1) for i=1:10]
+    imgs = rand(6, 6, 1, 10)
+    Xmatrix = [Gray.(imgs[:, :, 1, idx]) for idx=1:10]
     y = categorical([:a, :b, :a, :a, :b, :a, :a, :a, :b, :a])
     model = MLJFlux.ImageClassifier(batch_size=2)
 
     data = MLJFlux.collate(model, Xmatrix, y)
     @test  first.(data) ==
-        [cat(Xmatrix[1], Xmatrix[2], dims=4),
-        cat(Xmatrix[3], Xmatrix[4], dims=4),
-        cat(Xmatrix[5], Xmatrix[6], dims=4),
-        cat(Xmatrix[7], Xmatrix[8], dims=4),
-        cat(Xmatrix[9], Xmatrix[10], dims=4),
+        [Float32.(cat(Xmatrix[1], Xmatrix[2], dims=4)),
+        Float32.(cat(Xmatrix[3], Xmatrix[4], dims=4)),
+        Float32.(cat(Xmatrix[5], Xmatrix[6], dims=4)),
+        Float32.(cat(Xmatrix[7], Xmatrix[8], dims=4)),
+        Float32.(cat(Xmatrix[9], Xmatrix[10], dims=4)),
         ]
 
     expected_y = [[1 0;0 1], [1 1;0 0], [0 1; 1 0], [1 1;0 0], [0 1; 1 0]]

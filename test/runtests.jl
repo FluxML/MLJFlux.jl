@@ -3,6 +3,7 @@ using Tables
 using MLJBase
 import MLJFlux
 using CategoricalArrays
+using ColorTypes
 import Flux
 import Random
 import Random.seed!

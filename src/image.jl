@@ -57,7 +57,9 @@ end
 # Xnew is an array of 3D values
 function MLJModelInterface.predict(model::ImageClassifier, fitresult, Xnew)
     chain, levels = fitresult
-    [MLJModelInterface.UnivariateFinite(levels, map(x -> x.data, chain(Float32.(Flux.unsqueeze(Xnew[i], 4))))) for i in 1:length(Xnew)]
+    row_batches = Base.Iterators.partition(1:length(Xnew), model.batch_size)
+    x_ = [get(reformat(Xnew), b) for b in row_batches]
+    [MLJModelInterface.UnivariateFinite(levels, map(x -> x.data, chain(x_[i]))) for i in 1:length(x_)]
 end
 
 function MLJModelInterface.update(model::ImageClassifier,

@@ -173,8 +173,40 @@ end
 nrows(y::AbstractVector) = length(y)
 
 reformat(X) = reformat(X, scitype(X))
+
+# Image
+_2d{C} =AbstractArray{C} where C <: Union{Gray, AbstractRGB}
+# Image collections
+
 reformat(X, ::Type{<:Table}) = MLJModelInterface.matrix(X)'
-reformat(X, ::Type{AbstractArray{AbstractArray{T,3},1}} where T) = X
+
+reformat(X, ::Type{GrayImage{W, H}}) where W where H = reshape(Float32.(X), size(X)..., 1)
+
+function reformat(X, ::Type{AbstractArray{GrayImage{W, H},1}}) where W where H
+    ret = zeros(Float32, size(first(X))..., 1, length(X))
+    for idx=1:size(ret, 4)
+        ret[:, :, :, idx] .= reformat(X[idx])
+    end
+    return ret
+end
+
+function reformat(X, ::Type{ColorImage})
+    ret = zeros(Float32, size(X)... , 3)
+    for w = 1:size(X)[1]
+        for h = 1:size(X)[2]
+            ret[w, h, :] .= Float32.([X[w, h].r, X[w, h].g, X[w, h].b])
+        end
+    end
+    return ret 
+end
+
+function reformat(X, ::Type{AbstractArray{ColorImage, 1}})
+    ret = zeros(Float32, size(first(X))..., 3, length(X))
+    for idx=1:size(ret, 4)
+        ret[:, :, :, idx] .= reformat(X[idx])
+    end
+    return ret
+end
 
 reformat(y, ::Type{<:AbstractVector{<:Continuous}}) = y
 function reformat(y, ::Type{<:AbstractVector{<:Finite}})
@@ -196,12 +228,8 @@ get(Xmatrix::AbstractMatrix, b) = Xmatrix[:, b]
 get(y::AbstractVector, b) = y[b]
 
 # each element in X is a single image of size (w, h, c)
-function get(X::Array{Array{T ,3},1} where T, b)
-    ret = zeros(Float32, size(first(X))..., length(b))
-    for i in eachindex(b)
-        ret[:, :, :, i] .= Float32.(X[b[i]])
-    end
-    return ret
+function get(Xmatrix::AbstractArray{T, 4}, b) where T
+    return Xmatrix[:, :, :, b]
 end
 
 """
@@ -214,7 +242,12 @@ input `X` and target `y` in the form required by
 by `model.batch_size`.)
 
 """
-function collate(model, X, y)
+function collate(model, X, y=nothing)
+    if y == nothing
+        row_batches = Base.Iterators.partition(1:length(X), model.batch_size)
+        Xmatrix = reformat(X)
+        return [get(Xmatrix, b) for b in row_batches]
+    end
     row_batches = Base.Iterators.partition(1:nrows(y), model.batch_size)
     Xmatrix = reformat(X)
     ymatrix = reformat(y)

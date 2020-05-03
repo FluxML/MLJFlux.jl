@@ -17,14 +17,16 @@ end
     end
 
     model = MLJFlux.ImageClassifier(builder = mynn((2,2), (2,2)), epochs=10)
-    img, l = [rand(6,6,1) for i=1:50], CategoricalArray(rand(1:5, 50))
+    img, l = [Gray.(rand(6,6)) for i=1:50], CategoricalArray(rand(1:5, 50))
 
     fitresult, cache, report = MLJBase.fit(model, 3, img, l)
 
     pred = MLJBase.predict(model, fitresult, img[1:5])
-    
+  
     model.epochs = 15
     MLJBase.update(model, 3, fitresult, cache, img, l)
+
+    pred = MLJBase.predict(model, fitresult, img[1:5])
 end
 
 @testset "Image MNIST" begin
@@ -35,7 +37,7 @@ end
     # Images here are of dimension 28x28
     # They need to be 28x28x1 according to the 
     # convention.
-    images = [reshape(image, 28, 28, 1) for image in images]
+    images = [Gray.(reshape(image, 28, 28)) for image in images]
     labels = categorical(labels)
 
     function MLJFlux.fit(model::mnistclassifier, ip, op)
@@ -49,7 +51,7 @@ end
     model = MLJFlux.ImageClassifier(builder=mnistclassifier((3,3), 2, (3,3), 1))
 
     fitresult, cache, report = MLJBase.fit(model, 3, images[1:500], labels[1:500])
+    pred = MLJBase.predict(model, fitresult, images[1:5])
 
 end
-
 true

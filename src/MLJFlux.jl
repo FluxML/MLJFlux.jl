@@ -8,6 +8,7 @@ using ProgressMeter
 using CategoricalArrays
 using Tables
 using Statistics
+using ColorTypes
 
 include("core.jl")
 include("regressor.jl")

@@ -143,7 +143,7 @@ function MLJModelInterface.predict(model::Regressor, fitresult, Xnew_)
         return MLJModelInterface.table(reduce(hcat, y for y in ypred)',
                                        names=target_column_names)
     else
-        return [chain(values.(Xnew_[i, :]))[1] for i in 1:size(Xnew_, 1)]
+        return [chain(values.(Xnew_[i, :]))[1].data for i in 1:size(Xnew_, 1)]
     end
 end
 

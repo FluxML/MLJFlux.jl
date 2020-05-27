@@ -56,8 +56,7 @@ end
          (Xmatrix'[:,10:10], ymatrix'[:,10:10])]
 
     # ImageClassifier
-    imgs = rand(6, 6, 1, 10)
-    Xmatrix = [Gray.(imgs[:, :, 1, idx]) for idx=1:10]
+    Xmatrix = coerce(rand(6, 6, 1, 10), GrayImage)
     y = categorical([:a, :b, :a, :a, :b, :a, :a, :a, :b, :a])
     model = MLJFlux.ImageClassifier(batch_size=2)
 

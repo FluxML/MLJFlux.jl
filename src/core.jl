@@ -174,15 +174,18 @@ nrows(y::AbstractVector) = length(y)
 
 reformat(X) = reformat(X, scitype(X))
 
-# Image
-_2d{C} =AbstractArray{C} where C <: Union{Gray, AbstractRGB}
-# Image collections
+# ---------------------------------
+# Reformatting tables
 
 reformat(X, ::Type{<:Table}) = MLJModelInterface.matrix(X)'
 
-reformat(X, ::Type{GrayImage{W, H}}) where W where H = reshape(Float32.(X), size(X)..., 1)
+# ---------------------------------
+# Reformatting images
 
-function reformat(X, ::Type{AbstractArray{GrayImage{W, H},1}}) where W where H
+reformat(X, ::Type{<:GrayImage}) =
+    reshape(Float32.(X), size(X)..., 1)
+
+function reformat(X, ::Type{<:AbstractVector{<:GrayImage}})
     ret = zeros(Float32, size(first(X))..., 1, length(X))
     for idx=1:size(ret, 4)
         ret[:, :, :, idx] .= reformat(X[idx])
@@ -190,23 +193,26 @@ function reformat(X, ::Type{AbstractArray{GrayImage{W, H},1}}) where W where H
     return ret
 end
 
-function reformat(X, ::Type{ColorImage})
+function reformat(X, ::Type{<:ColorImage})
     ret = zeros(Float32, size(X)... , 3)
     for w = 1:size(X)[1]
         for h = 1:size(X)[2]
             ret[w, h, :] .= Float32.([X[w, h].r, X[w, h].g, X[w, h].b])
         end
     end
-    return ret 
+    return ret
 end
 
-function reformat(X, ::Type{AbstractArray{ColorImage, 1}})
+function reformat(X, ::Type{<:AbstractVector{<:ColorImage}})
     ret = zeros(Float32, size(first(X))..., 3, length(X))
     for idx=1:size(ret, 4)
         ret[:, :, :, idx] .= reformat(X[idx])
     end
     return ret
 end
+
+# ------------------------------------------------------------
+# Reformatting vectors of "scalar" types
 
 reformat(y, ::Type{<:AbstractVector{<:Continuous}}) = y
 function reformat(y, ::Type{<:AbstractVector{<:Finite}})
@@ -224,13 +230,12 @@ function reformat(y, ::Type{<:AbstractVector{<:Multiclass}})
     return hcat([Flux.onehot(ele, levels) for ele in y]...,)
 end
 
-get(Xmatrix::AbstractMatrix, b) = Xmatrix[:, b]
-get(y::AbstractVector, b) = y[b]
+_get(Xmatrix::AbstractMatrix, b) = Xmatrix[:, b]
+_get(y::AbstractVector, b) = y[b]
 
 # each element in X is a single image of size (w, h, c)
-function get(Xmatrix::AbstractArray{T, 4}, b) where T
-    return Xmatrix[:, :, :, b]
-end
+_get(X::AbstractArray{<:Any, 4}, b) = X[:, :, :, b]
+
 
 """
     collate(model, X, y)
@@ -251,5 +256,5 @@ function collate(model, X, y=nothing)
     row_batches = Base.Iterators.partition(1:nrows(y), model.batch_size)
     Xmatrix = reformat(X)
     ymatrix = reformat(y)
-    return [(get(Xmatrix, b), get(ymatrix, b)) for b in row_batches]
+    return [(_get(Xmatrix, b), _get(ymatrix, b)) for b in row_batches]
 end

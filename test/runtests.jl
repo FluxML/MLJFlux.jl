@@ -9,6 +9,7 @@ import Random
 import Random.seed!
 using Statistics
 import StatsBase
+using MLJScientificTypes
 
 seed!(123)
 

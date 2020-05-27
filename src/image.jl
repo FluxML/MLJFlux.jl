@@ -38,7 +38,8 @@ function MLJModelInterface.fit(model::ImageClassifier, verbosity::Int, X_, y_)
     levels = y_ |> first |> MLJModelInterface.classes
     n_output = length(levels)
     n_input = size(X_[1])
-    chain = Flux.Chain(fit(model.builder,n_input, n_output), model.finaliser)
+
+    chain = Flux.Chain(fit(model.builder, n_input, n_output), model.finaliser)
 
     optimiser = deepcopy(model.optimiser)
 
@@ -57,9 +58,15 @@ end
 # Xnew is an array of 3D values
 function MLJModelInterface.predict(model::ImageClassifier, fitresult, Xnew)
     chain, levels = fitresult
-    row_batches = Base.Iterators.partition(1:length(Xnew), model.batch_size)
-    x_ = [get(reformat(Xnew), b) for b in row_batches]
-    [MLJModelInterface.UnivariateFinite(levels, map(x -> x.data, chain(x_[i]))) for i in 1:length(x_)]
+    X = reformat(Xnew)
+    [MLJModelInterface.UnivariateFinite(
+        levels,
+    map(x -> x.data,
+        chain(X[:,:,:,i])))
+        # next two lines were Ayush:
+        # map(x -> x.data, chain(Float32.(Flux.unsqueeze(Xnew[i], 4)))))
+        # for i in 1:length(Xnew)]
+        for i in 1:size(X, 4)]
 end
 
 function MLJModelInterface.update(model::ImageClassifier,

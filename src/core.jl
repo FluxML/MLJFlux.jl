@@ -247,12 +247,7 @@ input `X` and target `y` in the form required by
 by `model.batch_size`.)
 
 """
-function collate(model, X, y=nothing)
-    if y == nothing
-        row_batches = Base.Iterators.partition(1:length(X), model.batch_size)
-        Xmatrix = reformat(X)
-        return [get(Xmatrix, b) for b in row_batches]
-    end
+function collate(model, X, y)
     row_batches = Base.Iterators.partition(1:nrows(y), model.batch_size)
     Xmatrix = reformat(X)
     ymatrix = reformat(y)

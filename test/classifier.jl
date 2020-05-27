@@ -6,7 +6,7 @@
     X = MLJBase.table(rand(Float32, N, 4));
     ycont = 2*X.x1 - X.x3 + 0.1*rand(N)
     m, M = minimum(ycont), maximum(ycont)
-    _, a, b, _ = range(m, M, length=4) |> collect
+    _, a, b, _ = range(m, stop=M, length=4) |> collect
     y = map(ycont) do η
         if η < 0.9*a
             :a

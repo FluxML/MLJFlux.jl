@@ -31,12 +31,12 @@ end
 
     fitresult, cache, report = MLJBase.fit(model, 3, images, labels)
 
-    pred = MLJBase.predict(model, fitresult, images[1:5])
+    pred = MLJBase.predict(model, fitresult, images[1:6])
 
     model.epochs = 15
     MLJBase.update(model, 3, fitresult, cache, images, labels)
 
-    pred = MLJBase.predict(model, fitresult, images[1:5])
+    pred = MLJBase.predict(model, fitresult, images[1:6])
 
 end
 
@@ -45,18 +45,24 @@ end
 
     images, labels = MNIST.images(), MNIST.labels()
 
-    # Images here are of dimension 28x28
-    # They need to be 28x28x1 according to the
-    # convention.
-    images = [Gray.(reshape(image, 28, 28)) for image in images]
     labels = categorical(labels)
 
-    function MLJFlux.fit(model::mnistclassifier, ip, op)
-        dense_layers = ip[1:2] .- model.kernel1 .+ 1 .- model.kernel2 .+ 1 |> prod
+    function flatten(x::AbstractArray)
+        return reshape(x, :, size(x)[end])
+    end
 
-        return Flux.Chain(Flux.Conv(model.kernel1, 1=>model.filters1),
-                            Flux.Conv(model.kernel2, model.filters1=>model.filters2), vec,
-                                Flux.Dense(dense_layers, op))
+    function MLJFlux.fit(model::mnistclassifier, ip, op)
+        cnn_output_size = [3,3,32]	
+
+        return Chain(
+        Conv((3, 3), 1=>16, pad=(1,1), relu),
+        MaxPool((2,2)),
+        Conv((3, 3), 16=>32, pad=(1,1), relu),
+        MaxPool((2,2)),
+        Conv((3, 3), 32=>32, pad=(1,1), relu),
+        MaxPool((2,2)),
+        flatten,
+        Dense(prod(cnn_output_size), 10))
     end
 
     model = MLJFlux.ImageClassifier(builder=mnistclassifier((3,3), 2, (3,3), 1))

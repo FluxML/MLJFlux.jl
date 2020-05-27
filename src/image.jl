@@ -61,12 +61,9 @@ function MLJModelInterface.predict(model::ImageClassifier, fitresult, Xnew)
     X = reformat(Xnew)
     [MLJModelInterface.UnivariateFinite(
         levels,
-    map(x -> x.data,
-        chain(X[:,:,:,i])))
-        # next two lines were Ayush:
-        # map(x -> x.data, chain(Float32.(Flux.unsqueeze(Xnew[i], 4)))))
-        # for i in 1:length(Xnew)]
-        for i in 1:size(X, 4)]
+    vec(map(x -> x.data,
+        chain(X[:,:,:,idx:idx]))))
+        for idx=1:length(Xnew)]
 end
 
 function MLJModelInterface.update(model::ImageClassifier,

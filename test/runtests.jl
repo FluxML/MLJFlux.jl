@@ -4,7 +4,7 @@ using MLJBase
 import MLJFlux
 using CategoricalArrays
 using ColorTypes
-import Flux
+using Flux
 import Random
 import Random.seed!
 using Statistics

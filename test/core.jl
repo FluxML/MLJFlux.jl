@@ -110,5 +110,18 @@ end
 
 end
 
+@testset "dropout" begin
+    model = MLJFlux.Short()
+    chain = MLJFlux.fit(model, 5, 1)
+
+    input = rand(5,1)
+    # At the moment, Dropout is active:
+    @test chain(input) != chain(input)
+
+    # This should deactivate dropout
+    Flux.testmode!(chain, true)
+
+    @test chain(input) == chain(input)
+end
 
 true

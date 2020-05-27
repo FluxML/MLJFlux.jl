@@ -37,7 +37,7 @@ end
     @test last.(data) ==
         [[1 0 1; 0 1 0], [1 0 1; 0 1 0],
          [1 1 0; 0 0 1], reshape([1; 0], (2,1))]
-
+ 
     # MultitargetNeuralNetworRegressor:
     ymatrix = rand(10, 2)
     y = MLJBase.table(ymatrix) # a rowaccess table
@@ -56,7 +56,7 @@ end
          (Xmatrix'[:,10:10], ymatrix'[:,10:10])]
 
     # ImageClassifier
-    Xmatrix = coerce(rand(6,6, 1, 10), GrayImage)
+    Xmatrix = coerce(rand(6, 6, 1, 10), GrayImage)
     y = categorical([:a, :b, :a, :a, :b, :a, :a, :a, :b, :a])
     model = MLJFlux.ImageClassifier(batch_size=2)
 

@@ -15,7 +15,7 @@ end
     MLJFlux.fit(model::mynn, ip, op) =
         Flux.Chain(Flux.Conv(model.kernel1, 1=>2),
                    Flux.Conv(model.kernel2, 2=>1),
-                   vec,
+                   x->reshape(x, :, size(x)[end]),
                    Flux.Dense(16, op))
 
     builder = mynn((2,2), (2,2))

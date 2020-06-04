@@ -50,7 +50,7 @@ function MLJModelInterface.fit(model::ImageClassifier, verbosity::Int, X_, y_)
     cache = deepcopy(model), data, history, n_input, n_output
     fitresult = (chain, levels)
 
-    report = (training_losses=[loss.data for loss in history])
+    report = (training_losses=[loss.data for loss in history], )
 
     return fitresult, cache, report
 end
@@ -89,6 +89,7 @@ function MLJModelInterface.update(model::ImageClassifier,
         chain = Flux.Chain(fit(model.builder, n_input, n_output),
                            model.finaliser)
         data = collate(model, X, y)
+        @warn "cold restart" typeof(data)
         epochs = model.epochs
     end
 

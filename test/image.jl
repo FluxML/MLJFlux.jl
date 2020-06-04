@@ -18,7 +18,8 @@ end
                    vec,
                    Flux.Dense(16, op))
 
-    model = MLJFlux.ImageClassifier(builder = mynn((2,2), (2,2)), epochs=10)
+    builder = mynn((2,2), (2,2))
+    model = MLJFlux.ImageClassifier(builder=builder, epochs=10)
 
     # collection of gray images as a 4D array in WHCN format:
     raw_images = rand(6, 6, 1, 50);
@@ -38,6 +39,14 @@ end
 
     pred = MLJBase.predict(model, fitresult, images[1:6])
 
+    # try with batch_size > 1:
+    model = MLJFlux.ImageClassifier(builder=builder, epochs=10, batch_size=2)
+    fitresult, cache, report = MLJBase.fit(model, 3, images, labels)
+
+    # tests update logic, etc (see test_utililites.jl):
+    @test_broken basictest(MLJFlux.ImageClassifier, images, labels,
+                           model.builder, model.optimiser)
+
 end
 
 @testset "Image MNIST" begin
@@ -52,7 +61,7 @@ end
     end
 
     function MLJFlux.fit(model::mnistclassifier, ip, op)
-        cnn_output_size = [3,3,32]	
+        cnn_output_size = [3,3,32]
 
         return Chain(
         Conv((3, 3), 1=>16, pad=(1,1), relu),

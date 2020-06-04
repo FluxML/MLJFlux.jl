@@ -61,5 +61,5 @@ function basictest(ModelType, X, y, builder, optimiser)
 
          end)
 
-    return nothing
+    return true
 end

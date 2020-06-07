@@ -1,7 +1,7 @@
 # To run a battery of tests checking: (i) fit, predict & update calls
 # work; (ii) update logic is correct; (iii) training loss after 10
 # epochs is 80% or better than initial loss:
-function basictest(ModelType, X, y, builder, optimiser)
+function basictest(ModelType, X, y, builder, optimiser, threshold)
 
     ModelType_ex = Meta.parse(string(ModelType))
 
@@ -17,7 +17,7 @@ function basictest(ModelType, X, y, builder, optimiser)
          @test length(history) == model.epochs
 
          # test improvement in training loss:
-         @test history[end] < 0.8*history[1]
+         @test history[end] < $threshold*history[1]
 
          # increase iterations and check update is incremental:
          model.epochs = model.epochs + 3

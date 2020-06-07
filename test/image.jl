@@ -41,11 +41,11 @@ end
 
     # try with batch_size > 1:
     model = MLJFlux.ImageClassifier(builder=builder, epochs=10, batch_size=2)
-    fitresult, cache, report = MLJBase.fit(model, 3, images, labels)
+    fitresult, cache, report = MLJBase.fit(model, 3, images, labels);
 
     # tests update logic, etc (see test_utililites.jl):
-    @test_broken basictest(MLJFlux.ImageClassifier, images, labels,
-                           model.builder, model.optimiser)
+    @test basictest(MLJFlux.ImageClassifier, images, labels,
+                           model.builder, model.optimiser, 0.95)
 
 end
 

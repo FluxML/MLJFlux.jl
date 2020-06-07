@@ -89,7 +89,6 @@ function MLJModelInterface.update(model::ImageClassifier,
         chain = Flux.Chain(fit(model.builder, n_input, n_output),
                            model.finaliser)
         data = collate(model, X, y)
-        @warn "cold restart" typeof(data)
         epochs = model.epochs
     end
 

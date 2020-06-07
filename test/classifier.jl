@@ -22,7 +22,7 @@
 
     optimiser = Flux.Optimise.ADAM(0.01)
 
-    basictest(MLJFlux.NeuralNetworkClassifier, X, y, builder, optimiser)
+    basictest(MLJFlux.NeuralNetworkClassifier, X, y, builder, optimiser, 0.75)
 
     train, test = MLJBase.partition(1:N, 0.7)
 
@@ -37,7 +37,7 @@
         MLJBase.cross_entropy(fill(dist, length(test)), y[test]) |> mean
 
     # check flux model is an improvement on predicting constant
-    # distributioin:
+    # distribution:
     model = MLJFlux.NeuralNetworkClassifier(epochs=150)
     mach = fit!(machine(model, X, y), rows=train, verbosity=0)
     yhat = MLJBase.predict(mach, rows=test);

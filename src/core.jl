@@ -173,15 +173,69 @@ end
 nrows(y::AbstractVector) = length(y)
 
 reformat(X) = reformat(X, scitype(X))
+
+# ---------------------------------
+# Reformatting tables
+
 reformat(X, ::Type{<:Table}) = MLJModelInterface.matrix(X)'
+
+# ---------------------------------
+# Reformatting images
+
+reformat(X, ::Type{<:GrayImage}) =
+    reshape(Float32.(X), size(X)..., 1)
+
+function reformat(X, ::Type{<:AbstractVector{<:GrayImage}})
+    ret = zeros(Float32, size(first(X))..., 1, length(X))
+    for idx=1:size(ret, 4)
+        ret[:, :, :, idx] .= reformat(X[idx])
+    end
+    return ret
+end
+
+function reformat(X, ::Type{<:ColorImage})
+    ret = zeros(Float32, size(X)... , 3)
+    for w = 1:size(X)[1]
+        for h = 1:size(X)[2]
+            ret[w, h, :] .= Float32.([X[w, h].r, X[w, h].g, X[w, h].b])
+        end
+    end
+    return ret
+end
+
+function reformat(X, ::Type{<:AbstractVector{<:ColorImage}})
+    ret = zeros(Float32, size(first(X))..., 3, length(X))
+    for idx=1:size(ret, 4)
+        ret[:, :, :, idx] .= reformat(X[idx])
+    end
+    return ret
+end
+
+# ------------------------------------------------------------
+# Reformatting vectors of "scalar" types
+
 reformat(y, ::Type{<:AbstractVector{<:Continuous}}) = y
 function reformat(y, ::Type{<:AbstractVector{<:Finite}})
     levels = y |> first |> MLJModelInterface.classes
     return hcat([Flux.onehot(ele, levels) for ele in y]...,)
 end
 
-get(Xmatrix::AbstractMatrix, b) = Xmatrix[:, b]
-get(y::AbstractVector, b) = y[b]
+function reformat(y, ::Type{<:AbstractVector{<:Count}})
+    levels = y |> first |> MLJModelInterface.classes
+    return hcat([Flux.onehot(ele, levels) for ele in y]...,)
+end
+
+function reformat(y, ::Type{<:AbstractVector{<:Multiclass}})
+    levels = y |> first |> MLJModelInterface.classes
+    return hcat([Flux.onehot(ele, levels) for ele in y]...,)
+end
+
+_get(Xmatrix::AbstractMatrix, b) = Xmatrix[:, b]
+_get(y::AbstractVector, b) = y[b]
+
+# each element in X is a single image of size (w, h, c)
+_get(X::AbstractArray{<:Any, 4}, b) = X[:, :, :, b]
+
 
 """
     collate(model, X, y)
@@ -189,7 +243,7 @@ get(y::AbstractVector, b) = y[b]
 Return the Flux-friendly data object required by `MLJFlux.fit!`, given
 input `X` and target `y` in the form required by
 `MLJModelInterface.input_scitype(X)` and
-`MLJModelInterface.target_sictype(y)`. (The batch size used is given
+`MLJModelInterface.target_scitype(y)`. (The batch size used is given
 by `model.batch_size`.)
 
 """
@@ -197,5 +251,5 @@ function collate(model, X, y)
     row_batches = Base.Iterators.partition(1:nrows(y), model.batch_size)
     Xmatrix = reformat(X)
     ymatrix = reformat(y)
-    return [(get(Xmatrix, b), get(ymatrix, b)) for b in row_batches]
+    return [(_get(Xmatrix, b), _get(ymatrix, b)) for b in row_batches]
 end

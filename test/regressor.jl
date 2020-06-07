@@ -8,7 +8,7 @@ optimiser = Flux.Optimise.ADAM()
 
 @testset "NeuralNetworkRegressor" begin
     y = 1 .+ X.x1 - X.x2 .- 2X.x4 + X.x5
-    basictest(MLJFlux.NeuralNetworkRegressor, X, y, builder, optimiser)
+    basictest(MLJFlux.NeuralNetworkRegressor, X, y, builder, optimiser, 0.7)
 
     # test a bit better than constant predictor
     model = MLJFlux.NeuralNetworkRegressor()
@@ -27,7 +27,8 @@ end
               X,
               y,
               builder,
-              optimiser)
+              optimiser,
+              0.7)
 
     # test a bit better than constant predictor
     model = MLJFlux.MultitargetNeuralNetworkRegressor()

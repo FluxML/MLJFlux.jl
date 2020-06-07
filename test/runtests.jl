@@ -3,11 +3,13 @@ using Tables
 using MLJBase
 import MLJFlux
 using CategoricalArrays
-import Flux
+using ColorTypes
+using Flux
 import Random
 import Random.seed!
 using Statistics
 import StatsBase
+using MLJScientificTypes
 
 seed!(123)
 
@@ -23,4 +25,8 @@ end
 
 @testset "classifier" begin
     include("classifier.jl")
+end
+
+@testset "image" begin
+    include("image.jl")
 end

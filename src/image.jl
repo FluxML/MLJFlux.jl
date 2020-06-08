@@ -1,4 +1,4 @@
-mutable struct ImageClassifier{B<:Builder,F,O,L} <: MLJModelInterface.Probabilistic
+mutable struct ImageClassifier{B,F,O,L} <: MLJModelInterface.Probabilistic
     builder::B
     finaliser::F
     optimiser::O    # mutable struct from Flux/src/optimise/optimisers.jl
@@ -44,8 +44,7 @@ function MLJModelInterface.fit(model::ImageClassifier, verbosity::Int, X_, y_)
     optimiser = deepcopy(model.optimiser)
 
     chain, history = fit!(chain, optimiser, model.loss,
-        model.epochs, model.lambda, model.alpha,
-        verbosity, data)
+        model.epochs, model.lambda, model.alpha, verbosity, data)
 
     cache = deepcopy(model), data, history, n_input, n_output
     fitresult = (chain, levels)
@@ -59,12 +58,10 @@ end
 function MLJModelInterface.predict(model::ImageClassifier, fitresult, Xnew)
     chain, levels = fitresult
     X = reformat(Xnew)
-    [MLJModelInterface.UnivariateFinite(
-        levels,
-    vec(map(x -> x.data,
-        chain(X[:,:,:,idx:idx]))))
-        for idx=1:length(Xnew)]
+    probs = vcat([chain(X[:,:,:,idx:idx]).data' for idx in 1:length(Xnew)]...)
+    return MLJModelInterface.UnivariateFinite(levels, probs)
 end
+
 
 function MLJModelInterface.update(model::ImageClassifier,
                                   verbosity::Int,

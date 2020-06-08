@@ -59,12 +59,10 @@ end
 function MLJModelInterface.predict(model::ImageClassifier, fitresult, Xnew)
     chain, levels = fitresult
     X = reformat(Xnew)
-    [MLJModelInterface.UnivariateFinite(
-        levels,
-    vec(map(x -> x.data,
-        chain(X[:,:,:,idx:idx]))))
-        for idx=1:length(Xnew)]
+    probs = vcat([chain(X[:,:,:,idx:idx]).data' for idx in 1:length(Xnew)]...)
+    return MLJModelInterface.UnivariateFinite(levels, probs)
 end
+
 
 function MLJModelInterface.update(model::ImageClassifier,
                                   verbosity::Int,

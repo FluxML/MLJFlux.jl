@@ -38,7 +38,7 @@ function MLJModelInterface.fit(model::NeuralNetworkClassifier,
 
     # (No categorical features)
     n_input = Tables.schema(X).names |> length
-    levels = MLJModelInterface.classes(y[1]) 
+    levels = MLJModelInterface.classes(y[1])
     n_output = length(levels)
     chain = Flux.Chain(fit(model.builder, n_input, n_output),
                        model.finaliser)
@@ -60,12 +60,10 @@ end
 function MLJModelInterface.predict(model::NeuralNetworkClassifier,
                                    fitresult,
                                    Xnew_)
-    chain , levels = fitresult
+    chain, levels = fitresult
     Xnew = MLJModelInterface.matrix(Xnew_)
-    return map(1:size(Xnew, 1)) do i
-        probs = map(x->x.data, chain(Xnew[i, :])) |> vec
-        MLJModelInterface.UnivariateFinite(levels, probs)
-    end
+    probs = vcat([chain(Xnew[i, :]).data' for i in 1:size(Xnew, 1)]...)
+    return MLJModelInterface.UnivariateFinite(levels, probs)
 end
 
 function MLJModelInterface.update(model::NeuralNetworkClassifier,

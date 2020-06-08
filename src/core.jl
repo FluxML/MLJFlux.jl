@@ -140,7 +140,7 @@ fit(builder::Linear, n::Integer, m::Integer) =
 
 # baby example 2:
 mutable struct Short <: Builder
-    n_hidden::Int     # if zero use geometric mean of input/outpu
+    n_hidden::Int     # if zero use geometric mean of input/output
     dropout::Float64
     σ
 end

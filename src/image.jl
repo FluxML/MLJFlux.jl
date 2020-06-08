@@ -62,7 +62,6 @@ function MLJModelInterface.predict(model::ImageClassifier, fitresult, Xnew)
     return MLJModelInterface.UnivariateFinite(levels, probs)
 end
 
-
 function MLJModelInterface.update(model::ImageClassifier,
                                   verbosity::Int,
                                   old_fitresult,

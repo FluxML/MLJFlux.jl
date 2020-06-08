@@ -37,12 +37,10 @@ standardization of input features.
 
 ```julia
 using MLJ
+import RDatasets 
+iris = RDatasets.dataset("datasets", "iris");
+y, X = unpack(iris, ==(:Species), colname -> true, rng=123);
 @load NeuralNetworkClassifier
-X, y = @load_iris
-using Random
-Random.seed!(123)
-shuffled = shuffle(eachindex(y))
-X, y = selectrows(X, shuffled), y[shuffled]
 
 julia> clf = NeuralNetworkClassifier()
 NeuralNetworkClassifier(

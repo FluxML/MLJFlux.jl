@@ -1,4 +1,4 @@
-mutable struct NeuralNetworkClassifier{B<:Builder,F,O,L} <: MLJModelInterface.Probabilistic
+mutable struct NeuralNetworkClassifier{B,F,O,L} <: MLJModelInterface.Probabilistic
     builder::B
     finaliser::F
     optimiser::O    # mutable struct from Flux/src/optimise/optimisers.jl

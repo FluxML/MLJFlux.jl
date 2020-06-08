@@ -1,4 +1,4 @@
-mutable struct NeuralNetworkRegressor{B<:Builder,O,L} <: MLJModelInterface.Deterministic
+mutable struct NeuralNetworkRegressor{B,O,L} <: MLJModelInterface.Deterministic
     builder::B
     optimiser::O    # mutable struct from Flux/src/optimise/optimisers.jl
     loss::L         # can be called as in `loss(yhat, y)`
@@ -28,7 +28,7 @@ NeuralNetworkRegressor(; builder::B   = Linear()
                                        , optimiser_changes_trigger_retraining)
 
 
-mutable struct MultitargetNeuralNetworkRegressor{B<:Builder,O,L} <: MLJModelInterface.Deterministic
+mutable struct MultitargetNeuralNetworkRegressor{B,O,L} <: MLJModelInterface.Deterministic
     builder::B
     optimiser::O    # mutable struct from Flux/src/optimise/optimisers.jl
     loss::L         # can be called as in `loss(yhat, y)`

@@ -135,7 +135,7 @@ mutable struct Linear <: Builder
     σ
 end
 Linear(; σ=Flux.relu) = Linear(σ)
-fit(builder::Linear, n::Integer, m::Integer) =
+build(builder::Linear, n::Integer, m::Integer) =
     Flux.Chain(Flux.Dense(n, m, builder.σ))
 
 # baby example 2:
@@ -145,7 +145,7 @@ mutable struct Short <: Builder
     σ
 end
 Short(; n_hidden=0, dropout=0.5, σ=Flux.sigmoid) = Short(n_hidden, dropout, σ)
-function fit(builder::Short, n, m)
+function build(builder::Short, n, m)
     n_hidden =
         builder.n_hidden == 0 ? round(Int, sqrt(n*m)) : builder.n_hidden
     return Flux.Chain(Flux.Dense(n, n_hidden, builder.σ),

@@ -45,7 +45,7 @@ function MLJModelInterface.fit(model::ImageClassifier, verbosity::Int, X_, y_)
         n_channels = 3      # 3-D color image
     end
 
-    chain = Flux.Chain(fit(model.builder, n_input, n_output, n_channels), model.finaliser)
+    chain = Flux.Chain(build(model.builder, n_input, n_output, n_channels), model.finaliser)
 
     optimiser = deepcopy(model.optimiser)
 
@@ -93,7 +93,7 @@ function MLJModelInterface.update(model::ImageClassifier,
         else
             n_channels = 3      # 3-D color image
         end
-        chain = Flux.Chain(fit(model.builder, n_input, n_output, n_channels),
+        chain = Flux.Chain(build(model.builder, n_input, n_output, n_channels),
                            model.finaliser)
         data = collate(model, X, y)
         epochs = model.epochs

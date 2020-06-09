@@ -192,7 +192,7 @@ mutable struct MyNetwork <: MLJFlux.Builder
     n2 :: Int
 end
 
-function MLJFlux.fit(nn::MyNetwork, n_in, n_out)
+function MLJFlux.build(nn::MyNetwork, n_in, n_out)
     return Chain(Dense(n_in, nn.n1), Dense(nn.n1, nn.n2), Dense(nn.n2, n_out))
 end
 ```
@@ -205,8 +205,8 @@ More generally, defining a new builder means defining a new struct
 and defining a new `MLJFlux.fit` method with one of these signatures:
 
 ```julia
-MLJFlux.fit(builder::MyNetwork, n_in, n_out)
-MLJFlux.fit(builder::MyNetwork, n_in, n_out, n_channels) # for use with `ImageClassifier`
+MLJFlux.build(builder::MyNetwork, n_in, n_out)
+MLJFlux.build(builder::MyNetwork, n_in, n_out, n_channels) # for use with `ImageClassifier`
 ```
 
 This method must return a `Flux.Chain` instance, `chain`, subject to the

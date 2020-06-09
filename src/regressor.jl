@@ -74,7 +74,7 @@ function MLJModelInterface.fit(model::Regressor, verbosity::Int, X, y)
     end
 
     n_output = length(target_column_names)
-    chain = fit(model.builder, n_input, n_output)
+    chain = build(model.builder, n_input, n_output)
 
     optimiser = deepcopy(model.optimiser)
 
@@ -110,7 +110,7 @@ function MLJModelInterface.update(model::Regressor,
         chain = old_chain
         epochs = model.epochs - old_model.epochs
     else
-        chain = fit(model.builder, n_input, n_output)
+        chain = build(model.builder, n_input, n_output)
         data = collate(model, X, y)
         epochs = model.epochs
     end

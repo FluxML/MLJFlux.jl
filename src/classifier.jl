@@ -40,7 +40,7 @@ function MLJModelInterface.fit(model::NeuralNetworkClassifier,
     n_input = Tables.schema(X).names |> length
     levels = MLJModelInterface.classes(y[1])
     n_output = length(levels)
-    chain = Flux.Chain(fit(model.builder, n_input, n_output),
+    chain = Flux.Chain(build(model.builder, n_input, n_output),
                        model.finaliser)
 
     data = collate(model, X, y)
@@ -86,7 +86,7 @@ function MLJModelInterface.update(model::NeuralNetworkClassifier,
         chain = old_chain
         epochs = model.epochs - old_model.epochs
     else
-        chain = Flux.Chain(fit(model.builder, n_input, n_output),
+        chain = Flux.Chain(build(model.builder, n_input, n_output),
                            model.finaliser)
         data = collate(model, X, y)
         epochs = model.epochs

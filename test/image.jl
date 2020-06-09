@@ -10,7 +10,7 @@ mutable struct mnistclassifier <: MLJFlux.Builder
     filters2
 end
 
-MLJFlux.fit(model::mynn, ip, op, n_channels) =
+MLJFlux.build(model::mynn, ip, op, n_channels) =
         Flux.Chain(Flux.Conv(model.kernel1, n_channels=>2),
                    Flux.Conv(model.kernel2, 2=>1),
                    x->reshape(x, :, size(x)[end]),
@@ -60,7 +60,7 @@ end
         return reshape(x, :, size(x)[end])
     end
 
-    function MLJFlux.fit(model::mnistclassifier, ip, op, n_channels)
+    function MLJFlux.build(model::mnistclassifier, ip, op, n_channels)
         cnn_output_size = [3,3,32]
 
         return Chain(

@@ -111,7 +111,7 @@ end
 
 @testset "dropout" begin
     model = MLJFlux.Short()
-    chain = MLJFlux.fit(model, 5, 1)
+    chain = MLJFlux.build(model, 5, 1)
 
     input = rand(5,1)
     # At the moment, Dropout is active:

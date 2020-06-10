@@ -78,7 +78,7 @@ where `l1 = sum(norm, params(chain)` and `l2 = sum(norm, params(chain))`.
 function  fit!(chain, optimiser, loss, epochs,
                lambda, alpha, verbosity, data)
 
-    Flux.testmode!(chain, false)
+    # Flux.testmode!(chain, false)
     # intitialize and start progress meter:
     meter = Progress(epochs+1, dt=0, desc="Optimising neural net:",
                      barglyphs=BarGlyphs("[=> ]"), barlen=25, color=:yellow)
@@ -107,7 +107,7 @@ function  fit!(chain, optimiser, loss, epochs,
         verbosity != 1 || next!(meter)
 
     end
-    Flux.testmode!(chain, true)         # to use in inference mode
+    # Flux.testmode!(chain, true)         # to use in inference mode
     return chain, history
 
 end

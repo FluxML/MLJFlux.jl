@@ -55,7 +55,7 @@ function MLJModelInterface.fit(model::ImageClassifier, verbosity::Int, X_, y_)
     cache = deepcopy(model), data, history, n_input, n_output
     fitresult = (chain, levels)
 
-    report = (training_losses=[loss.data for loss in history], )
+    report = (training_losses=history, )
 
     return fitresult, cache, report
 end
@@ -64,7 +64,7 @@ end
 function MLJModelInterface.predict(model::ImageClassifier, fitresult, Xnew)
     chain, levels = fitresult
     X = reformat(Xnew)
-    probs = vcat([chain(X[:,:,:,idx:idx]).data' for idx in 1:length(Xnew)]...)
+    probs = vcat([chain(X[:,:,:,idx:idx])' for idx in 1:length(Xnew)]...)
     return MLJModelInterface.UnivariateFinite(levels, probs)
 end
 
@@ -110,7 +110,7 @@ function MLJModelInterface.update(model::ImageClassifier,
 
     fitresult = (chain, levels)
     cache = (deepcopy(model), data, history, n_input, n_output)
-    report = (training_losses=[loss.data for loss in history], )
+    report = (training_losses=history, )
 
     return fitresult, cache, report
 

@@ -52,7 +52,7 @@ function MLJModelInterface.fit(model::NeuralNetworkClassifier,
 
     cache = (deepcopy(model), data, history, n_input, n_output)
     fitresult = (chain, levels)
-    report = (training_losses=[loss.data for loss in history], )
+    report = (training_losses=history, )
 
     return fitresult, cache, report
 end
@@ -62,7 +62,7 @@ function MLJModelInterface.predict(model::NeuralNetworkClassifier,
                                    Xnew_)
     chain, levels = fitresult
     Xnew = MLJModelInterface.matrix(Xnew_)
-    probs = vcat([chain(Xnew[i, :]).data' for i in 1:size(Xnew, 1)]...)
+    probs = vcat([chain(Xnew[i, :])' for i in 1:size(Xnew, 1)]...)
     return MLJModelInterface.UnivariateFinite(levels, probs)
 end
 
@@ -103,7 +103,7 @@ function MLJModelInterface.update(model::NeuralNetworkClassifier,
 
     fitresult = (chain, levels)
     cache = (deepcopy(model), data, history, n_input, n_output)
-    report = (training_losses=[loss.data for loss in history], )
+    report = (training_losses=history, )
 
     return fitresult, cache, report
 

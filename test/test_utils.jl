@@ -28,6 +28,8 @@ function basictest(ModelType, X, y, builder, optimiser, threshold)
                     (:info, r""),
                     MLJBase.update(model, 2,fitresult, cache, $X, $y));
 
+         @test MLJBase.fitted_params(model, fitresult).chain isa Flux.Chain
+
          yhat = MLJBase.predict(model, fitresult, $X)
 
          history = report.training_losses;

@@ -116,6 +116,9 @@ function MLJModelInterface.update(model::ImageClassifier,
 
 end
 
+MLJModelInterface.fitted_params(::ImageClassifier, fitresult) =
+    (chain=fitresult[1],)
+
 MLJModelInterface.metadata_model(ImageClassifier,
                input=AbstractVector{<:MLJModelInterface.GrayImage},
                target=AbstractVector{<:Multiclass},

@@ -147,6 +147,8 @@ function MLJModelInterface.predict(model::Regressor, fitresult, Xnew_)
     end
 end
 
+MLJModelInterface.fitted_params(::Regressor, fitresult) = (chain=fitresult[1],)
+
 MLJModelInterface.metadata_model(NeuralNetworkRegressor,
                input=Table(Continuous),
                target=AbstractVector{<:Continuous},

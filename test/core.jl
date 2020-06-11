@@ -76,7 +76,7 @@ end
 
 end
 
-@testset "fit!" begin
+@testset "fit! and dropout" begin
 
     Xmatrix = rand(100, 5)
     X = MLJBase.table(Xmatrix)
@@ -89,38 +89,39 @@ end
             (Xmatrix'[:,61:80], y[61:80]),
             (Xmatrix'[:, 81:100], y[81:100])]
 
-    initial_chain = Flux.Chain(Flux.Dense(5, 15),
+    # construct two chains with identical state, except one has
+    # dropout and the other does not:
+    chain_yes_drop = Flux.Chain(Flux.Dense(5, 15),
                                Flux.Dropout(0.2),
                                Flux.Dense(15, 8),
-                               Flux.Dense(8, 1))
+                                   Flux.Dense(8, 1))
+
+    chain_no_drop = deepcopy(chain_yes_drop)
+    chain_no_drop.layers[2].p = 1.0
+
     test_input = rand(5, 1)
 
-    chain, history = MLJFlux.fit!(initial_chain,
+    # check both chains have same behaviour before training:
+    @test chain_yes_drop(test_input) == chain_no_drop(test_input)
+
+    chain_yes_drop, history = MLJFlux.fit!(chain_yes_drop,
                                   Flux.Optimise.ADAM(0.001),
                                   Flux.mse, 10, 0, 0, 3, data)
 
+    chain_no_drop, history = MLJFlux.fit!(chain_no_drop,
+                                  Flux.Optimise.ADAM(0.001),
+                                  Flux.mse, 10, 0, 0, 3, data)
+
+    # check chains have different behaviour after training:
+    @test !(chain_yes_drop(test_input) ≈ chain_no_drop(test_input))
+
+    # check chain with dropout is deterministic outside of training
+    # (if we do not differentiate):
+    @test all(chain_yes_drop(test_input) ==
+              chain_yes_drop(test_input) for i in 1:1000)
+
     @test length(history) == 10
 
-    # Dropout should be inactive during test mode
-    @test chain(test_input) == chain(test_input)
-
-    # Loss should decrease at every epoch
-    @test history == sort(history, rev=true)
-
-end
-
-@testset "dropout" begin
-    model = MLJFlux.Short()
-    chain = MLJFlux.build(model, 5, 1)
-
-    input = rand(5,1)
-    # At the moment, Dropout is active:
-    @test chain(input) != chain(input)
-
-    # This should deactivate dropout
-    Flux.testmode!(chain, true)
-
-    @test chain(input) == chain(input)
 end
 
 true

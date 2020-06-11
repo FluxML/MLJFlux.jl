@@ -28,7 +28,7 @@ end
               y,
               builder,
               optimiser,
-              0.7)
+              0.8)
 
     # test a bit better than constant predictor
     model = MLJFlux.MultitargetNeuralNetworkRegressor()

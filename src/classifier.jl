@@ -109,6 +109,10 @@ function MLJModelInterface.update(model::NeuralNetworkClassifier,
 
 end
 
+MLJModelInterface.fitted_params(::NeuralNetworkClassifier, fitresult) =
+    (chain=fitresult[1],)
+
+
 MLJModelInterface.metadata_model(NeuralNetworkClassifier,
                                  input=Table(Continuous),
                                  target=AbstractVector{<:Finite},

@@ -1,6 +1,8 @@
 # MLJFlux
 
-An interface to Flux deep learning models for the [MLJ](https://github.com/alan-turing-institute/MLJ.jl) machine learning framework
+An interface to the Flux deep learning models for the
+[MLJ](https://github.com/alan-turing-institute/MLJ.jl) machine
+learning framework
 
 [![Build Status](https://travis-ci.com/alan-turing-institute/MLJFlux.jl.svg?branch=master)](https://travis-ci.com/alan-turing-institute/MLJFlux.jl) [![Coverage Status](https://coveralls.io/repos/github/alan-turing-institute/MLJFlux.jl/badge.svg?branch=master)](https://coveralls.io/github/alan-turing-institute/MLJFlux.jl?branch=master)
 
@@ -150,7 +152,7 @@ with caution.
 
 Instructions for coercing common image formats into some
 `AbstractVector{<:Image}` are
-[here](https://alan-turing-institute.github.io/MLJScientificTypes.jl/dev/#Type-coercion-for-image-data-1)
+[here](https://alan-turing-institute.github.io/MLJScientificTypes.jl/dev/#Type-coercion-for-image-data-1).
 
 
 #### Built-in builders
@@ -162,7 +164,7 @@ MLJ provides two simple builders out of the box:
   function `σ`, defaulting to a `MLJFlux.relu`.
 
 - `MLJFlux.Short(n_hidden=..., dropout=..., σ=...)` builds a
-  full-connected two-layer network with `n_in` inputs and `n_out`
+  full-connected three-layer network with `n_in` inputs and `n_out`
   outputs using `n_hidden` nodes in the hidden layer and the specified
   `dropout` (defaulting to 0.5). An activation function `σ` is applied
   between the hidden and final layers. If `n_hidden=0` (the default)

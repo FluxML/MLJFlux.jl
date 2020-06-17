@@ -80,7 +80,7 @@ julia> training_loss = cross_entropy(predict(mach, X), y) |> mean
 0.89526004f0
 
 # increase learning rate and add iterations:
-clf.optimiser.eta = clf.optimiser.eta * 2 
+clf.optimiser.eta = clf.optimiser.eta * 2
 clf.epochs = clf.epochs + 5
 
 julia> fit!(mach, verbosity=2)
@@ -266,8 +266,8 @@ following conditions:
       `(W, H, n_channels)`, where `n_in = (W, H)` and `n_channels` is
       1 or 3 (for use with `ImageClassifier`)
 
-- The object returned by `chain(MLJFlux.reformat(X))` must be an
-  `AbstractFloat` vector of length `n_out`
+- The object returned by `chain(x)` must be an `AbstractFloat` vector
+  of length `n_out`.
 
 
 ### Loss functions

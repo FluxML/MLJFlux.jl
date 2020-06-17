@@ -28,6 +28,15 @@ chain.
 In the future MLJFlux may provided an assortment of more sophisticated
 canned builders.
 
+### Installation
+
+```julia
+using Pkg
+Pkg.activate("my_environment", shared=true)
+Pkg.add("MLJFlux")
+Pkg.add("MLJ")
+Pkg.add("RDatasets")  # for the demo below
+```
 
 ### Example
 
@@ -70,21 +79,21 @@ fit!(mach)
 julia> training_loss = cross_entropy(predict(mach, X), y) |> mean
 0.89526004f0
 
-# reduce learning rate and add iterations:
-clf.optimiser.eta = clf.optimiser.eta / 5
+# increase learning rate and add iterations:
+clf.optimiser.eta = clf.optimiser.eta * 2 
 clf.epochs = clf.epochs + 5
 
 julia> fit!(mach, verbosity=2)
-[ Info: Updating Machine{NeuralNetworkClassifier{Short,…}} @ 1…42.
-[ Info: Loss is 0.9638
-[ Info: Loss is 0.9226
-[ Info: Loss is 0.9197
-[ Info: Loss is 0.9477
-[ Info: Loss is 0.9517
+[ Info: Updating Machine{NeuralNetworkClassifier{Short,…}} @240.
+[ Info: Loss is 0.853
+[ Info: Loss is 0.8207
+[ Info: Loss is 0.8072
+[ Info: Loss is 0.752
+[ Info: Loss is 0.7077
 Machine{NeuralNetworkClassifier{Short,…}} @ 1…42
 
 julia> training_loss = cross_entropy(predict(mach, X), y) |> mean
-0.87368965f0
+0.7076618f0
 ```
 
 #### Accessing the Flux chain (model)

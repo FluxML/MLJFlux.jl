@@ -3,13 +3,6 @@ mutable struct mynn <: MLJFlux.Builder
     kernel2
 end
 
-mutable struct mnistclassifier <: MLJFlux.Builder
-    kernel1
-    filters1
-    kernel2
-    filters2
-end
-
 MLJFlux.build(model::mynn, ip, op, n_channels) =
         Flux.Chain(Flux.Conv(model.kernel1, n_channels=>2),
                    Flux.Conv(model.kernel2, 2=>1),
@@ -49,35 +42,41 @@ MLJFlux.build(model::mynn, ip, op, n_channels) =
 
 end
 
+mutable struct MyConvBuilder <: MLJFlux.Builder end
+
 @testset "Image MNIST" begin
     using Flux.Data:MNIST
 
-    images, labels = MNIST.images(), MNIST.labels()
+    images, labels = MNIST.images(), MNIST.labels();
 
-    labels = categorical(labels)
+    labels = categorical(labels);
 
     function flatten(x::AbstractArray)
         return reshape(x, :, size(x)[end])
     end
 
-    function MLJFlux.build(model::mnistclassifier, ip, op, n_channels)
+    function MLJFlux.build(builder::MyConvBuilder, n_in, n_out, n_channels)
         cnn_output_size = [3,3,32]
 
         return Chain(
-        Conv((3, 3), 1=>16, pad=(1,1), relu),
-        MaxPool((2,2)),
-        Conv((3, 3), 16=>32, pad=(1,1), relu),
-        MaxPool((2,2)),
-        Conv((3, 3), 32=>32, pad=(1,1), relu),
-        MaxPool((2,2)),
-        flatten,
-        Dense(prod(cnn_output_size), 10))
+            Conv((3, 3), 1=>16, pad=(1,1), relu),
+            MaxPool((2,2)),
+            Conv((3, 3), 16=>32, pad=(1,1), relu),
+            MaxPool((2,2)),
+            Conv((3, 3), 32=>32, pad=(1,1), relu),
+            MaxPool((2,2)),
+            flatten,
+            Dense(prod(cnn_output_size), 10))
     end
 
-    model = MLJFlux.ImageClassifier(builder=mnistclassifier((3,3), 2, (3,3), 1))
+    model = MLJFlux.ImageClassifier(builder=MyConvBuilder())
 
-    fitresult, cache, report = MLJBase.fit(model, 3, images[1:500], labels[1:500])
-    pred = MLJBase.predict(model, fitresult, images[1:5])
+    fitresult, cache, report =
+        MLJBase.fit(model, 3, images[1:500], labels[1:500]);
+
+    pred = mode.(MLJBase.predict(model, fitresult, images[501:600]));
+    error = misclassification_rate(pred, labels[501:600])
+    @test error < 0.1
 
 end
 

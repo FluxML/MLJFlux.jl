@@ -66,7 +66,7 @@ mutable struct MyConvBuilder <: MLJFlux.Builder end
             Conv((3, 3), 32=>32, pad=(1,1), relu),
             MaxPool((2,2)),
             flatten,
-            Dense(prod(cnn_output_size), 10))
+            Dense(prod(cnn_output_size), n_out))
     end
 
     model = MLJFlux.ImageClassifier(builder=MyConvBuilder())

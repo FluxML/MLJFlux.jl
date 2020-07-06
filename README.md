@@ -246,8 +246,8 @@ Note here that `n_in` and `n_out` depend on the size of the data (see
 Table 1).
 
 More generally, defining a new builder means defining a new struct
-(sub-typing `MLJFlux.Builder` to get pretty printing) `MyNetwork`, say,
-and defining a new `MLJFlux.fit` method with one of these signatures:
+sub-typing `MLJFlux.Builder` and defining a new `MLJFlux.build` method
+with one of these signatures:
 
 ```julia
 MLJFlux.build(builder::MyNetwork, n_in, n_out)
@@ -311,14 +311,14 @@ function flatten(x::AbstractArray)
     return reshape(x, :, size(x)[end])
 end
 
-mutable struct MyConvBuilder
+import MLJFlux
+mutable struct MyConvBuilder <: MLJFlux.Builder
     filter_size::Int
     channels1::Int
     channels2::Int
     channels3::Int
 end
 
-import MLJFlux
 function MLJFlux.build(b::MyConvBuilder, n_in, n_out, n_channels)
 
     k, c1, c2, c3 = b.filter_size, b.channels1, b.channels2, b.channels3

@@ -282,7 +282,6 @@ for example, supply one of MLJ's probabilistic loss functions, such as
 you *should* use MLJ loss functions in MLJ meta-algorithms.
 
 
-
 <!-- Unless, you are familiar with this API, it is recommended you use one -->
 <!-- of the [loss functions provided by -->
 <!-- Flux](https://github.com/FluxML/Flux.jl/blob/v0.8.3/src/layers/stateless.jl) -->
@@ -378,10 +377,6 @@ And evaluating the accuracy of the model on a 30% holdout set:
 
 ```
 mach = machine(clf, X, y)
-evaluate!(mach,
-          resampling=Holdout(rng=123, fraction_train=0.7),
-          operation = predict_mode,
-          measures=misclassification_rate)
 
 julia> evaluate!(mach,
                  resampling=Holdout(rng=123, fraction_train=0.7),

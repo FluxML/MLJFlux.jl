@@ -59,7 +59,7 @@ mutable struct MyConvBuilder <: MLJFlux.Builder end
         cnn_output_size = [3,3,32]
 
         return Chain(
-            Conv((3, 3), 1=>16, pad=(1,1), relu),
+            Conv((3, 3), n_channels=>16, pad=(1,1), relu),
             MaxPool((2,2)),
             Conv((3, 3), 16=>32, pad=(1,1), relu),
             MaxPool((2,2)),

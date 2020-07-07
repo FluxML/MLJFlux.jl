@@ -242,12 +242,12 @@ function MLJFlux.build(nn::MyNetwork, n_in, n_out)
 end
 ```
 
-Note here that `n_in` and `n_out` depend on the size of the data (see
+Note here that `n_in` and `n_out` depend on the size of the data (see 
 Table 1).
 
 More generally, defining a new builder means defining a new struct
-(sub-typing `MLJFlux.Builder` to get pretty printing) `MyNetwork`, say,
-and defining a new `MLJFlux.fit` method with one of these signatures:
+sub-typing `MLJFlux.Builder` and defining a new `MLJFlux.build` method
+with one of these signatures:
 
 ```julia
 MLJFlux.build(builder::MyNetwork, n_in, n_out)
@@ -269,6 +269,9 @@ following conditions:
 - The object returned by `chain(x)` must be an `AbstractFloat` vector
   of length `n_out`.
 
+For an builder example for use with `ImageClassifier` see
+[below](an-image-classification-example).
+
 
 ### Loss functions
 
@@ -277,6 +280,7 @@ internally by Flux and needs to conform to the Flux API. You cannot,
 for example, supply one of MLJ's probabilistic loss functions, such as
 `MLJ.cross_entropy` to one of the classifiers constructors, although
 you *should* use MLJ loss functions in MLJ meta-algorithms.
+
 
 <!-- Unless, you are familiar with this API, it is recommended you use one -->
 <!-- of the [loss functions provided by -->
@@ -287,3 +291,101 @@ you *should* use MLJ loss functions in MLJ meta-algorithms.
 <!-- more than two classes (most image problems) consider -->
 <!-- `Flux.logitbinarycrossentropy`, as these have better numerical -->
 <!-- stability than vanilla `Flux.crossentropy`. -->
+
+### An image classification example
+
+We define a builder that builds a chain with six alternating
+convolution and max-pool layers, and a final dense layer, which we
+apply to the MNIST image dataset. 
+
+First we define a generic builder (working for any image size, color
+or gray):
+
+```julia
+using MLJ
+using Flux
+
+# helper function
+function flatten(x::AbstractArray)
+    return reshape(x, :, size(x)[end])
+end
+
+import MLJFlux
+mutable struct MyConvBuilder <: MLJFlux.Builder
+    filter_size::Int
+    channels1::Int
+    channels2::Int
+    channels3::Int
+end
+
+function MLJFlux.build(b::MyConvBuilder, n_in, n_out, n_channels)
+
+    k, c1, c2, c3 = b.filter_size, b.channels1, b.channels2, b.channels3
+
+    mod(k, 2) == 1 || error("`filter_size` must be odd. ")
+
+    # padding to preserve image size on convolution:
+    p = div(k - 1, 2)
+
+    # compute size, in first two dims, of output of final maxpool layer:
+    half(x) = div(x, 2)
+    h = n_in[1] |> half |> half |> half
+    w = n_in[2] |> half |> half |> half
+
+    return Chain(
+        Conv((k, k), n_channels => c1, pad=(p, p), relu),
+        MaxPool((2, 2)),
+        Conv((k, k), c1 => c2, pad=(p, p), relu),
+        MaxPool((2, 2)),
+        Conv((k, k), c2 => c3, pad=(p, p), relu),
+        MaxPool((2 ,2)),
+        flatten,
+        Dense(h*w*c3, n_out))
+end
+```
+
+Next, we load some of the MNIST data and check scientific types
+conform to those is the table above:
+
+```
+N = 1000
+X, y = Flux.Data.MNIST.images()[1:N], Flux.Data.MNIST.labels()[1:N];
+
+julia> scitype(X)
+AbstractArray{GrayImage{28,28},1}
+
+julia> scitype(y)
+AbstractArray{Count,1}
+```
+
+For classifiers, target must have element scitype `<: Finite`, so we fix this:
+
+```julia
+y = coerce(y, Multiclass);
+```
+
+Instantiating an image classifier model:
+
+```julia
+@load ImageClassifier
+clf = ImageClassifier(builder=MyConvBuilder(3, 16, 32, 32),
+                      epochs=10,
+                      loss=Flux.crossentropy)
+```
+
+And evaluating the accuracy of the model on a 30% holdout set:
+
+```
+mach = machine(clf, X, y)
+
+julia> evaluate!(mach,
+                 resampling=Holdout(rng=123, fraction_train=0.7),
+                 operation=predict_mode,
+                 measure=misclassification_rate)
+┌────────────────────────┬───────────────┬────────────┐
+│ _.measure              │ _.measurement │ _.per_fold │
+├────────────────────────┼───────────────┼────────────┤
+│ misclassification_rate │ 0.0467        │ [0.0467]   │
+└────────────────────────┴───────────────┴────────────┘
+```
+

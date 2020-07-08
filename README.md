@@ -347,7 +347,7 @@ end
 Next, we load some of the MNIST data and check scientific types
 conform to those is the table above:
 
-```
+```julia
 N = 1000
 X, y = Flux.Data.MNIST.images()[1:N], Flux.Data.MNIST.labels()[1:N];
 
@@ -375,7 +375,7 @@ clf = ImageClassifier(builder=MyConvBuilder(3, 16, 32, 32),
 
 And evaluating the accuracy of the model on a 30% holdout set:
 
-```
+```julia
 mach = machine(clf, X, y)
 
 julia> evaluate!(mach,

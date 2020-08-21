@@ -9,6 +9,7 @@ using CategoricalArrays
 using Tables
 using Statistics
 using ColorTypes
+using ComputationalResources
 
 include("core.jl")
 include("regressor.jl")

@@ -8,6 +8,7 @@ mutable struct NeuralNetworkClassifier{B,F,O,L} <: MLJModelInterface.Probabilist
     lambda::Float64 # regularization strength
     alpha::Float64  # regularizaton mix (0 for all l2, 1 for all l1)
     optimiser_changes_trigger_retraining::Bool
+    acceleration::AbstractResource       # Train on gpu
 end
 
 NeuralNetworkClassifier(; builder::B   = Short()
@@ -19,6 +20,7 @@ NeuralNetworkClassifier(; builder::B   = Short()
               , lambda       = 0
               , alpha        = 0
               , optimiser_changes_trigger_retraining = false
+              , acceleration = CPU1()
               ) where {B,F,O,L} =
                   NeuralNetworkClassifier{B,F,O,L}(builder
                                        , finaliser
@@ -29,6 +31,7 @@ NeuralNetworkClassifier(; builder::B   = Short()
                                        , lambda
                                        , alpha
                                        , optimiser_changes_trigger_retraining
+                                       , acceleration
                                        )
 
 function MLJModelInterface.fit(model::NeuralNetworkClassifier,
@@ -48,7 +51,7 @@ function MLJModelInterface.fit(model::NeuralNetworkClassifier,
 
     chain, history = fit!(chain, optimiser, model.loss,
                           model.epochs, model.lambda,
-                          model.alpha, verbosity, data)
+                          model.alpha, verbosity, data, use_gpu(model.acceleration))
 
     cache = (deepcopy(model), data, history, n_input, n_output)
     fitresult = (chain, levels)
@@ -96,7 +99,7 @@ function MLJModelInterface.update(model::NeuralNetworkClassifier,
 
     chain, history = fit!(chain, optimiser, model.loss, epochs,
                                 model.lambda, model.alpha,
-                                verbosity, data)
+                                verbosity, data, use_gpu(model.acceleration))
     if keep_chain
         history = vcat(old_history, history)
     end

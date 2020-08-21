@@ -106,11 +106,11 @@ end
 
     chain_yes_drop, history = MLJFlux.fit!(chain_yes_drop,
                                   Flux.Optimise.ADAM(0.001),
-                                  Flux.mse, 10, 0, 0, 3, data)
+                                  Flux.mse, 10, 0, 0, 3, data, false)
 
     chain_no_drop, history = MLJFlux.fit!(chain_no_drop,
                                   Flux.Optimise.ADAM(0.001),
-                                  Flux.mse, 10, 0, 0, 3, data)
+                                  Flux.mse, 10, 0, 0, 3, data, false)
 
     # check chains have different behaviour after training:
     @test !(chain_yes_drop(test_input) ≈ chain_no_drop(test_input))

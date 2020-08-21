@@ -36,6 +36,15 @@ for opt in (:Descent, :Momentum, :Nesterov, :RMSProp, :ADAM, :AdaMax,
 
 end
 
+function use_gpu(resource)
+    if resource isa CUDALibs
+        return true
+    elseif resource isa CPU1
+        return false
+    else
+        throw(ArgumentError("Resource not supported"))
+    end
+end
 
 ## GENERAL METHOD TO OPTIMIZE A CHAIN
 
@@ -47,7 +56,8 @@ end
          lambda,
          alpha,
          verbosity,
-         data)
+         data,
+         gpu)
 
 Optimize a Flux model `chain` using the regularization parameters
 `lambda` (strength) and `alpha` (l2/l1 mix), where `loss(yhat, y) ` is
@@ -76,7 +86,7 @@ where `l1 = sum(norm, params(chain)` and `l2 = sum(norm, params(chain))`.
 
 """
 function  fit!(chain, optimiser, loss, epochs,
-               lambda, alpha, verbosity, data)
+               lambda, alpha, verbosity, data, gpu)
 
     # Flux.testmode!(chain, false)
     # intitialize and start progress meter:
@@ -86,6 +96,12 @@ function  fit!(chain, optimiser, loss, epochs,
     loss_func(x, y) = loss(chain(x), y)
     history = []
     prev_loss = Inf
+    if gpu
+        verbosity < 1 || @info "Using GPU for training"
+        data = Flux.gpu.(data)
+        chain = Flux.gpu(chain)
+    end
+
     for i in 1:epochs
         # We're taking data in a Flux-fashion.
         Flux.train!(loss_func, Flux.params(chain), data, optimiser)

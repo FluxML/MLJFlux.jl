@@ -7,6 +7,7 @@ mutable struct NeuralNetworkRegressor{B,O,L} <: MLJModelInterface.Deterministic
     lambda::Float64 # regularization strength
     alpha::Float64  # regularizaton mix (0 for all l2, 1 for all l1)
     optimiser_changes_trigger_retraining::Bool
+    acceleration::AbstractResource       # To use GPU
 end
 
 NeuralNetworkRegressor(; builder::B   = Linear()
@@ -17,6 +18,7 @@ NeuralNetworkRegressor(; builder::B   = Linear()
               , lambda       = 0
               , alpha        = 0
               , optimiser_changes_trigger_retraining=false
+              , acceleration  = CPU1()
               ) where {B,O,L} =
                   NeuralNetworkRegressor{B,O,L}(builder
                                        , optimiser
@@ -25,7 +27,8 @@ NeuralNetworkRegressor(; builder::B   = Linear()
                                        , batch_size
                                        , lambda
                                        , alpha
-                                       , optimiser_changes_trigger_retraining)
+                                       , optimiser_changes_trigger_retraining
+                                       , acceleration)
 
 
 mutable struct MultitargetNeuralNetworkRegressor{B,O,L} <: MLJModelInterface.Deterministic
@@ -37,6 +40,7 @@ mutable struct MultitargetNeuralNetworkRegressor{B,O,L} <: MLJModelInterface.Det
     lambda::Float64 # regularization strength
     alpha::Float64  # regularizaton mix (0 for all l2, 1 for all l1)
     optimiser_changes_trigger_retraining::Bool
+    acceleration::AbstractResource
 end
 
 MultitargetNeuralNetworkRegressor(; builder::B   = Linear()
@@ -47,6 +51,7 @@ MultitargetNeuralNetworkRegressor(; builder::B   = Linear()
               , lambda       = 0
               , alpha        = 0
               , optimiser_changes_trigger_retraining=false
+              , acceleration = CPU1()
               ) where {B,O,L} =
                   MultitargetNeuralNetworkRegressor{B,O,L}(builder
                                        , optimiser
@@ -55,7 +60,8 @@ MultitargetNeuralNetworkRegressor(; builder::B   = Linear()
                                        , batch_size
                                        , lambda
                                        , alpha
-                                       , optimiser_changes_trigger_retraining)
+                                       , optimiser_changes_trigger_retraining
+                                       , acceleration)
 
 const Regressor =
     Union{NeuralNetworkRegressor, MultitargetNeuralNetworkRegressor}
@@ -80,7 +86,7 @@ function MLJModelInterface.fit(model::Regressor, verbosity::Int, X, y)
 
     chain, history = fit!(chain, optimiser, model.loss,
                           model.epochs, model.lambda, 
-                          model.alpha, verbosity, data)
+                          model.alpha, verbosity, data, use_gpu(model.acceleration))
 
     cache = (deepcopy(model), data, history, n_input, n_output)
     fitresult = (chain, target_is_multivariate, target_column_names)
@@ -119,7 +125,7 @@ function MLJModelInterface.update(model::Regressor,
 
     chain, history = fit!(chain, optimiser, model.loss, epochs,
                                 model.lambda, model.alpha,
-                                verbosity, data)
+                                verbosity, data, use_gpu(model.acceleration))
     if keep_chain
         history = vcat(old_history, history)
     end

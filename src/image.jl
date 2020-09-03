@@ -8,6 +8,7 @@ mutable struct ImageClassifier{B,F,O,L} <: MLJModelInterface.Probabilistic
     lambda::Float64 # regularization strength
     alpha::Float64  # regularizaton mix (0 for all l2, 1 for all l1)
     optimiser_changes_trigger_retraining::Bool
+    acceleration::AbstractResource
 end
 
 ImageClassifier(; builder::B   = Short()
@@ -19,6 +20,7 @@ ImageClassifier(; builder::B   = Short()
               , lambda       = 0
               , alpha        = 0
               , optimiser_changes_trigger_retraining = false
+              , acceleration = CPU1()
               ) where {B,F,O,L} =
                   ImageClassifier{B,F,O,L}(builder
                                        , finaliser
@@ -29,6 +31,7 @@ ImageClassifier(; builder::B   = Short()
                                        , lambda
                                        , alpha
                                        , optimiser_changes_trigger_retraining
+                                       , acceleration
                                        )
 
 function MLJModelInterface.fit(model::ImageClassifier, verbosity::Int, X_, y_)
@@ -50,7 +53,7 @@ function MLJModelInterface.fit(model::ImageClassifier, verbosity::Int, X_, y_)
     optimiser = deepcopy(model.optimiser)
 
     chain, history = fit!(chain, optimiser, model.loss,
-        model.epochs, model.lambda, model.alpha, verbosity, data)
+        model.epochs, model.lambda, model.alpha, verbosity, data, use_gpu(model.acceleration))
 
     cache = deepcopy(model), data, history, n_input, n_output
     fitresult = (chain, levels)
@@ -103,7 +106,7 @@ function MLJModelInterface.update(model::ImageClassifier,
 
     chain, history = fit!(chain, optimiser, model.loss, epochs,
                                 model.lambda, model.alpha,
-                                verbosity, data)
+                                verbosity, data, use_gpu(model.acceleration))
     if keep_chain
         history = vcat(old_history, history)
     end

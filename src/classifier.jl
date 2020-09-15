@@ -122,5 +122,5 @@ MLJModelInterface.metadata_model(NeuralNetworkClassifier,
                                  path="MLJFlux.NeuralNetworkClassifier",
                                  descr="A neural network model for making "*
                                  "probabilistic predictions of a "*
-                                 "`Mutliclass` or `OrderedFactor` target, "*
+                                 "`Multiclass` or `OrderedFactor` target, "*
                                  "given a table of `Continuous` features. ")

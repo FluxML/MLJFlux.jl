@@ -1,20 +1,67 @@
+macro testset_accelerated(name::String, var, ex)
+    testset_accelerated(name, var, ex)
+end
+macro testset_accelerated(name::String, var, opts::Expr, ex)
+    testset_accelerated(name, var, ex; eval(opts)...)
+end
+
+# To exclude a resource, say, CPU1, do like
+# `@test_accelerated "cool test" accel (exclude=[CPU1,],) begin ... end`
+function testset_accelerated(name::String, var, ex; exclude=[])
+
+    final_ex = quote end
+
+    push!(final_ex.args, quote
+          println()
+          @info "$($name):"
+          end)
+
+    append!(exclude, EXCLUDED_RESOURCE_TYPES)
+
+    for res in RESOURCES
+        push!(final_ex.args, quote
+              @info "acceleration = $($res)"
+              end)
+        if any(x->typeof(res)<:x, exclude)
+            push!(final_ex.args, quote
+               $var = $res
+               @testset $(name*" ($(typeof(res).name))") begin
+                   @test_broken false
+               end
+            end)
+        else
+            push!(final_ex.args, quote
+               $var = $res
+               @testset $(name*" ($(typeof(res).name))") $ex
+            end)
+        end
+    end
+
+    return esc(final_ex)
+    
+end
+
+
 # To run a battery of tests checking: (i) fit, predict & update calls
 # work; (ii) update logic is correct; (iii) training loss after 10
-# epochs is 80% or better than initial loss:
-function basictest(ModelType, X, y, builder, optimiser, threshold)
+# epochs is better than `threshold` times initial loss:
+function basictest(ModelType, X, y, builder, optimiser, threshold, accel)
 
-    ModelType_ex = Meta.parse(string(ModelType))
+    ModelType_str = string(ModelType)
+    ModelType_ex = Meta.parse(ModelType_str)
+    accel_ex = Meta.parse(string(accel))
+    optimiser = deepcopy(optimiser)
 
     eval(quote
 
          model = $ModelType_ex(builder=$builder,
-                               optimiser=$optimiser)
+                               optimiser=$optimiser,
+                               acceleration=$accel_ex)
 
-         fitresult, cache, report =
-         MLJBase.fit(model,0, $X, $y);
+         fitresult, cache, report = MLJBase.fit(model, 0, $X, $y);
 
          history = report.training_losses;
-         @test length(history) == model.epochs
+         @test length(history) == model.epochs + 1
 
          # test improvement in training loss:
          @test history[end] < $threshold*history[1]
@@ -33,12 +80,14 @@ function basictest(ModelType, X, y, builder, optimiser, threshold)
          yhat = MLJBase.predict(model, fitresult, $X)
 
          history = report.training_losses;
-         @test length(history) == model.epochs
+         @test length(history) == model.epochs + 1
 
          # start fresh with small epochs:
          model = $ModelType_ex(builder=$builder,
                                optimiser=$optimiser,
-                               epochs=2)
+                               epochs=2,
+                               acceleration=$accel_ex)
+
          fitresult, cache, report = MLJBase.fit(model, 0, $X, $y);
 
          # change batch_size and check it performs cold restart:

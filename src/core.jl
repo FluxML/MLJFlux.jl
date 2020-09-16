@@ -17,9 +17,9 @@ for opt in (:Descent, :Momentum, :Nesterov, :RMSProp, :ADAM, :AdaMax,
 
     @eval begin
 
-# TODO: Uncomment next line when
-# https://github.com/alan-turing-institute/MLJModelInterface.jl/issues/28
-# is resolved:
+        # TODO: Uncomment next line when
+        # https://github.com/alan-turing-institute/MLJModelInterface.jl/issues/28
+        # is resolved:
 
         # MLJModelInterface.istransparent(m::Flux.$opt) = true
 
@@ -36,17 +36,15 @@ for opt in (:Descent, :Momentum, :Nesterov, :RMSProp, :ADAM, :AdaMax,
 
 end
 
-function use_gpu(resource)
-    if resource isa CUDALibs
-        return true
-    elseif resource isa CPU1
-        return false
-    else
-        throw(ArgumentError("Resource not supported"))
-    end
-end
 
 ## GENERAL METHOD TO OPTIMIZE A CHAIN
+
+struct Mover{R<:AbstractResource}
+    resource::R
+end
+
+(::Mover{<:CPU1})(data) = Flux.cpu(data)
+(::Mover{<:CUDALibs})(data) = Flux.gpu(data)
 
 """
     fit!(chain,
@@ -57,7 +55,7 @@ end
          alpha,
          verbosity,
          data,
-         gpu)
+         acceleration)
 
 Optimize a Flux model `chain` using the regularization parameters
 `lambda` (strength) and `alpha` (l2/l1 mix), where `loss(yhat, y) ` is
@@ -84,26 +82,39 @@ instance `(X, y)` is
 
 where `l1 = sum(norm, params(chain)` and `l2 = sum(norm, params(chain))`.
 
+One must have `acceleration isa CPU1` or `acceleration isa CUDALibs`
+(for running on a GPU) where `CPU1` and `CUDALibs` are types defined
+in `ComputationalResources.jl`.
+
+### Return value
+
+`(chain_trained, history)`, where `chain_trained` is a trained version
+of `chain` (possibly moved to a gpu) and `history` is a vector of
+losses - one intial loss, and one loss per epoch. The method may
+mutate the argument `chain`, depending on cpu <-> gpu movements.
+
 """
 function  fit!(chain, optimiser, loss, epochs,
-               lambda, alpha, verbosity, data, gpu)
+               lambda, alpha, verbosity, data, acceleration)
 
-    # Flux.testmode!(chain, false)
     # intitialize and start progress meter:
     meter = Progress(epochs+1, dt=0, desc="Optimising neural net:",
                      barglyphs=BarGlyphs("[=> ]"), barlen=25, color=:yellow)
     verbosity != 1 || next!(meter)
+
+    move = Mover(acceleration)
+    data = move(data)
+    chain = move(chain)
+
     loss_func(x, y) = loss(chain(x), y)
-    history = []
-    prev_loss = Inf
-    if gpu
-        verbosity < 1 || @info "Using GPU for training"
-        data = Flux.gpu.(data)
-        chain = Flux.gpu(chain)
-    end
+
+    # initiate history:
+    prev_loss = mean(loss_func(data[i][1], data[i][2]) for i=1:length(data))
+    history = [prev_loss,]
 
     for i in 1:epochs
         # We're taking data in a Flux-fashion.
+#        @show i rand()
         Flux.train!(loss_func, Flux.params(chain), data, optimiser)
         current_loss =
             mean(loss_func(data[i][1], data[i][2]) for i=1:length(data))
@@ -123,8 +134,8 @@ function  fit!(chain, optimiser, loss, epochs,
         verbosity != 1 || next!(meter)
 
     end
-    # Flux.testmode!(chain, true)         # to use in inference mode
-    return chain, history
+    
+    return Flux.cpu(chain), history
 
 end
 
@@ -171,6 +182,15 @@ end
 
 
 ## HELPERS
+
+"""
+    gpu_isdead()
+
+Returns `true` if `acceleration=CUDALibs()` option is unavailable, and
+false otherwise.
+
+"""
+gpu_isdead() = Flux.gpu([1.0, ]) isa Array
 
 """
     nrows(X)
@@ -237,11 +257,6 @@ function reformat(y, ::Type{<:AbstractVector{<:Finite}})
 end
 
 function reformat(y, ::Type{<:AbstractVector{<:Count}})
-    levels = y |> first |> MLJModelInterface.classes
-    return hcat([Flux.onehot(ele, levels) for ele in y]...,)
-end
-
-function reformat(y, ::Type{<:AbstractVector{<:Multiclass}})
     levels = y |> first |> MLJModelInterface.classes
     return hcat([Flux.onehot(ele, levels) for ele in y]...,)
 end

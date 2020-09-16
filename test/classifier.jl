@@ -22,6 +22,7 @@ optimiser = Flux.Optimise.ADAM(0.01)
 optimiser = Flux.Optimise.ADAM(0.01)
 
 @testset_accelerated "NeuralNetworkClassifier" accel begin
+    Random.seed!(123)
     basictest(MLJFlux.NeuralNetworkClassifier,
               X,
               y,

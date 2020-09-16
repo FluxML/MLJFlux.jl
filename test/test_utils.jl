@@ -4,6 +4,9 @@ end
 macro testset_accelerated(name::String, var, opts::Expr, ex)
     testset_accelerated(name, var, ex; eval(opts)...)
 end
+
+# To exclude a resource, say, CPU1, do like
+# `@test_accelerated "cool test" accel (exclude=[CPU1,],) begin ... end`
 function testset_accelerated(name::String, var, ex; exclude=[])
 
     final_ex = quote end

@@ -7,6 +7,7 @@ builder = MLJFlux.Short(σ=identity)
 optimiser = Flux.Optimise.ADAM()
 
 @testset_accelerated "NeuralNetworkRegressor" accel begin
+    Random.seed!(123)
     y = 1 .+ X.x1 - X.x2 .- 2X.x4 + X.x5
     basictest(MLJFlux.NeuralNetworkRegressor,
               X,
@@ -27,6 +28,7 @@ optimiser = Flux.Optimise.ADAM()
 end
 
 @testset_accelerated "MultitargetNeuralNetworkRegressor" accel begin
+    Random.seed!(123)
     ymatrix = hcat(1 .+ X.x1 - X.x2, 1 .- 2X.x4 + X.x5);
     y = MLJBase.table(ymatrix);
     basictest(MLJFlux.MultitargetNeuralNetworkRegressor,

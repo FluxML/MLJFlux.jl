@@ -1,3 +1,5 @@
+Random.seed!(123)
+
 @testset "optimiser equality" begin
     @test Flux.Momentum() == Flux.Momentum()
     @test Flux.Momentum(0.1) != Flux.Momentum(0.2)
@@ -103,6 +105,8 @@ test_input = rand(5, 1)
 @test chain_yes_drop(test_input) == chain_no_drop(test_input)
 
 @testset_accelerated "fit! and dropout" accel begin
+
+    Random.seed!(123)
 
     _chain_yes_drop, history = MLJFlux.fit!(chain_yes_drop,
                                   Flux.Optimise.ADAM(0.001),

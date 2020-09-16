@@ -1,5 +1,7 @@
 ## BASIC IMAGE TESTS GREY
 
+Random.seed!(123)
+
 mutable struct mynn <: MLJFlux.Builder
     kernel1
     kernel2
@@ -23,6 +25,8 @@ images = coerce(raw_images, GrayImage);
 labels = categorical(rand(1:5, 50));
 
 @testset_accelerated "ImageClassifier basic tests" accel begin
+
+    Random.seed!(123)
 
     model = MLJFlux.ImageClassifier(builder=builder,
                                     epochs=10,
@@ -78,6 +82,8 @@ end
 
 @testset_accelerated "Image MNIST" accel begin
 
+    Random.seed!(123)
+
     model = MLJFlux.ImageClassifier(builder=MyConvBuilder())
 
     fitresult, cache, report =
@@ -103,6 +109,8 @@ images = coerce(raw_images, ColorImage);
 labels = categorical(rand(1:5, 50));
 
 @testset_accelerated "ColorImages" accel begin
+
+    Random.seed!(123)
 
     model = MLJFlux.ImageClassifier(builder=builder, epochs=10)
 

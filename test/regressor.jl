@@ -6,12 +6,18 @@ X = MLJBase.table(randn(Float32, N, 5));
 builder = MLJFlux.Short(σ=identity)
 optimiser = Flux.Optimise.ADAM()
 
-@testset "NeuralNetworkRegressor" begin
+@testset_accelerated "NeuralNetworkRegressor" accel begin
     y = 1 .+ X.x1 - X.x2 .- 2X.x4 + X.x5
-    basictest(MLJFlux.NeuralNetworkRegressor, X, y, builder, optimiser, 0.7)
+    basictest(MLJFlux.NeuralNetworkRegressor,
+              X,
+              y,
+              builder,
+              optimiser,
+              0.7,
+              accel)
 
     # test a bit better than constant predictor
-    model = MLJFlux.NeuralNetworkRegressor()
+    model = MLJFlux.NeuralNetworkRegressor(acceleration=accel)
     train, test = MLJBase.partition(1:N, 0.7)
     mach = fit!(machine(model, X, y), rows=train, verbosity=0)
     yhat = predict(mach, rows=test)
@@ -20,7 +26,7 @@ optimiser = Flux.Optimise.ADAM()
     @test model.loss(yhat, truth) < goal
 end
 
-@testset "MultitargetNeuralNetworkRegressor" begin
+@testset_accelerated "MultitargetNeuralNetworkRegressor" accel begin
     ymatrix = hcat(1 .+ X.x1 - X.x2, 1 .- 2X.x4 + X.x5);
     y = MLJBase.table(ymatrix);
     basictest(MLJFlux.MultitargetNeuralNetworkRegressor,
@@ -28,10 +34,11 @@ end
               y,
               builder,
               optimiser,
-              0.8)
+              0.8,
+              accel)
 
     # test a bit better than constant predictor
-    model = MLJFlux.MultitargetNeuralNetworkRegressor()
+    model = MLJFlux.MultitargetNeuralNetworkRegressor(acceleration=accel)
     train, test = MLJBase.partition(1:N, 0.7)
     mach = fit!(machine(model, X, y), rows=train, verbosity=0)
     yhat = predict(mach, rows=test)

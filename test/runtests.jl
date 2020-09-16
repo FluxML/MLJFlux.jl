@@ -11,6 +11,12 @@ using Statistics
 import StatsBase
 using MLJModelInterface.ScientificTypes
 
+using ComputationalResources
+using ComputationalResources: CPU1, CUDALibs
+
+const RESOURCES = Any[CPU1(), CUDALibs()]
+const EXCLUDED_RESOURCE_TYPES = Any[CUDALibs,]
+
 seed!(123)
 
 include("test_utils.jl")

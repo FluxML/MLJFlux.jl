@@ -76,49 +76,49 @@ end
 
 end
 
-@testset "fit! and dropout" begin
+Xmatrix = rand(100, 5)
+X = MLJBase.table(Xmatrix)
+y = Xmatrix[:, 1] + Xmatrix[:, 2] + Xmatrix[:, 3] +
+    Xmatrix[:, 4] + Xmatrix[:, 5]
 
-    Xmatrix = rand(100, 5)
-    X = MLJBase.table(Xmatrix)
-    y = Xmatrix[:, 1] + Xmatrix[:, 2] + Xmatrix[:, 3] +
-        Xmatrix[:, 4] + Xmatrix[:, 5]
+data = [(Xmatrix'[:,1:20], y[1:20]),
+        (Xmatrix'[:,21:40], y[21:40]),
+        (Xmatrix'[:,41:60], y[41:60]),
+        (Xmatrix'[:,61:80], y[61:80]),
+        (Xmatrix'[:, 81:100], y[81:100])]
 
-    data = [(Xmatrix'[:,1:20], y[1:20]),
-            (Xmatrix'[:,21:40], y[21:40]),
-            (Xmatrix'[:,41:60], y[41:60]),
-            (Xmatrix'[:,61:80], y[61:80]),
-            (Xmatrix'[:, 81:100], y[81:100])]
+# construct two chains with identical state, except one has
+# dropout and the other does not:
+chain_yes_drop = Flux.Chain(Flux.Dense(5, 15),
+                            Flux.Dropout(0.2),
+                            Flux.Dense(15, 8),
+                            Flux.Dense(8, 1))
 
-    # construct two chains with identical state, except one has
-    # dropout and the other does not:
-    chain_yes_drop = Flux.Chain(Flux.Dense(5, 15),
-                               Flux.Dropout(0.2),
-                               Flux.Dense(15, 8),
-                                   Flux.Dense(8, 1))
+chain_no_drop = deepcopy(chain_yes_drop)
+chain_no_drop.layers[2].p = 1.0
 
-    chain_no_drop = deepcopy(chain_yes_drop)
-    chain_no_drop.layers[2].p = 1.0
+test_input = rand(5, 1)
 
-    test_input = rand(5, 1)
+# check both chains have same behaviour before training:
+@test chain_yes_drop(test_input) == chain_no_drop(test_input)
 
-    # check both chains have same behaviour before training:
-    @test chain_yes_drop(test_input) == chain_no_drop(test_input)
+@testset_accelerated "fit! and dropout" accel begin
 
-    chain_yes_drop, history = MLJFlux.fit!(chain_yes_drop,
+    _chain_yes_drop, history = MLJFlux.fit!(chain_yes_drop,
                                   Flux.Optimise.ADAM(0.001),
-                                  Flux.mse, 10, 0, 0, 3, data, false)
+                                  Flux.mse, 10, 0, 0, 3, data, accel)
 
-    chain_no_drop, history = MLJFlux.fit!(chain_no_drop,
+    _chain_no_drop, history = MLJFlux.fit!(chain_no_drop,
                                   Flux.Optimise.ADAM(0.001),
-                                  Flux.mse, 10, 0, 0, 3, data, false)
+                                  Flux.mse, 10, 0, 0, 3, data, accel)
 
     # check chains have different behaviour after training:
-    @test !(chain_yes_drop(test_input) ≈ chain_no_drop(test_input))
+    @test !(_chain_yes_drop(test_input) ≈ _chain_no_drop(test_input))
 
     # check chain with dropout is deterministic outside of training
     # (if we do not differentiate):
-    @test all(chain_yes_drop(test_input) ==
-              chain_yes_drop(test_input) for i in 1:1000)
+    @test all(_chain_yes_drop(test_input) ==
+              _chain_yes_drop(test_input) for i in 1:1000)
 
     @test length(history) == 10
 

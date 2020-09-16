@@ -84,9 +84,15 @@ function MLJModelInterface.fit(model::Regressor, verbosity::Int, X, y)
 
     optimiser = deepcopy(model.optimiser)
 
-    chain, history = fit!(chain, optimiser, model.loss,
-                          model.epochs, model.lambda, 
-                          model.alpha, verbosity, data, use_gpu(model.acceleration))
+    chain, history = fit!(chain,
+                          optimiser,
+                          model.loss,
+                          model.epochs,
+                          model.lambda,
+                          model.alpha,
+                          verbosity,
+                          data,
+                          model.acceleration)
 
     cache = (deepcopy(model), data, history, n_input, n_output)
     fitresult = (chain, target_is_multivariate, target_column_names)
@@ -123,9 +129,15 @@ function MLJModelInterface.update(model::Regressor,
 
     optimiser = deepcopy(model.optimiser)
 
-    chain, history = fit!(chain, optimiser, model.loss, epochs,
-                                model.lambda, model.alpha,
-                                verbosity, data, use_gpu(model.acceleration))
+    chain, history = fit!(chain,
+                          optimiser,
+                          model.loss,
+                          epochs,
+                          model.lambda,
+                          model.alpha,
+                          verbosity,
+                          data,
+                          model.acceleration)
     if keep_chain
         history = vcat(old_history, history)
     end

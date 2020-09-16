@@ -52,8 +52,15 @@ function MLJModelInterface.fit(model::ImageClassifier, verbosity::Int, X_, y_)
 
     optimiser = deepcopy(model.optimiser)
 
-    chain, history = fit!(chain, optimiser, model.loss,
-        model.epochs, model.lambda, model.alpha, verbosity, data, use_gpu(model.acceleration))
+    chain, history = fit!(chain,
+                          optimiser,
+                          model.loss,
+                          model.epochs,
+                          model.lambda,
+                          model.alpha,
+                          verbosity,
+                          data,
+                          model.acceleration)
 
     cache = deepcopy(model), data, history, n_input, n_output
     fitresult = (chain, levels)
@@ -104,9 +111,15 @@ function MLJModelInterface.update(model::ImageClassifier,
 
     optimiser = deepcopy(model.optimiser)
 
-    chain, history = fit!(chain, optimiser, model.loss, epochs,
-                                model.lambda, model.alpha,
-                                verbosity, data, use_gpu(model.acceleration))
+    chain, history = fit!(chain,
+                          optimiser,
+                          model.loss,
+                          epochs,
+                          model.lambda,
+                          model.alpha,
+                          verbosity,
+                          data,
+                          model.acceleration)
     if keep_chain
         history = vcat(old_history, history)
     end

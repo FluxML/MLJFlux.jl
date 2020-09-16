@@ -49,9 +49,15 @@ function MLJModelInterface.fit(model::NeuralNetworkClassifier,
     data = collate(model, X, y)
     optimiser = deepcopy(model.optimiser)
 
-    chain, history = fit!(chain, optimiser, model.loss,
-                          model.epochs, model.lambda,
-                          model.alpha, verbosity, data, use_gpu(model.acceleration))
+    chain, history = fit!(chain,
+                          optimiser,
+                          model.loss,
+                          model.epochs,
+                          model.lambda,
+                          model.alpha,
+                          verbosity,
+                          data,
+                          model.acceleration)
 
     cache = (deepcopy(model), data, history, n_input, n_output)
     fitresult = (chain, levels)
@@ -97,9 +103,15 @@ function MLJModelInterface.update(model::NeuralNetworkClassifier,
 
     optimiser = deepcopy(model.optimiser)
 
-    chain, history = fit!(chain, optimiser, model.loss, epochs,
-                                model.lambda, model.alpha,
-                                verbosity, data, use_gpu(model.acceleration))
+    chain, history = fit!(chain,
+                          optimiser,
+                          model.loss,
+                          epochs,
+                          model.lambda,
+                          model.alpha,
+                          verbosity,
+                          data,
+                          model.acceleration)
     if keep_chain
         history = vcat(old_history, history)
     end

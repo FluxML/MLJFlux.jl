@@ -57,7 +57,7 @@ end
          alpha,
          verbosity,
          data,
-         gpu)
+         acceleration)
 
 Optimize a Flux model `chain` using the regularization parameters
 `lambda` (strength) and `alpha` (l2/l1 mix), where `loss(yhat, y) ` is
@@ -84,9 +84,15 @@ instance `(X, y)` is
 
 where `l1 = sum(norm, params(chain)` and `l2 = sum(norm, params(chain))`.
 
+One must have `acceleration isa CPU1` or `acceleration isa CUDALibs`
+where `CPU1` and `CUDALibs` are types defined in
+`ComputationalResources.jl`.
+
 """
 function  fit!(chain, optimiser, loss, epochs,
-               lambda, alpha, verbosity, data, gpu)
+               lambda, alpha, verbosity, data, acceleration)
+
+    gpu = use_gpu(acceleration)
 
     # Flux.testmode!(chain, false)
     # intitialize and start progress meter:

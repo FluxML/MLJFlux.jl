@@ -103,7 +103,6 @@ function  fit!(chain, optimiser, loss, epochs,
     history = []
     prev_loss = Inf
     if gpu
-        verbosity < 1 || @info "Using GPU for training"
         data = Flux.gpu.(data)
         chain = Flux.gpu(chain)
     end

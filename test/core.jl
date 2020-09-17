@@ -109,12 +109,16 @@ test_input = rand(5, 1)
     Random.seed!(123)
 
     _chain_yes_drop, history = MLJFlux.fit!(chain_yes_drop,
-                                  Flux.Optimise.ADAM(0.001),
-                                  Flux.mse, 10, 0, 0, 3, data, accel)
+                                            Flux.Optimise.ADAM(0.001),
+                                            Flux.mse, 10, 0, 0, 3, data, accel)
+    
+    println()
+    
+    Random.seed!(123)
 
     _chain_no_drop, history = MLJFlux.fit!(chain_no_drop,
-                                  Flux.Optimise.ADAM(0.001),
-                                  Flux.mse, 10, 0, 0, 3, data, accel)
+                                           Flux.Optimise.ADAM(0.001),
+                                           Flux.mse, 10, 0, 0, 3, data, accel)
 
     # check chains have different behaviour after training:
     @test !(_chain_yes_drop(test_input) ≈ _chain_no_drop(test_input))

@@ -14,8 +14,10 @@ using MLJModelInterface.ScientificTypes
 using ComputationalResources
 using ComputationalResources: CPU1, CUDALibs
 
-const RESOURCES = Any[CPU1(), CUDALibs()]
-const EXCLUDED_RESOURCE_TYPES = Any[CUDALibs,]
+const RESOURCES = Any[CUDALibs(), CPU1()]
+# const RESOURCES = Any[CPU1(), CUDALibs()]
+const EXCLUDED_RESOURCE_TYPES = Any[]
+# const EXCLUDED_RESOURCE_TYPES = Any[CUDALibs,]
 
 seed!(123)
 
@@ -25,9 +27,9 @@ include("test_utils.jl")
     include("core.jl")
 end
 
-@testset "regressor" begin
-    include("regressor.jl")
-end
+# @testset "regressor" begin
+#     include("regressor.jl")
+# end
 
 @testset "classifier" begin
     include("classifier.jl")

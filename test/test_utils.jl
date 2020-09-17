@@ -9,6 +9,8 @@ end
 # `@test_accelerated "cool test" accel (exclude=[CPU1,],) begin ... end`
 function testset_accelerated(name::String, var, ex; exclude=[])
 
+    @info "Starting this test: $name..."
+    
     final_ex = quote end
 
     append!(exclude, EXCLUDED_RESOURCE_TYPES)
@@ -34,7 +36,7 @@ end
 
 # To run a battery of tests checking: (i) fit, predict & update calls
 # work; (ii) update logic is correct; (iii) training loss after 10
-# epochs is 80% or better than initial loss:
+# epochs is better than `threshold` times initial loss:
 function basictest(ModelType, X, y, builder, optimiser, threshold, accel)
 
     ModelType_str = string(ModelType)
@@ -77,7 +79,9 @@ function basictest(ModelType, X, y, builder, optimiser, threshold, accel)
                                optimiser=$optimiser,
                                epochs=2,
                                acceleration=$accel_ex)
-         fitresult, cache, report = MLJBase.fit(model, 0, $X, $y);
+         println()
+         fitresult, cache, report = MLJBase.fit(model, 1, $X, $y);
+         println()
 
          # change batch_size and check it performs cold restart:
          model.batch_size = 2

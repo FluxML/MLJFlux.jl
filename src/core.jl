@@ -102,9 +102,14 @@ function  fit!(chain, optimiser, loss, epochs,
     loss_func(x, y) = loss(chain(x), y)
     history = []
     prev_loss = Inf
-    if gpu
+    mode = if gpu
         data = Flux.gpu.(data)
         chain = Flux.gpu(chain)
+        "CUDALibs()"
+    else
+        data = Flux.cpu.(data)
+        chain = Flux.cpu(chain)
+        "CPU1()"
     end
 
     for i in 1:epochs
@@ -113,7 +118,7 @@ function  fit!(chain, optimiser, loss, epochs,
         current_loss =
             mean(loss_func(data[i][1], data[i][2]) for i=1:length(data))
         verbosity < 2 ||
-            @info "Loss is $(round(current_loss; sigdigits=4))"
+            @info "Loss is $(round(current_loss; sigdigits=4)) ($mode)"
         push!(history, current_loss)
 
         # Early stopping is to be externally controlled.

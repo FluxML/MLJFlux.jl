@@ -20,7 +20,7 @@ optimiser = Flux.Optimise.ADAM()
     # test a bit better than constant predictor
     model = MLJFlux.NeuralNetworkRegressor(acceleration=accel)
     train, test = MLJBase.partition(1:N, 0.7)
-    mach = fit!(machine(model, X, y), rows=train, verbosity=0)
+    @time mach = fit!(machine(model, X, y), rows=train, verbosity=0)
     yhat = predict(mach, rows=test)
     truth = y[test]
     goal =0.8*model.loss(truth .- mean(truth), 0)
@@ -42,7 +42,7 @@ end
     # test a bit better than constant predictor
     model = MLJFlux.MultitargetNeuralNetworkRegressor(acceleration=accel)
     train, test = MLJBase.partition(1:N, 0.7)
-    mach = fit!(machine(model, X, y), rows=train, verbosity=0)
+    @test mach = fit!(machine(model, X, y), rows=train, verbosity=2)
     yhat = predict(mach, rows=test)
     truth = ymatrix[test]
     goal =0.8*model.loss(truth .- mean(truth), 0)

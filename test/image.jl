@@ -42,8 +42,9 @@ labels = categorical(rand(1:5, 50));
     pred = MLJBase.predict(model, fitresult, images[1:6])
 
     # try with batch_size > 1:
-    model = MLJFlux.ImageClassifier(builder=builder, epochs=10, batch_size=2)
-    fitresult, cache, report = MLJBase.fit(model, 3, images, labels);
+    model = MLJFlux.ImageClassifier(builder=builder, epochs=10, batch_size=2,
+                                    acceleration=accel)
+    @time fitresult, cache, report = MLJBase.fit(model, 3, images, labels);
 
     # tests update logic, etc (see test_utililites.jl):
     @test basictest(MLJFlux.ImageClassifier, images, labels,
@@ -84,9 +85,9 @@ end
 
     Random.seed!(123)
 
-    model = MLJFlux.ImageClassifier(builder=MyConvBuilder())
+    model = MLJFlux.ImageClassifier(builder=MyConvBuilder(), acceleration=accel)
 
-    fitresult, cache, report =
+    @time fitresult, cache, report =
         MLJBase.fit(model, 3, images[1:500], labels[1:500]);
 
     pred = mode.(MLJBase.predict(model, fitresult, images[501:600]));
@@ -112,7 +113,7 @@ labels = categorical(rand(1:5, 50));
 
     Random.seed!(123)
 
-    model = MLJFlux.ImageClassifier(builder=builder, epochs=10)
+    model = MLJFlux.ImageClassifier(builder=builder, epochs=10, acceleration=accel)
 
     fitresult, cache, report = MLJBase.fit(model, 3, images, labels)
 
@@ -124,8 +125,8 @@ labels = categorical(rand(1:5, 50));
     pred = MLJBase.predict(model, fitresult, images[1:6])
 
     # try with batch_size > 1:
-    model = MLJFlux.ImageClassifier(builder=builder, epochs=10, batch_size=2)
-    fitresult, cache, report = MLJBase.fit(model, 3, images, labels);
+    model = MLJFlux.ImageClassifier(builder=builder, epochs=10, batch_size=2, acceleration=accel)
+    @time fitresult, cache, report = MLJBase.fit(model, 3, images, labels);
 
     # tests update logic, etc (see test_utililites.jl):
     @test basictest(MLJFlux.ImageClassifier, images, labels,

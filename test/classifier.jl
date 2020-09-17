@@ -28,7 +28,7 @@ optimiser = Flux.Optimise.ADAM(0.01)
               y,
               builder,
               optimiser,
-              0.75,
+              0.85,
               accel)
 
     train, test = MLJBase.partition(1:N, 0.7)
@@ -46,7 +46,7 @@ optimiser = Flux.Optimise.ADAM(0.01)
     # check flux model is an improvement on predicting constant
     # distribution:
     model = MLJFlux.NeuralNetworkClassifier(epochs=150, acceleration=accel)
-    mach = fit!(machine(model, X, y), rows=train, verbosity=0)
+    @time mach = fit!(machine(model, X, y), rows=train, verbosity=2)
     yhat = MLJBase.predict(mach, rows=test);
     @test mean(MLJBase.cross_entropy(yhat, y[test])) < 0.9*loss_baseline
 end

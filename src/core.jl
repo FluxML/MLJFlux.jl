@@ -118,7 +118,7 @@ function  fit!(chain, optimiser, loss, epochs,
         current_loss =
             mean(loss_func(data[i][1], data[i][2]) for i=1:length(data))
         verbosity < 2 ||
-            @info "Loss is $(round(current_loss; sigdigits=4)) ($mode)"
+            @info "Loss is $(round(current_loss; sigdigits=4))"
         push!(history, current_loss)
 
         # Early stopping is to be externally controlled.

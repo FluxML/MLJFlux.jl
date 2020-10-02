@@ -99,12 +99,17 @@ chain_yes_drop = Flux.Chain(Flux.Dense(5, 15),
 chain_no_drop = deepcopy(chain_yes_drop)
 chain_no_drop.layers[2].p = 1.0
 
-test_input = rand(5, 1)
+test_input = rand(Float32, 5, 1)
 
 # check both chains have same behaviour before training:
 @test chain_yes_drop(test_input) == chain_no_drop(test_input)
 
+move(data, ::CUDALibs) = Flux.gpu(data)
+move(data, ::Any) = Flux.cpu(data)
+
 @testset_accelerated "fit! and dropout" accel begin
+
+    test_input = move(rand(Float32, 5, 1), accel)
 
     Random.seed!(123)
 

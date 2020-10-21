@@ -36,17 +36,11 @@ for opt in (:Descent, :Momentum, :Nesterov, :RMSProp, :ADAM, :AdaMax,
 
 end
 
-function use_gpu(resource)
-    if resource isa CUDALibs
-        return true
-    elseif resource isa CPU1
-        return false
-    else
-        throw(ArgumentError("Resource not supported"))
-    end
-end
 
 ## GENERAL METHOD TO OPTIMIZE A CHAIN
+
+move(data, ::CUDALibs) = Flux.gpu(data)
+move(data, ::CPU1) = Flux.cpu(data)
 
 """
     fit!(chain,
@@ -85,14 +79,12 @@ instance `(X, y)` is
 where `l1 = sum(norm, params(chain)` and `l2 = sum(norm, params(chain))`.
 
 One must have `acceleration isa CPU1` or `acceleration isa CUDALibs`
-where `CPU1` and `CUDALibs` are types defined in
-`ComputationalResources.jl`.
+(for running on a GPU) where `CPU1` and `CUDALibs` are types defined
+in `ComputationalResources.jl`.
 
 """
 function  fit!(chain, optimiser, loss, epochs,
                lambda, alpha, verbosity, data, acceleration)
-
-    gpu = use_gpu(acceleration)
 
     # Flux.testmode!(chain, false)
     # intitialize and start progress meter:
@@ -102,15 +94,8 @@ function  fit!(chain, optimiser, loss, epochs,
     loss_func(x, y) = loss(chain(x), y)
     history = []
     prev_loss = Inf
-    mode = if gpu
-        data = Flux.gpu.(data)
-        chain = Flux.gpu(chain)
-        "CUDALibs()"
-    else
-        data = Flux.cpu.(data)
-        chain = Flux.cpu(chain)
-        "CPU1()"
-    end
+    data = move(data, acceleration)
+    chain = move(chain, acceleration)
 
     for i in 1:epochs
         # We're taking data in a Flux-fashion.

@@ -39,8 +39,12 @@ end
 
 ## GENERAL METHOD TO OPTIMIZE A CHAIN
 
-move(data, ::CUDALibs) = Flux.gpu(data)
-move(data, ::CPU1) = Flux.cpu(data)
+struct Mover{R<:AbstractResource}
+    resource::R
+end
+
+(::Mover{<:CPU1})(data) = Flux.cpu(data)
+(::Mover{<:CUDALibs})(data) = Flux.gpu(data)
 
 """
     fit!(chain,
@@ -94,8 +98,9 @@ function  fit!(chain, optimiser, loss, epochs,
     loss_func(x, y) = loss(chain(x), y)
     history = []
     prev_loss = Inf
-    data = move(data, acceleration)
-    chain = move(chain, acceleration)
+    move = Mover(acceleration)
+    data = move(data)
+    chain = move(chain)
 
     for i in 1:epochs
         # We're taking data in a Flux-fashion.

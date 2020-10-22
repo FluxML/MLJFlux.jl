@@ -73,8 +73,9 @@ end
 # Xnew is an array of 3D values
 function MLJModelInterface.predict(model::ImageClassifier, fitresult, Xnew)
     chain, levels = fitresult
-    X = reformat(Xnew)
-    probs = vcat([chain(X[:,:,:,idx:idx])' for idx in 1:length(Xnew)]...)
+    X = reformat(Xnew) |> Mover(model.acceleration) 
+    probs = vcat([chain(X[:,:,:,idx:idx])'
+                  for idx in 1:length(Xnew)]...) |> Flux.cpu
     return MLJModelInterface.UnivariateFinite(levels, probs)
 end
 

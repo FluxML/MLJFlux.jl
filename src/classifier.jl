@@ -113,7 +113,8 @@ function MLJModelInterface.update(model::NeuralNetworkClassifier,
                           data,
                           model.acceleration)
     if keep_chain
-        history = vcat(old_history, history)
+        # note: history[1] = old_history[end]
+        history = vcat(old_history[1:end-1], history)
     end
 
     fitresult = (chain, levels)

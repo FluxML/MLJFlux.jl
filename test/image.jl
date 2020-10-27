@@ -32,19 +32,21 @@ labels = categorical(rand(1:5, 50));
                                     epochs=10,
                                     acceleration=accel)
 
-    fitresult, cache, report = MLJBase.fit(model, 3, images, labels)
+    fitresult, cache, _report = MLJBase.fit(model, 0, images, labels)
 
     pred = MLJBase.predict(model, fitresult, images[1:6])
 
     model.epochs = 15
-    MLJBase.update(model, 3, fitresult, cache, images, labels)
+    MLJBase.update(model, 0, fitresult, cache, images, labels)
 
     pred = MLJBase.predict(model, fitresult, images[1:6])
 
     # try with batch_size > 1:
     model = MLJFlux.ImageClassifier(builder=builder, epochs=10, batch_size=2,
                                     acceleration=accel)
-    @time fitresult, cache, report = MLJBase.fit(model, 3, images, labels);
+    @time fitresult, cache, _report = MLJBase.fit(model, 0, images, labels);
+    first_last_training_loss = _report[1][[1, end]]
+    @show first_last_training_loss
 
     # tests update logic, etc (see test_utililites.jl):
     @test basictest(MLJFlux.ImageClassifier, images, labels,
@@ -87,8 +89,10 @@ end
 
     model = MLJFlux.ImageClassifier(builder=MyConvBuilder(), acceleration=accel)
 
-    @time fitresult, cache, report =
-        MLJBase.fit(model, 3, images[1:500], labels[1:500]);
+    @time fitresult, cache, _report =
+        MLJBase.fit(model, 0, images[1:500], labels[1:500]);
+    first_last_training_loss = _report[1][[1, end]]
+    @show first_last_training_loss
 
     pred = mode.(MLJBase.predict(model, fitresult, images[501:600]));
     error = misclassification_rate(pred, labels[501:600])
@@ -115,22 +119,19 @@ labels = categorical(rand(1:5, 50));
 
     model = MLJFlux.ImageClassifier(builder=builder, epochs=10, acceleration=accel)
 
-    fitresult, cache, report = MLJBase.fit(model, 3, images, labels)
-
-    pred = MLJBase.predict(model, fitresult, images[1:6])
-
-    model.epochs = 15
-    MLJBase.update(model, 3, fitresult, cache, images, labels)
-
-    pred = MLJBase.predict(model, fitresult, images[1:6])
-
-    # try with batch_size > 1:
-    model = MLJFlux.ImageClassifier(builder=builder, epochs=10, batch_size=2, acceleration=accel)
-    @time fitresult, cache, report = MLJBase.fit(model, 3, images, labels);
-
     # tests update logic, etc (see test_utililites.jl):
     @test basictest(MLJFlux.ImageClassifier, images, labels,
                            model.builder, model.optimiser, 0.95, accel)
+    
+    @time fitresult, cache, _report = MLJBase.fit(model, 0, images, labels)
+    pred = MLJBase.predict(model, fitresult, images[1:6])
+    first_last_training_loss = _report[1][[1, end]]
+    @show first_last_training_loss
+
+    # try with batch_size > 1:
+    model = MLJFlux.ImageClassifier(builder=builder, epochs=10, batch_size=2, acceleration=accel)
+    fitresult, cache, _report = MLJBase.fit(model, 0, images, labels);
+
 end
 
 true

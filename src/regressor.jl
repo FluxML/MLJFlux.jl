@@ -139,7 +139,8 @@ function MLJModelInterface.update(model::Regressor,
                           data,
                           model.acceleration)
     if keep_chain
-        history = vcat(old_history, history)
+        # note: history[1] = old_history[end]
+        history = vcat(old_history[1:end-1], history)
     end
     fitresult = (chain, target_is_multivariate, target_column_names)
     cache = (deepcopy(model), data, history, n_input, n_output)

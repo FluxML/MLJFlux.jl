@@ -106,6 +106,7 @@ test_input = rand(Float32, 5, 1)
 
 move(data, ::CUDALibs) = Flux.gpu(data)
 move(data, ::Any) = Flux.cpu(data)
+epochs = 10
 
 @testset_accelerated "fit! and dropout" accel begin
 
@@ -115,7 +116,7 @@ move(data, ::Any) = Flux.cpu(data)
 
     _chain_yes_drop, history = MLJFlux.fit!(chain_yes_drop,
                                             Flux.Optimise.ADAM(0.001),
-                                            Flux.mse, 10, 0, 0, 3, data, accel)
+                                            Flux.mse, epochs, 0, 0, 0, data, accel)
     
     println()
     
@@ -123,7 +124,7 @@ move(data, ::Any) = Flux.cpu(data)
 
     _chain_no_drop, history = MLJFlux.fit!(chain_no_drop,
                                            Flux.Optimise.ADAM(0.001),
-                                           Flux.mse, 10, 0, 0, 3, data, accel)
+                                           Flux.mse, epochs, 0, 0, 0, data, accel)
 
     # check chains have different behaviour after training:
     @test !(_chain_yes_drop(test_input) ≈ _chain_no_drop(test_input))
@@ -133,7 +134,7 @@ move(data, ::Any) = Flux.cpu(data)
     @test all(_chain_yes_drop(test_input) ==
               _chain_yes_drop(test_input) for i in 1:1000)
 
-    @test length(history) == 10
+    @test length(history) == epochs + 1
 
 end
 

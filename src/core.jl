@@ -90,17 +90,20 @@ in `ComputationalResources.jl`.
 function  fit!(chain, optimiser, loss, epochs,
                lambda, alpha, verbosity, data, acceleration)
 
-    # Flux.testmode!(chain, false)
     # intitialize and start progress meter:
     meter = Progress(epochs+1, dt=0, desc="Optimising neural net:",
                      barglyphs=BarGlyphs("[=> ]"), barlen=25, color=:yellow)
     verbosity != 1 || next!(meter)
-    loss_func(x, y) = loss(chain(x), y)
-    history = []
-    prev_loss = Inf
+
     move = Mover(acceleration)
     data = move(data)
     chain = move(chain)
+
+    loss_func(x, y) = loss(chain(x), y)
+
+    # initiate history:
+    prev_loss = mean(loss_func(data[i][1], data[i][2]) for i=1:length(data))
+    history = [prev_loss,]
 
     for i in 1:epochs
         # We're taking data in a Flux-fashion.
@@ -123,7 +126,7 @@ function  fit!(chain, optimiser, loss, epochs,
         verbosity != 1 || next!(meter)
 
     end
-    # Flux.testmode!(chain, true)         # to use in inference mode
+    
     return chain, history
 
 end

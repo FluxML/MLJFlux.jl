@@ -9,13 +9,19 @@ end
 # `@test_accelerated "cool test" accel (exclude=[CPU1,],) begin ... end`
 function testset_accelerated(name::String, var, ex; exclude=[])
 
-    @info "Starting this test: $name..."
-    
     final_ex = quote end
+
+    push!(final_ex.args, quote
+          println()
+          @info "$($name):"
+          end)
 
     append!(exclude, EXCLUDED_RESOURCE_TYPES)
 
     for res in RESOURCES
+        push!(final_ex.args, quote
+              @info "acceleration = $($res)"
+              end)
         if any(x->typeof(res)<:x, exclude)
             push!(final_ex.args, quote
                $var = $res
@@ -30,7 +36,9 @@ function testset_accelerated(name::String, var, ex; exclude=[])
             end)
         end
     end
+
     return esc(final_ex)
+    
 end
 
 
@@ -49,11 +57,10 @@ function basictest(ModelType, X, y, builder, optimiser, threshold, accel)
                                optimiser=$optimiser,
                                acceleration=$accel_ex)
 
-         fitresult, cache, report =
-         MLJBase.fit(model,0, $X, $y);
+         fitresult, cache, report = MLJBase.fit(model, 0, $X, $y);
 
          history = report.training_losses;
-         @test length(history) == model.epochs
+         @test length(history) == model.epochs + 1
 
          # test improvement in training loss:
          @test history[end] < $threshold*history[1]
@@ -72,16 +79,15 @@ function basictest(ModelType, X, y, builder, optimiser, threshold, accel)
          yhat = MLJBase.predict(model, fitresult, $X)
 
          history = report.training_losses;
-         @test length(history) == model.epochs
+         @test length(history) == model.epochs + 1
 
          # start fresh with small epochs:
          model = $ModelType_ex(builder=$builder,
                                optimiser=$optimiser,
                                epochs=2,
                                acceleration=$accel_ex)
-         println()
-         fitresult, cache, report = MLJBase.fit(model, 1, $X, $y);
-         println()
+
+         fitresult, cache, report = MLJBase.fit(model, 0, $X, $y);
 
          # change batch_size and check it performs cold restart:
          model.batch_size = 2

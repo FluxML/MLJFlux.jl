@@ -3,8 +3,12 @@ Random.seed!(123)
 N = 200
 X = MLJBase.table(randn(Float32, N, 5));
 
-builder = MLJFlux.Short(σ=identity)
+# TODO: replace Short2 -> Short when
+# https://github.com/FluxML/Flux.jl/issues/1372 is resolved:
+builder = Short2(σ=identity)
 optimiser = Flux.Optimise.ADAM()
+
+losses = []
 
 @testset_accelerated "NeuralNetworkRegressor" accel begin
     Random.seed!(123)
@@ -21,11 +25,18 @@ optimiser = Flux.Optimise.ADAM()
     model = MLJFlux.NeuralNetworkRegressor(acceleration=accel)
     train, test = MLJBase.partition(1:N, 0.7)
     @time mach = fit!(machine(model, X, y), rows=train, verbosity=0)
+    first_last_training_loss = MLJBase.report(mach)[1][[1, end]]
+    push!(losses, first_last_training_loss[2])
+    @show first_last_training_loss
     yhat = predict(mach, rows=test)
     truth = y[test]
-    goal =0.8*model.loss(truth .- mean(truth), 0)
+    goal = 1.0*model.loss(truth .- mean(truth), 0)
     @test model.loss(yhat, truth) < goal
 end
+
+# check different resources (CPU1, CUDALibs, etc)) give about the same loss:
+reference = losses[1]
+@test all(x->abs(x - reference)/x < 1e-6, losses[2:end])
 
 @testset_accelerated "MultitargetNeuralNetworkRegressor" accel begin
     Random.seed!(123)
@@ -36,16 +47,18 @@ end
               y,
               builder,
               optimiser,
-              0.8,
+              1.0,
               accel)
 
     # test a bit better than constant predictor
     model = MLJFlux.MultitargetNeuralNetworkRegressor(acceleration=accel)
     train, test = MLJBase.partition(1:N, 0.7)
-    @test mach = fit!(machine(model, X, y), rows=train, verbosity=2)
+    @time mach = fit!(machine(model, X, y), rows=train, verbosity=0)
+    first_last_training_loss = MLJBase.report(mach)[1][[1, end]]
+    @show first_last_training_loss
     yhat = predict(mach, rows=test)
     truth = ymatrix[test]
-    goal =0.8*model.loss(truth .- mean(truth), 0)
+    goal = 1.0*model.loss(truth .- mean(truth), 0)
     @test model.loss(Tables.matrix(yhat), truth) < goal
 end
 

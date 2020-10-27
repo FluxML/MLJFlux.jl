@@ -15,9 +15,14 @@ using ComputationalResources
 using ComputationalResources: CPU1, CUDALibs
 
 const RESOURCES = Any[CPU1(), CUDALibs()]
-# const RESOURCES = Any[CPU1(), CUDALibs()]
-const EXCLUDED_RESOURCE_TYPES = Any[]
-# const EXCLUDED_RESOURCE_TYPES = Any[CUDALibs,]
+EXCLUDED_RESOURCE_TYPES = Any[]
+
+if Flux.gpu(rand(2,2)) isa Array
+    push!(EXCLUDED_RESOURCE_TYPES, CUDALibs)
+end
+
+@show RESOURCES
+@show EXCLUDED_RESOURCE_TYPES
 
 # alternative version of Short builder with no dropout; see
 # https://github.com/FluxML/Flux.jl/issues/1372

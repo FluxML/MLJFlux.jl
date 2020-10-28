@@ -10,26 +10,32 @@ mutable struct NeuralNetworkRegressor{B,O,L} <: MLJModelInterface.Deterministic
     acceleration::AbstractResource       # To use GPU
 end
 
-NeuralNetworkRegressor(; builder::B   = Linear()
-              , optimiser::O = Flux.Optimise.ADAM()
-              , loss::L      = Flux.mse
-              , epochs       = 10
-              , batch_size   = 1
-              , lambda       = 0
-              , alpha        = 0
-              , optimiser_changes_trigger_retraining=false
-              , acceleration  = CPU1()
-              ) where {B,O,L} =
-                  NeuralNetworkRegressor{B,O,L}(builder
-                                       , optimiser
-                                       , loss
-                                       , epochs
-                                       , batch_size
-                                       , lambda
-                                       , alpha
-                                       , optimiser_changes_trigger_retraining
-                                       , acceleration)
-
+function NeuralNetworkRegressor(; builder::B   = Linear()
+                                , optimiser::O = Flux.Optimise.ADAM()
+                                , loss::L      = Flux.mse
+                                , epochs       = 10
+                                , batch_size   = 1
+                                , lambda       = 0
+                                , alpha        = 0
+                                , optimiser_changes_trigger_retraining=false
+                                , acceleration  = CPU1()
+                                ) where {B,O,L}
+    
+    model = NeuralNetworkRegressor{B,O,L}(builder
+                                          , optimiser
+                                          , loss
+                                          , epochs
+                                          , batch_size
+                                          , lambda
+                                          , alpha
+                                          , optimiser_changes_trigger_retraining
+                                          , acceleration)
+    
+   message = clean!(model)
+   isempty(message) || @warn message
+    
+    return model
+end
 
 mutable struct MultitargetNeuralNetworkRegressor{B,O,L} <: MLJModelInterface.Deterministic
     builder::B
@@ -43,26 +49,33 @@ mutable struct MultitargetNeuralNetworkRegressor{B,O,L} <: MLJModelInterface.Det
     acceleration::AbstractResource
 end
 
-MultitargetNeuralNetworkRegressor(; builder::B   = Linear()
-              , optimiser::O = Flux.Optimise.ADAM()
-              , loss::L      = Flux.mse
-              , epochs       = 10
-              , batch_size   = 1
-              , lambda       = 0
-              , alpha        = 0
-              , optimiser_changes_trigger_retraining=false
-              , acceleration = CPU1()
-              ) where {B,O,L} =
-                  MultitargetNeuralNetworkRegressor{B,O,L}(builder
-                                       , optimiser
-                                       , loss
-                                       , epochs
-                                       , batch_size
-                                       , lambda
-                                       , alpha
-                                       , optimiser_changes_trigger_retraining
-                                       , acceleration)
+function MultitargetNeuralNetworkRegressor(; builder::B   = Linear()
+                                           , optimiser::O = Flux.Optimise.ADAM()
+                                           , loss::L      = Flux.mse
+                                           , epochs       = 10
+                                           , batch_size   = 1
+                                           , lambda       = 0
+                                           , alpha        = 0
+                                           , optimiser_changes_trigger_retraining=false
+                                           , acceleration = CPU1()
+                                           ) where {B,O,L}
 
+    model = MultitargetNeuralNetworkRegressor{B,O,L}(builder
+                                                     , optimiser
+                                                     , loss
+                                                     , epochs
+                                                     , batch_size
+                                                     , lambda
+                                                     , alpha
+                                                     , optimiser_changes_trigger_retraining
+                                                     , acceleration)
+
+    message = clean!(model)
+    isempty(message) || @warn message
+
+    return model
+end
+    
 const Regressor =
     Union{NeuralNetworkRegressor, MultitargetNeuralNetworkRegressor}
 
@@ -70,7 +83,7 @@ function MLJModelInterface.fit(model::Regressor, verbosity::Int, X, y)
 
     # (assumes  no categorical features)
     n_input = Tables.schema(X).names |> length
-    data = collate(model, X, y)
+    data = MLJFlux.collate(model, X, y)
 
     target_is_multivariate = Tables.istable(y)
     if target_is_multivariate

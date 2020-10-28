@@ -21,6 +21,8 @@ end |> categorical;
 builder = Short2()
 optimiser = Flux.Optimise.ADAM(0.03)
 
+losses = []
+
 @testset_accelerated "NeuralNetworkClassifier" accel begin
     Random.seed!(123)
     basictest(MLJFlux.NeuralNetworkClassifier,
@@ -45,14 +47,21 @@ optimiser = Flux.Optimise.ADAM(0.03)
 
     # check flux model is an improvement on predicting constant
     # distribution:
-    model = MLJFlux.NeuralNetworkClassifier(epochs=150,
+    model = MLJFlux.NeuralNetworkClassifier(epochs=50,
+                                            builder=builder,
+                                            optimiser=optimiser,
                                             acceleration=accel,
                                             batch_size=10)
     @time mach = fit!(machine(model, X, y), rows=train, verbosity=0)
     first_last_training_loss = MLJBase.report(mach)[1][[1, end]]
-    @show first_last_training_loss
+    push!(losses, first_last_training_loss[2])
     yhat = MLJBase.predict(mach, rows=test);
-    @test mean(MLJBase.cross_entropy(yhat, y[test])) < 0.9*loss_baseline
+    @test mean(MLJBase.cross_entropy(yhat, y[test])) < 0.95*loss_baseline
 end
+
+# check different resources (CPU1, CUDALibs, etc)) give about the same loss:
+reference = losses[1]
+abs(losses[2] - reference)/reference
+@test all(x->abs(x - reference)/reference < 1e-5, losses[2:end])
 
 true

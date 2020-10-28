@@ -1,7 +1,7 @@
 module MLJFlux
 
 import Flux
-import MLJModelInterface
+using MLJModelInterface
 using MLJModelInterface.ScientificTypes
 import Base.==
 using ProgressMeter
@@ -15,6 +15,7 @@ include("core.jl")
 include("regressor.jl")
 include("classifier.jl")
 include("image.jl")
+include("common.jl")
 
 ### Package specific model traits:
 MLJModelInterface.metadata_pkg.((NeuralNetworkRegressor,

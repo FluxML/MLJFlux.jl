@@ -17,9 +17,7 @@ using ComputationalResources: CPU1, CUDALibs
 const RESOURCES = Any[CPU1(), CUDALibs()]
 EXCLUDED_RESOURCE_TYPES = Any[]
 
-if Flux.gpu(rand(2,2)) isa Array
-    push!(EXCLUDED_RESOURCE_TYPES, CUDALibs)
-end
+MLJFlux.gpu_isdead() && push!(EXCLUDED_RESOURCE_TYPES, CUDALibs)
 
 @show RESOURCES
 @show EXCLUDED_RESOURCE_TYPES
@@ -44,6 +42,10 @@ include("test_utils.jl")
 
 @testset "core" begin
     include("core.jl")
+end
+
+@testset "common" begin
+    include("common.jl")
 end
 
 @testset "regressor" begin

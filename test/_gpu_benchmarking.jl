@@ -33,13 +33,17 @@ basedir = joinpath(dirname(pathof(MLJFlux)), "..", "test")
 include(joinpath(basedir, "test_utils.jl"))
 
 # CPU
-model = MLJFlux.ImageClassifier(builder=MyConvBuilder(), acceleration=CPU1())
+model = MLJFlux.ImageClassifier(builder=MyConvBuilder(),
+                                batch_size=50,
+                                acceleration=CPU1());
 @btime MLJBase.fit($model, 0, $images, $labels);
-# 16.877 s (7401673 allocations: 8.15 GiB)
+# 16.877 s (7401673 allocations: 8.15 GiB) batch_size = 1 
+#  8.816 s (409635 allocations: 3.15 GiB) batch_size = 50
 
 # GPU
 model.acceleration = CUDALibs()
 @btime MLJBase.fit($model, 0, $images, $labels);
-# 30.214 s (46970158 allocations: 2.37 GiB)
+# 30.214 s (46970158 allocations: 2.37 GiB) batch_size = 1
+# 600.534 ms (960560 allocations: 52.82 MiB) batch_size = 50
 
 

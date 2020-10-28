@@ -19,7 +19,7 @@ end |> categorical;
 # TODO: replace Short2 -> Short when
 # https://github.com/FluxML/Flux.jl/issues/1372 is resolved:
 builder = Short2()
-optimiser = Flux.Optimise.ADAM(0.01)
+optimiser = Flux.Optimise.ADAM(0.03)
 
 @testset_accelerated "NeuralNetworkClassifier" accel begin
     Random.seed!(123)
@@ -45,7 +45,9 @@ optimiser = Flux.Optimise.ADAM(0.01)
 
     # check flux model is an improvement on predicting constant
     # distribution:
-    model = MLJFlux.NeuralNetworkClassifier(epochs=150, acceleration=accel)
+    model = MLJFlux.NeuralNetworkClassifier(epochs=150,
+                                            acceleration=accel,
+                                            batch_size=10)
     @time mach = fit!(machine(model, X, y), rows=train, verbosity=0)
     first_last_training_loss = MLJBase.report(mach)[1][[1, end]]
     @show first_last_training_loss

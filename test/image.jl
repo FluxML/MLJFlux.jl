@@ -87,7 +87,9 @@ end
 
     Random.seed!(123)
 
-    model = MLJFlux.ImageClassifier(builder=MyConvBuilder(), acceleration=accel)
+    model = MLJFlux.ImageClassifier(builder=MyConvBuilder(),
+                                    acceleration=accel,
+                                    batch_size=50)
 
     @time fitresult, cache, _report =
         MLJBase.fit(model, 0, images[1:500], labels[1:500]);
@@ -96,7 +98,7 @@ end
 
     pred = mode.(MLJBase.predict(model, fitresult, images[501:600]));
     error = misclassification_rate(pred, labels[501:600])
-    @test error < 0.1
+    @test error < 0.2
 
 end
 

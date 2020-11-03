@@ -17,9 +17,9 @@ for opt in (:Descent, :Momentum, :Nesterov, :RMSProp, :ADAM, :AdaMax,
 
     @eval begin
 
-# TODO: Uncomment next line when
-# https://github.com/alan-turing-institute/MLJModelInterface.jl/issues/28
-# is resolved:
+        # TODO: Uncomment next line when
+        # https://github.com/alan-turing-institute/MLJModelInterface.jl/issues/28
+        # is resolved:
 
         # MLJModelInterface.istransparent(m::Flux.$opt) = true
 
@@ -86,6 +86,13 @@ One must have `acceleration isa CPU1` or `acceleration isa CUDALibs`
 (for running on a GPU) where `CPU1` and `CUDALibs` are types defined
 in `ComputationalResources.jl`.
 
+### Return value
+
+`(chain_trained, history)`, where `chain_trained` is a trained version
+of `chain` (possibly moved to a gpu) and `history` is a vector of
+losses - one intial loss, and one loss per epoch. The method may
+mutate the argument `chain`, depending on cpu <-> gpu movements.
+
 """
 function  fit!(chain, optimiser, loss, epochs,
                lambda, alpha, verbosity, data, acceleration)
@@ -107,6 +114,7 @@ function  fit!(chain, optimiser, loss, epochs,
 
     for i in 1:epochs
         # We're taking data in a Flux-fashion.
+#        @show i rand()
         Flux.train!(loss_func, Flux.params(chain), data, optimiser)
         current_loss =
             mean(loss_func(data[i][1], data[i][2]) for i=1:length(data))
@@ -176,6 +184,15 @@ end
 ## HELPERS
 
 """
+    gpu_isdead()
+
+Returns `true` if `acceleration=CUDALibs()` option is unavailable, and
+false otherwise.
+
+"""
+gpu_isdead() = Flux.gpu([1.0, ]) isa Array
+
+"""
     nrows(X)
 
 Find the number of rows of `X`, where `X` is an `AbstractVector or
@@ -240,11 +257,6 @@ function reformat(y, ::Type{<:AbstractVector{<:Finite}})
 end
 
 function reformat(y, ::Type{<:AbstractVector{<:Count}})
-    levels = y |> first |> MLJModelInterface.classes
-    return hcat([Flux.onehot(ele, levels) for ele in y]...,)
-end
-
-function reformat(y, ::Type{<:AbstractVector{<:Multiclass}})
     levels = y |> first |> MLJModelInterface.classes
     return hcat([Flux.onehot(ele, levels) for ele in y]...,)
 end

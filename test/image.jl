@@ -21,9 +21,9 @@ raw_images = rand(Float32, 6, 6, 1, 50);
 # as a vector of Matrix{<:AbstractRGB}
 images = coerce(raw_images, GrayImage);
 @test scitype(images) == AbstractVector{GrayImage{6,6}}
-
 labels = categorical(rand(1:5, 50));
 
+losses = []
 @testset_accelerated "ImageClassifier basic tests" accel begin
 
     Random.seed!(123)
@@ -46,13 +46,18 @@ labels = categorical(rand(1:5, 50));
                                     acceleration=accel)
     @time fitresult, cache, _report = MLJBase.fit(model, 0, images, labels);
     first_last_training_loss = _report[1][[1, end]]
-    @show first_last_training_loss
+    push!(losses, first_last_training_loss[2])
+#    @show first_last_training_loss
 
     # tests update logic, etc (see test_utililites.jl):
     @test basictest(MLJFlux.ImageClassifier, images, labels,
                            model.builder, model.optimiser, 0.95, accel)
 
 end
+
+# check different resources (CPU1, CUDALibs, etc)) give about the same loss:
+reference = losses[1]
+@test all(x->abs(x - reference)/reference < 1e-5, losses[2:end])
 
 
 ## MNIST IMAGES TEST
@@ -83,22 +88,31 @@ function MLJFlux.build(builder::MyConvBuilder, n_in, n_out, n_channels)
         Dense(prod(cnn_output_size), n_out))
 end
 
+losses = []
+
 @testset_accelerated "Image MNIST" accel begin
 
     Random.seed!(123)
 
-    model = MLJFlux.ImageClassifier(builder=MyConvBuilder(), acceleration=accel)
+    model = MLJFlux.ImageClassifier(builder=MyConvBuilder(),
+                                    acceleration=accel,
+                                    batch_size=50)
 
     @time fitresult, cache, _report =
         MLJBase.fit(model, 0, images[1:500], labels[1:500]);
     first_last_training_loss = _report[1][[1, end]]
-    @show first_last_training_loss
+    push!(losses, first_last_training_loss[2])
+#    @show first_last_training_loss
 
     pred = mode.(MLJBase.predict(model, fitresult, images[501:600]));
     error = misclassification_rate(pred, labels[501:600])
-    @test error < 0.1
+    @test error < 0.2
 
 end
+
+# check different resources (CPU1, CUDALibs, etc)) give about the same loss:
+reference = losses[1]
+@test all(x->abs(x - reference)/reference < 1e-4, losses[2:end])
 
 
 ## BASIC IMAGE TESTS COLOR
@@ -110,14 +124,17 @@ raw_images = rand(Float32, 6, 6, 3, 50);
 
 images = coerce(raw_images, ColorImage);
 @test scitype(images) == AbstractVector{ColorImage{6,6}}
-
 labels = categorical(rand(1:5, 50));
+
+losses = []
 
 @testset_accelerated "ColorImages" accel begin
 
     Random.seed!(123)
 
-    model = MLJFlux.ImageClassifier(builder=builder, epochs=10, acceleration=accel)
+    model = MLJFlux.ImageClassifier(builder=builder,
+                                    epochs=10,
+                                    acceleration=accel)
 
     # tests update logic, etc (see test_utililites.jl):
     @test basictest(MLJFlux.ImageClassifier, images, labels,
@@ -126,12 +143,20 @@ labels = categorical(rand(1:5, 50));
     @time fitresult, cache, _report = MLJBase.fit(model, 0, images, labels)
     pred = MLJBase.predict(model, fitresult, images[1:6])
     first_last_training_loss = _report[1][[1, end]]
-    @show first_last_training_loss
+    push!(losses, first_last_training_loss[2])
+#    @show first_last_training_loss
 
     # try with batch_size > 1:
-    model = MLJFlux.ImageClassifier(builder=builder, epochs=10, batch_size=2, acceleration=accel)
+    model = MLJFlux.ImageClassifier(builder=builder,
+                                    epochs=10,
+                                    batch_size=2,
+                                    acceleration=accel)
     fitresult, cache, _report = MLJBase.fit(model, 0, images, labels);
 
 end
+
+# check different resources (CPU1, CUDALibs, etc)) give about the same loss:
+reference = losses[1]
+@test all(x->abs(x - reference)/reference < 1e-5, losses[2:end])
 
 true

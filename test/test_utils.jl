@@ -50,6 +50,7 @@ function basictest(ModelType, X, y, builder, optimiser, threshold, accel)
     ModelType_str = string(ModelType)
     ModelType_ex = Meta.parse(ModelType_str)
     accel_ex = Meta.parse(string(accel))
+    optimiser = deepcopy(optimiser)
 
     eval(quote
 

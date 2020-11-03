@@ -31,7 +31,7 @@ end
     # NeuralNetworClassifier:
     y = categorical([:a, :b, :a, :a, :b, :a, :a, :a, :b, :a])
     model = MLJFlux.NeuralNetworkClassifier()
-    model.batch_size= 3
+    model.batch_size = 3
     data = MLJFlux.collate(model, X, y)
     @test first.(data) ==
         [Xmatrix'[:,1:3], Xmatrix'[:,4:6],
@@ -104,13 +104,12 @@ test_input = rand(Float32, 5, 1)
 # check both chains have same behaviour before training:
 @test chain_yes_drop(test_input) == chain_no_drop(test_input)
 
-move(data, ::CUDALibs) = Flux.gpu(data)
-move(data, ::Any) = Flux.cpu(data)
 epochs = 10
 
 @testset_accelerated "fit! and dropout" accel begin
 
-    test_input = move(rand(Float32, 5, 1), accel)
+    move = MLJFlux.Mover(accel)
+    test_input = move(rand(Float32, 5, 1))
 
     Random.seed!(123)
 

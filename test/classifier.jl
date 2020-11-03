@@ -61,7 +61,6 @@ end
 
 # check different resources (CPU1, CUDALibs, etc)) give about the same loss:
 reference = losses[1]
-abs(losses[2] - reference)/reference
 @test all(x->abs(x - reference)/reference < 1e-5, losses[2:end])
 
 true

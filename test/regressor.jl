@@ -1,4 +1,3 @@
-
 Random.seed!(123)
 
 N = 200

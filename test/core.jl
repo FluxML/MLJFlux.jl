@@ -109,7 +109,6 @@ epochs = 10
 @testset_accelerated "fit! and dropout" accel begin
 
     move = MLJFlux.Mover(accel)
-    test_input = move(rand(Float32, 5, 1))
 
     Random.seed!(123)
 

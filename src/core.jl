@@ -135,7 +135,7 @@ function  fit!(chain, optimiser, loss, epochs,
 
     end
     
-    return chain, history
+    return Flux.cpu(chain), history
 
 end
 

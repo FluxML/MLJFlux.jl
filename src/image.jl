@@ -37,10 +37,10 @@ function ImageClassifier(; builder::B   = Short()
 
    message = clean!(model)
    isempty(message) || @warn message
-    
+
     return model
 end
-    
+
 function MLJModelInterface.fit(model::ImageClassifier,
                                verbosity::Int,
                                X_,
@@ -48,7 +48,7 @@ function MLJModelInterface.fit(model::ImageClassifier,
 
     data = collate(model, X_, y_)
 
-    levels =     levels = MLJModelInterface.classes(y_[1])
+    levels = MLJModelInterface.classes(y_[1])
     n_output = length(levels)
     n_input = size(X_[1])
 
@@ -58,7 +58,7 @@ function MLJModelInterface.fit(model::ImageClassifier,
         n_channels = 3      # 3-D color image
     end
 
-    chain0 = build(model.builder, n_input, n_output, n_channels) 
+    chain0 = build(model.builder, n_input, n_output, n_channels)
     chain = Flux.Chain(chain0, model.finaliser)
 
     optimiser = deepcopy(model.optimiser)
@@ -83,9 +83,9 @@ end
 
 function MLJModelInterface.predict(model::ImageClassifier, fitresult, Xnew)
     chain, levels = fitresult
-    X = reformat(Xnew) 
+    X = reformat(Xnew)
     probs = vcat([chain(X[:,:,:,idx:idx])'
-                  for idx in 1:length(Xnew)]...) 
+                  for idx in 1:length(Xnew)]...)
     return MLJModelInterface.UnivariateFinite(levels, probs)
 end
 

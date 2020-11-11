@@ -203,7 +203,9 @@ All models share the following hyper-parameters:
 
 7. `alpha`: The L2/L1 mix of regularization. Default = 0. Range = [0, 1]
 
-8. `optimiser_changes_trigger_retraining`: True if fitting an
+8. `acceleration`: Use `CUDALibs()` for training on GPU; default is `CPU1()`. 
+
+9. `optimiser_changes_trigger_retraining`: True if fitting an
    associated machine should trigger retraining from scratch whenever
    the optimiser changes. Default = `false`
 

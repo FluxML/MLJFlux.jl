@@ -1,5 +1,7 @@
 module MLJFlux
 
+export ComputationalResources: CUDALibs, CPU1
+
 import Flux
 using MLJModelInterface
 using MLJModelInterface.ScientificTypes

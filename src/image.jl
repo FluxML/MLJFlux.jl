@@ -8,34 +8,47 @@ mutable struct ImageClassifier{B,F,O,L} <: MLJModelInterface.Probabilistic
     lambda::Float64 # regularization strength
     alpha::Float64  # regularizaton mix (0 for all l2, 1 for all l1)
     optimiser_changes_trigger_retraining::Bool
+    acceleration::AbstractResource
 end
 
-ImageClassifier(; builder::B   = Short()
-              , finaliser::F = Flux.softmax
-              , optimiser::O = Flux.Optimise.ADAM()
-              , loss::L      = Flux.crossentropy
-              , epochs       = 10
-              , batch_size   = 1
-              , lambda       = 0
-              , alpha        = 0
-              , optimiser_changes_trigger_retraining = false
-              ) where {B,F,O,L} =
-                  ImageClassifier{B,F,O,L}(builder
-                                       , finaliser
-                                       , optimiser
-                                       , loss
-                                       , epochs
-                                       , batch_size
-                                       , lambda
-                                       , alpha
-                                       , optimiser_changes_trigger_retraining
-                                       )
+function ImageClassifier(; builder::B   = Short()
+                         , finaliser::F = Flux.softmax
+                         , optimiser::O = Flux.Optimise.ADAM()
+                         , loss::L      = Flux.crossentropy
+                         , epochs       = 10
+                         , batch_size   = 1
+                         , lambda       = 0
+                         , alpha        = 0
+                         , optimiser_changes_trigger_retraining = false
+                         , acceleration = CPU1()
+                         ) where {B,F,O,L}
 
-function MLJModelInterface.fit(model::ImageClassifier, verbosity::Int, X_, y_)
+    model = ImageClassifier{B,F,O,L}(builder
+                                     , finaliser
+                                     , optimiser
+                                     , loss
+                                     , epochs
+                                     , batch_size
+                                     , lambda
+                                     , alpha
+                                     , optimiser_changes_trigger_retraining
+                                     , acceleration
+                                     )
+
+   message = clean!(model)
+   isempty(message) || @warn message
+
+    return model
+end
+
+function MLJModelInterface.fit(model::ImageClassifier,
+                               verbosity::Int,
+                               X_,
+                               y_)
 
     data = collate(model, X_, y_)
 
-    levels = y_ |> first |> MLJModelInterface.classes
+    levels = MLJModelInterface.classes(y_[1])
     n_output = length(levels)
     n_input = size(X_[1])
 
@@ -45,12 +58,20 @@ function MLJModelInterface.fit(model::ImageClassifier, verbosity::Int, X_, y_)
         n_channels = 3      # 3-D color image
     end
 
-    chain = Flux.Chain(build(model.builder, n_input, n_output, n_channels), model.finaliser)
+    chain0 = build(model.builder, n_input, n_output, n_channels)
+    chain = Flux.Chain(chain0, model.finaliser)
 
     optimiser = deepcopy(model.optimiser)
 
-    chain, history = fit!(chain, optimiser, model.loss,
-        model.epochs, model.lambda, model.alpha, verbosity, data)
+    chain, history = fit!(chain,
+                          optimiser,
+                          model.loss,
+                          model.epochs,
+                          model.lambda,
+                          model.alpha,
+                          verbosity,
+                          data,
+                          model.acceleration)
 
     cache = deepcopy(model), data, history, n_input, n_output
     fitresult = (chain, levels)
@@ -60,11 +81,11 @@ function MLJModelInterface.fit(model::ImageClassifier, verbosity::Int, X_, y_)
     return fitresult, cache, report
 end
 
-# Xnew is an array of 3D values
 function MLJModelInterface.predict(model::ImageClassifier, fitresult, Xnew)
     chain, levels = fitresult
     X = reformat(Xnew)
-    probs = vcat([chain(X[:,:,:,idx:idx])' for idx in 1:length(Xnew)]...)
+    probs = vcat([chain(X[:,:,:,idx:idx])'
+                  for idx in 1:length(Xnew)]...)
     return MLJModelInterface.UnivariateFinite(levels, probs)
 end
 
@@ -101,11 +122,18 @@ function MLJModelInterface.update(model::ImageClassifier,
 
     optimiser = deepcopy(model.optimiser)
 
-    chain, history = fit!(chain, optimiser, model.loss, epochs,
-                                model.lambda, model.alpha,
-                                verbosity, data)
+    chain, history = fit!(chain,
+                          optimiser,
+                          model.loss,
+                          epochs,
+                          model.lambda,
+                          model.alpha,
+                          verbosity,
+                          data,
+                          model.acceleration)
     if keep_chain
-        history = vcat(old_history, history)
+        # note: history[1] = old_history[end]
+        history = vcat(old_history[1:end-1], history)
     end
 
     fitresult = (chain, levels)

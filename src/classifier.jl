@@ -8,47 +8,64 @@ mutable struct NeuralNetworkClassifier{B,F,O,L} <: MLJModelInterface.Probabilist
     lambda::Float64 # regularization strength
     alpha::Float64  # regularizaton mix (0 for all l2, 1 for all l1)
     optimiser_changes_trigger_retraining::Bool
+    acceleration::AbstractResource       # Train on gpu
 end
 
-NeuralNetworkClassifier(; builder::B   = Short()
-              , finaliser::F = Flux.softmax
-              , optimiser::O = Flux.Optimise.ADAM()
-              , loss::L      = Flux.crossentropy
-              , epochs       = 10
-              , batch_size   = 1
-              , lambda       = 0
-              , alpha        = 0
-              , optimiser_changes_trigger_retraining = false
-              ) where {B,F,O,L} =
-                  NeuralNetworkClassifier{B,F,O,L}(builder
-                                       , finaliser
-                                       , optimiser
-                                       , loss
-                                       , epochs
-                                       , batch_size
-                                       , lambda
-                                       , alpha
-                                       , optimiser_changes_trigger_retraining
-                                       )
+function NeuralNetworkClassifier(; builder::B   = Short()
+                                 , finaliser::F = Flux.softmax
+                                 , optimiser::O = Flux.Optimise.ADAM()
+                                 , loss::L      = Flux.crossentropy
+                                 , epochs       = 10
+                                 , batch_size   = 1
+                                 , lambda       = 0
+                                 , alpha        = 0
+                                 , optimiser_changes_trigger_retraining = false
+                                 , acceleration = CPU1()
+                                 ) where {B,F,O,L}
+    
+    model = NeuralNetworkClassifier{B,F,O,L}(builder
+                                             , finaliser
+                                             , optimiser
+                                             , loss
+                                             , epochs
+                                             , batch_size
+                                             , lambda
+                                             , alpha
+                                             , optimiser_changes_trigger_retraining
+                                             , acceleration
+                                             )
 
+   message = clean!(model)
+   isempty(message) || @warn message
+    
+    return model
+end
+    
 function MLJModelInterface.fit(model::NeuralNetworkClassifier,
                                verbosity::Int,
                                X,
                                y)
 
-    # (No categorical features)
-    n_input = Tables.schema(X).names |> length
+    data = collate(model, X, y)
+
     levels = MLJModelInterface.classes(y[1])
     n_output = length(levels)
+    n_input = Tables.schema(X).names |> length
+
     chain = Flux.Chain(build(model.builder, n_input, n_output),
                        model.finaliser)
 
-    data = collate(model, X, y)
     optimiser = deepcopy(model.optimiser)
 
-    chain, history = fit!(chain, optimiser, model.loss,
-                          model.epochs, model.lambda,
-                          model.alpha, verbosity, data)
+    chain, history = fit!(chain,
+                          optimiser,
+                          model.loss,
+                          model.epochs,
+                          model.lambda,
+                          model.alpha,
+                          verbosity,
+                          data,
+                          model.acceleration)
 
     cache = (deepcopy(model), data, history, n_input, n_output)
     fitresult = (chain, levels)
@@ -61,7 +78,7 @@ function MLJModelInterface.predict(model::NeuralNetworkClassifier,
                                    fitresult,
                                    Xnew_)
     chain, levels = fitresult
-    Xnew = MLJModelInterface.matrix(Xnew_)
+    Xnew = MLJModelInterface.matrix(Xnew_) 
     probs = vcat([chain(Xnew[i, :])' for i in 1:size(Xnew, 1)]...)
     return MLJModelInterface.UnivariateFinite(levels, probs)
 end
@@ -94,11 +111,18 @@ function MLJModelInterface.update(model::NeuralNetworkClassifier,
 
     optimiser = deepcopy(model.optimiser)
 
-    chain, history = fit!(chain, optimiser, model.loss, epochs,
-                                model.lambda, model.alpha,
-                                verbosity, data)
+    chain, history = fit!(chain,
+                          optimiser,
+                          model.loss,
+                          epochs,
+                          model.lambda,
+                          model.alpha,
+                          verbosity,
+                          data,
+                          model.acceleration)
     if keep_chain
-        history = vcat(old_history, history)
+        # note: history[1] = old_history[end]
+        history = vcat(old_history[1:end-1], history)
     end
 
     fitresult = (chain, levels)
@@ -119,5 +143,5 @@ MLJModelInterface.metadata_model(NeuralNetworkClassifier,
                                  path="MLJFlux.NeuralNetworkClassifier",
                                  descr="A neural network model for making "*
                                  "probabilistic predictions of a "*
-                                 "`Mutliclass` or `OrderedFactor` target, "*
+                                 "`Multiclass` or `OrderedFactor` target, "*
                                  "given a table of `Continuous` features. ")

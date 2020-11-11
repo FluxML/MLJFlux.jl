@@ -1,28 +1,37 @@
 ## NEURAL NETWORK CLASSIFIER
 
-@testset "NeuralNetworkClassifier" begin
-    seed!(1234)
-    N = 300
-    X = MLJBase.table(rand(Float32, N, 4));
-    ycont = 2*X.x1 - X.x3 + 0.1*rand(N)
-    m, M = minimum(ycont), maximum(ycont)
-    _, a, b, _ = range(m, stop=M, length=4) |> collect
-    y = map(ycont) do η
-        if η < 0.9*a
-            :a
-        elseif η < 1.1*b
-            :b
-        else
-            :c
-        end
-    end |> categorical;
+seed!(1234)
+N = 300
+X = MLJBase.table(rand(Float32, N, 4));
+ycont = 2*X.x1 - X.x3 + 0.1*rand(N)
+m, M = minimum(ycont), maximum(ycont)
+_, a, b, _ = range(m, stop=M, length=4) |> collect
+y = map(ycont) do η
+    if η < 0.9*a
+        :a
+    elseif η < 1.1*b
+        :b
+    else
+        :c
+    end
+end |> categorical;
 
-    builder = MLJFlux.Short()
-    optimiser = Flux.Optimise.ADAM(0.01)
+# TODO: replace Short2 -> Short when
+# https://github.com/FluxML/Flux.jl/issues/1372 is resolved:
+builder = Short2()
+optimiser = Flux.Optimise.ADAM(0.03)
 
-    optimiser = Flux.Optimise.ADAM(0.01)
+losses = []
 
-    basictest(MLJFlux.NeuralNetworkClassifier, X, y, builder, optimiser, 0.75)
+@testset_accelerated "NeuralNetworkClassifier" accel begin
+    Random.seed!(123)
+    basictest(MLJFlux.NeuralNetworkClassifier,
+              X,
+              y,
+              builder,
+              optimiser,
+              0.85,
+              accel)
 
     train, test = MLJBase.partition(1:N, 0.7)
 
@@ -38,39 +47,20 @@
 
     # check flux model is an improvement on predicting constant
     # distribution:
-    model = MLJFlux.NeuralNetworkClassifier(epochs=150)
-    mach = fit!(machine(model, X, y), rows=train, verbosity=0)
+    model = MLJFlux.NeuralNetworkClassifier(epochs=50,
+                                            builder=builder,
+                                            optimiser=optimiser,
+                                            acceleration=accel,
+                                            batch_size=10)
+    @time mach = fit!(machine(model, X, y), rows=train, verbosity=0)
+    first_last_training_loss = MLJBase.report(mach)[1][[1, end]]
+    push!(losses, first_last_training_loss[2])
     yhat = MLJBase.predict(mach, rows=test);
-    @test mean(MLJBase.cross_entropy(yhat, y[test])) < 0.9*loss_baseline
+    @test mean(MLJBase.cross_entropy(yhat, y[test])) < 0.95*loss_baseline
 end
 
-
-## OLD CLASSIFIER TEST
-
-# train = 1:7N
-# test = (7N+1):10N
-
-
-# builder = MLJFlux.Linear(σ=Flux.sigmoid)
-# model = MLJFlux.NeuralNetworkClassifier(loss=Flux.crossentropy,
-#                                         builder=builder)
-
-# fitresult, cache, report =
-#     MLJBase.fit(model, 2, MLJBase.selectrows(X,train), y[train])
-
-# yhat = MLJBase.predict(model, fitresult, MLJBase.selectrows(X, test))
-
-# # Update without completely retraining
-# model.epochs = 15
-# fitresult, cache, report =
-#     MLJBase.update(model, 2, fitresult, cache,
-#                    MLJBase.selectrows(X,train), y[train])
-
-# # Update by completely retraining
-# model.batch_size = 5
-# fitresult, cache, report =
-#     MLJBase.update(model, 3, fitresult, cache,
-#                    MLJBase.selectrows(X,train), y[train])
-
+# check different resources (CPU1, CUDALibs, etc)) give about the same loss:
+reference = losses[1]
+@test all(x->abs(x - reference)/reference < 1e-5, losses[2:end])
 
 true

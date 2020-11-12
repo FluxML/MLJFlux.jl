@@ -1,6 +1,6 @@
 module MLJFlux
 
-export ComputationalResources: CUDALibs, CPU1
+export CUDALibs, CPU1
 
 import Flux
 using MLJModelInterface

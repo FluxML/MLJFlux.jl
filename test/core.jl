@@ -29,7 +29,7 @@ end
          (Xmatrix'[:,10:10], y[10:10])]
 
     # NeuralNetworClassifier:
-    y = categorical([:a, :b, :a, :a, :b, :a, :a, :a, :b, :a])
+    y = categorical(['a', 'b', 'a', 'a', 'b', 'a', 'a', 'a', 'b', 'a'])
     model = MLJFlux.NeuralNetworkClassifier()
     model.batch_size = 3
     data = MLJFlux.collate(model, X, y)
@@ -59,7 +59,7 @@ end
 
     # ImageClassifier
     Xmatrix = coerce(rand(6, 6, 1, 10), GrayImage)
-    y = categorical([:a, :b, :a, :a, :b, :a, :a, :a, :b, :a])
+    y = categorical(['a', 'b', 'a', 'a', 'b', 'a', 'a', 'a', 'b', 'a'])
     model = MLJFlux.ImageClassifier(batch_size=2)
 
     data = MLJFlux.collate(model, Xmatrix, y)

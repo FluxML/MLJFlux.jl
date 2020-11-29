@@ -8,7 +8,7 @@ on:
     branches:
       - master
       - dev
-     tags: '*'
+    tags: '*'
 jobs:
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}

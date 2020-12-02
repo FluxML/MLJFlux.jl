@@ -8,11 +8,11 @@ m, M = minimum(ycont), maximum(ycont)
 _, a, b, _ = range(m, stop=M, length=4) |> collect
 y = map(ycont) do η
     if η < 0.9*a
-        :a
+        'a'
     elseif η < 1.1*b
-        :b
+        'b'
     else
-        :c
+        'c'
     end
 end |> categorical;
 

@@ -4,7 +4,7 @@ An interface to the Flux deep learning models for the
 [MLJ](https://github.com/alan-turing-institute/MLJ.jl) machine
 learning framework
 
-[![Build Status](https://travis-ci.com/alan-turing-institute/MLJFlux.jl.svg?branch=master)](https://travis-ci.com/alan-turing-institute/MLJFlux.jl) [![Coverage Status](https://coveralls.io/repos/github/alan-turing-institute/MLJFlux.jl/badge.svg?branch=master)](https://coveralls.io/github/alan-turing-institute/MLJFlux.jl?branch=master)
+[![Build Status](https://github.com/alan-turing-institute/MLJFlux.jl/workflows/CI/badge.svg)](https://github.com/alan-turing-institute/MLJFlux.jl/actions) [![Coverage Status](https://coveralls.io/repos/github/alan-turing-institute/MLJFlux.jl/badge.svg?branch=master)](https://coveralls.io/github/alan-turing-institute/MLJFlux.jl?branch=master)
 
 MLJFlux makes it possible to apply the machine learning
 meta-algorithms provided by MLJ - such as out-of-sample performance
@@ -203,7 +203,9 @@ All models share the following hyper-parameters:
 
 7. `alpha`: The L2/L1 mix of regularization. Default = 0. Range = [0, 1]
 
-8. `optimiser_changes_trigger_retraining`: True if fitting an
+8. `acceleration`: Use `CUDALibs()` for training on GPU; default is `CPU1()`. 
+
+9. `optimiser_changes_trigger_retraining`: True if fitting an
    associated machine should trigger retraining from scratch whenever
    the optimiser changes. Default = `false`
 

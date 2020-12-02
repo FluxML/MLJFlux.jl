@@ -22,7 +22,7 @@ MLJFlux.gpu_isdead() && push!(EXCLUDED_RESOURCE_TYPES, CUDALibs)
 @info "Available computational resources: $RESOURCES"
 @info "Current test run to exclude resources with "*
     "these types: $EXCLUDED_RESOURCE_TYPES\n"*
-    "Excluded tests marked as \"broken\".
+    "Excluded tests marked as \"broken\"."
 
 # alternative version of Short builder with no dropout; see
 # https://github.com/FluxML/Flux.jl/issues/1372

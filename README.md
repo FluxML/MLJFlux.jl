@@ -4,8 +4,6 @@ An interface to the Flux deep learning models for the
 [MLJ](https://github.com/alan-turing-institute/MLJ.jl) machine
 learning framework
 
-[![Coverage Status]()](https://coveralls.io/github/alan-turing-institute/MLJFlux.jl?branch=master)
-
 | Branch   | Julia | CPU CI | GPU CI | Coverage |
 | -------- | ----- | ------ | -----  | -------- |
 | `master` | v1    | [![Continuous Integration (CPU)][gha-img-master]][gha-url] | [![Continuous Integration (GPU)][buildkite-julia1-img-master]][buildkite-url] | [![Code Coverage][coveralls-img-master]][coveralls-url] |

@@ -67,7 +67,7 @@ function MLJModelInterface.fit(model::NeuralNetworkClassifier,
                           data,
                           model.acceleration)
 
-    cache = (deepcopy(model), data, history, n_input, n_output)
+    cache = (deepcopy(model), data, history, n_input, n_output, optimiser)
     fitresult = (chain, levels)
     report = (training_losses=history, )
 
@@ -90,7 +90,7 @@ function MLJModelInterface.update(model::NeuralNetworkClassifier,
                                   X,
                                   y)
 
-    old_model, data, old_history, n_input, n_output = old_cache
+    old_model, data, old_history, n_input, n_output, optimiser = old_cache
     old_chain, levels = old_fitresult
 
     optimiser_flag = model.optimiser_changes_trigger_retraining &&
@@ -109,7 +109,12 @@ function MLJModelInterface.update(model::NeuralNetworkClassifier,
         epochs = model.epochs
     end
 
-    optimiser = deepcopy(model.optimiser)
+    # we only get to keep the optimiser "state" carried over from
+    # previous training if we're doing a warm restart and the user has not
+    # changed the optimiser hyper-parameter:
+    if !keep_chain || model.optimiser != old_model.optimiser
+        optimiser = deepcopy(model.optimiser)
+    end
 
     chain, history = fit!(chain,
                           optimiser,
@@ -126,7 +131,7 @@ function MLJModelInterface.update(model::NeuralNetworkClassifier,
     end
 
     fitresult = (chain, levels)
-    cache = (deepcopy(model), data, history, n_input, n_output)
+    cache = (deepcopy(model), data, history, n_input, n_output, optimiser)
     report = (training_losses=history, )
 
     return fitresult, cache, report

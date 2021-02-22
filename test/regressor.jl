@@ -17,7 +17,7 @@ train, test = MLJBase.partition(1:N, 0.7)
 @testset_accelerated "NeuralNetworkRegressor" accel begin
 
     Random.seed!(123)
-    
+
     basictest(MLJFlux.NeuralNetworkRegressor,
               X,
               y,
@@ -53,7 +53,7 @@ losses = []
 @testset_accelerated "MultitargetNeuralNetworkRegressor" accel begin
 
     Random.seed!(123)
-    
+
     basictest(MLJFlux.MultitargetNeuralNetworkRegressor,
               X,
               y,

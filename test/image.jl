@@ -139,7 +139,7 @@ losses = []
     # tests update logic, etc (see test_utililites.jl):
     @test basictest(MLJFlux.ImageClassifier, images, labels,
                            model.builder, model.optimiser, 0.95, accel)
-    
+
     @time fitresult, cache, _report = MLJBase.fit(model, 0, images, labels)
     pred = MLJBase.predict(model, fitresult, images[1:6])
     first_last_training_loss = _report[1][[1, end]]

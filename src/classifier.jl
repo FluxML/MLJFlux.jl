@@ -22,7 +22,7 @@ function NeuralNetworkClassifier(; builder::B   = Short()
                                  , optimiser_changes_trigger_retraining = false
                                  , acceleration = CPU1()
                                  ) where {B,F,O,L}
-    
+
     model = NeuralNetworkClassifier{B,F,O,L}(builder
                                              , finaliser
                                              , optimiser
@@ -37,10 +37,10 @@ function NeuralNetworkClassifier(; builder::B   = Short()
 
    message = clean!(model)
    isempty(message) || @warn message
-    
+
     return model
 end
-    
+
 function MLJModelInterface.fit(model::NeuralNetworkClassifier,
                                verbosity::Int,
                                X,
@@ -78,7 +78,7 @@ function MLJModelInterface.predict(model::NeuralNetworkClassifier,
                                    fitresult,
                                    Xnew_)
     chain, levels = fitresult
-    Xnew = MLJModelInterface.matrix(Xnew_) 
+    Xnew = MLJModelInterface.matrix(Xnew_)
     probs = vcat([chain(Xnew[i, :])' for i in 1:size(Xnew, 1)]...)
     return MLJModelInterface.UnivariateFinite(levels, probs)
 end

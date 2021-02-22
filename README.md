@@ -56,7 +56,11 @@ Pkg.add("RDatasets")  # for the demo below
 ### Example
 
 Following is an introductory example using a default builder and no
-standardization of input features.
+standardization of input features ([notebook/script](/examples/iris)).
+
+For a more advanced illustration, see the [MNIST dataset
+example](https://github.com/FluxML/MLJFlux.jl/blob/dev/examples/mnist).
+
 
 
 #### Loading some data and instantiating a model
@@ -66,7 +70,7 @@ using MLJ
 import RDatasets
 iris = RDatasets.dataset("datasets", "iris");
 y, X = unpack(iris, ==(:Species), colname -> true, rng=123);
-@load NeuralNetworkClassifier
+NeuralNetworkClassifier = @load NeuralNetworkClassifier
 
 julia> clf = NeuralNetworkClassifier()
 NeuralNetworkClassifier(
@@ -94,7 +98,7 @@ fit!(mach)
 julia> training_loss = cross_entropy(predict(mach, X), y) |> mean
 0.89526004f0
 
-# increase learning rate and add iterations:
+# Increasing learning rate and adding iterations:
 clf.optimiser.eta = clf.optimiser.eta * 2
 clf.epochs = clf.epochs + 5
 
@@ -135,7 +139,7 @@ plot(curve.parameter_values,
 
 ```
 
-![learning_curve.png](learning_curve.png)
+![](examples/iris/iris_history.png)
 
 
 ### Models
@@ -163,6 +167,21 @@ model type | prediction type | `scitype(X) <: _` | `scitype(y) <: _`
 `ImageClassifier` | `Probabilistic` | `AbstractVector(<:Image{W,H})` with `n_in = (W, H)` | `AbstractVector{<:Finite}` with `n_out` classes
 
 > Table 1. Input and output types for MLJFlux models
+
+### Training on a GPU
+
+When instantiating a model for training on a GPU, specify
+`acceleration=CUDALibs()`, as in
+
+```julia
+using MLJ
+ImageClassifier = @load ImageClassifier
+clf = ImageClassifier(epochs=10, acceleration=CUDALibs())
+```
+
+At present, data bound to a MLJ model in an MLJ machine is
+automatically moved on and off the GPU under the hood.
+
 
 #### Non-tabular input
 
@@ -262,6 +281,9 @@ end
 Note here that `n_in` and `n_out` depend on the size of the data (see
 Table 1).
 
+For a concrete image classification example, see
+[examples/mnist](examples/mnist).
+
 More generally, defining a new builder means defining a new struct
 sub-typing `MLJFlux.Builder` and defining a new `MLJFlux.build` method
 with one of these signatures:
@@ -279,15 +301,12 @@ following conditions:
     - for any `x <: Vector{<:AbstractFloat}` of length `n_in` (for use
       with one of the first three model types); or
 
-    - for any `x <: Array{<:Float32, 3}` of size
-      `(W, H, n_channels)`, where `n_in = (W, H)` and `n_channels` is
-      1 or 3 (for use with `ImageClassifier`)
+    - for any `x <: Array{<:Float32, 4}` of size `(W, H, n_channels,
+      batch_size)`, where `(W, H) = n_in`, `n_channels` is 1 or 3, and
+      `batch_size` is any integer (for use with `ImageClassifier`)
 
 - The object returned by `chain(x)` must be an `AbstractFloat` vector
   of length `n_out`.
-
-For an builder example for use with `ImageClassifier` see
-[below](an-image-classification-example).
 
 
 ### Loss functions
@@ -311,6 +330,9 @@ you *should* use MLJ loss functions in MLJ meta-algorithms.
 
 ### An image classification example
 
+An expanded version of this example, with early stopping, is available
+[here](/examples/mnist).
+
 We define a builder that builds a chain with six alternating
 convolution and max-pool layers, and a final dense layer, which we
 apply to the MNIST image dataset.
@@ -328,7 +350,7 @@ function flatten(x::AbstractArray)
 end
 
 import MLJFlux
-mutable struct MyConvBuilder <: MLJFlux.Builder
+mutable struct MyConvBuilder 
     filter_size::Int
     channels1::Int
     channels2::Int
@@ -384,7 +406,7 @@ y = coerce(y, Multiclass);
 Instantiating an image classifier model:
 
 ```julia
-@load ImageClassifier
+ImageClassifier = @load ImageClassifier
 clf = ImageClassifier(builder=MyConvBuilder(3, 16, 32, 32),
                       epochs=10,
                       loss=Flux.crossentropy)

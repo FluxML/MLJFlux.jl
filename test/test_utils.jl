@@ -111,25 +111,25 @@ function basictest(ModelType, X, y, builder, optimiser, threshold, accel)
                     MLJBase.update(model, 2, fitresult, cache, $X, $y));
 
          # optimiser "state" is preserved in update
-         if $accel_ex isa CPU1
-             model.epochs = 1
-             mach = machine(model, $X, $y);
+         # if $accel_ex isa CPU1
+         #     model.epochs = 1
+         #     mach = machine(model, $X, $y);
 
-             # two epochs in stages:
-             Random.seed!(123)
-             fit!(mach, verbosity=0, force=true);
-             model.epochs = model.epochs + 1
-             fit!(mach, verbosity=0);
-             l1 = MLJBase.report(mach).training_losses[end]
+         #     # two epochs in stages:
+         #     Random.seed!(123)
+         #     fit!(mach, verbosity=0, force=true);
+         #     model.epochs = model.epochs + 1
+         #     fit!(mach, verbosity=0);
+         #     l1 = MLJBase.report(mach).training_losses[end]
 
-             # two epochs in one go:
-             Random.seed!(123)
-             fit!(mach, verbosity=1, force=true)
-             l2 = MLJBase.report(mach).training_losses[end]
+         #     # two epochs in one go:
+         #     Random.seed!(123)
+         #     fit!(mach, verbosity=1, force=true)
+         #     l2 = MLJBase.report(mach).training_losses[end]
 
-             @test l1 ≈ l2
-         end
-         end)
+         #     @test l1 ≈ l2
+         # end
+;         end)
 
     return true
 end

@@ -134,7 +134,7 @@ function  fit!(chain, optimiser, loss, epochs,
         verbosity != 1 || next!(meter)
 
     end
-    
+
     return Flux.cpu(chain), history
 
 end

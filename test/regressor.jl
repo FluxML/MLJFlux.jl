@@ -42,8 +42,7 @@ end
 
 # check different resources (CPU1, CUDALibs, etc)) give about the same loss:
 reference = losses[1]
-#@test all(x->abs(x - reference)/reference < 1e-4, losses[2:end])
-@show [abs(x - reference)/reference for x in  losses[2:end]]
+@test all(x->abs(x - reference)/reference < 1e-6, losses[2:end])
 
 Random.seed!(123)
 ymatrix = hcat(1 .+ X.x1 - X.x2, 1 .- 2X.x4 + X.x5);
@@ -79,7 +78,6 @@ end
 
 # check different resources (CPU1, CUDALibs, etc)) give about the same loss:
 reference = losses[1]
-#@test all(x->abs(x - reference)/reference < 1e-4, losses[2:end])
-@show [abs(x - reference)/reference for x in  losses[2:end]]
+@test all(x->abs(x - reference)/reference < 1e-6, losses[2:end])
 
 true

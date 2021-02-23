@@ -135,14 +135,16 @@ function optimisertest(ModelType, X, y, builder, optimiser, accel)
              mach = machine(model, $X, $y);
 
              # two epochs in stages:
-             seed!($accel_ex)
+             Random.seed!(123)
+             #seed!($accel_ex)
              fit!(mach, verbosity=0, force=true);
              model.epochs = model.epochs + 1
              fit!(mach, verbosity=0);
              l1 = MLJBase.report(mach).training_losses[end]
 
              # two epochs in one go:
-             seed!($accel_ex)
+             Random.seed!(123)
+             #seed!($accel_ex)
              fit!(mach, verbosity=1, force=true)
              l2 = MLJBase.report(mach).training_losses[end]
 

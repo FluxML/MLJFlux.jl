@@ -138,8 +138,9 @@ function optimisertest(ModelType, X, y, builder, optimiser, accel)
              Random.seed!(123)
              #seed!($accel_ex)
              fit!(mach, verbosity=0, force=true);
+             @show mach.cache[end]
              model.epochs = model.epochs + 1
-             fit!(mach, verbosity=0);
+             fit!(mach, verbosity=0); # update
              l1 = MLJBase.report(mach).training_losses[end]
 
              # two epochs in one go:

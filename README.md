@@ -349,7 +349,7 @@ following conditions:
 Currently, the loss function specified by `loss=...` is applied
 internally by Flux and needs to conform to the Flux API. You cannot,
 for example, supply one of MLJ's probabilistic loss functions, such as
-`MLJ.cross_entropy` to one of the classifiers constructors, although
+`MLJ.cross_entropy` to one of the classifier constructors, although
 you *should* use MLJ loss functions in MLJ meta-algorithms.
 
 

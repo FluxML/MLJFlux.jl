@@ -24,10 +24,16 @@ learning framework
 MLJFlux makes it possible to apply the machine learning
 meta-algorithms provided by MLJ - such as out-of-sample performance
 evaluation and hyper-parameter optimization - to some classes of
-supervised deep learning models. It does this by providing an
+**supervised deep learning models**. It does this by providing an
 interface to the [Flux](https://fluxml.ai/Flux.jl/stable/)
 framework.
 
+The guiding vision of this package is to make evaluating and
+optimizing basic Flux models more convenient to users already familiar
+with the MLJ workflow. This goal will likely place restrictions of the
+class of Flux models that can used, at least in the medium term. For
+example, online learning, re-enforcement learning, and adversarial
+networks are currently out of scope.
 
 ### Basic idea
 
@@ -168,6 +174,31 @@ model type | prediction type | `scitype(X) <: _` | `scitype(y) <: _`
 
 > Table 1. Input and output types for MLJFlux models
 
+
+### Warm restart
+
+MLJ machines cache state enabling the "warm restart" of model
+training, as demonstrated in the example above. In the case of MLJFlux
+models, `fit!(mach)` will use a warm restart if:
+
+- only `model.epochs` has changed since the last call; or 
+
+- only `model.epochs` or `model.optimiser` have changed since the last
+  call and `model.optimiser_changes_trigger_retraining == false` (the
+  default) (the "state" part of the optimiser is ignored in this
+  comparison). This allows one to dynamically modify learning rates,
+  for example.
+  
+- Here `model=mach.model` is the associated MLJ model
+  
+The warm restart feature makes it possible to apply early stopping
+criteria, as defined in
+[EarlyStopping.jl](https://github.com/ablaom/EarlyStopping.jl). For an
+example, see [/examples/mnist/](/examples/mnist/). (Eventually, this
+will be handled by an MLJ model wrapper for controlling arbitrary
+iterative models.)
+
+
 ### Training on a GPU
 
 When instantiating a model for training on a GPU, specify
@@ -179,8 +210,14 @@ ImageClassifier = @load ImageClassifier
 clf = ImageClassifier(epochs=10, acceleration=CUDALibs())
 ```
 
-At present, data bound to a MLJ model in an MLJ machine is
-automatically moved on and off the GPU under the hood.
+At present, data bound to a MLJ model `model` in an MLJ machine is
+copied onto the GPU when a machine `mach` bound to the model is `fit!`
+for the first time. Further calls to `fit!`, after increments
+`model.epochs`, make use of a cached version of this data, unless some
+other hyperparameters are mutated, in which case `fit!` triggers a cold
+restart. The Flux chain used in training is always copied back to the
+CPU at then end of the `fit!` all, and available as
+`fitted_params(mach)`.
 
 
 #### Non-tabular input

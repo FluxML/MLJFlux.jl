@@ -1,3 +1,6 @@
+seed!(::CPU1, i=123) = Random.seed!(i)
+seed!(::CUDALibs, i=123) = Flux.CUDA.seed!(i)
+
 macro testset_accelerated(name::String, var, ex)
     testset_accelerated(name, var, ex)
 end
@@ -110,26 +113,41 @@ function basictest(ModelType, X, y, builder, optimiser, threshold, accel)
                     (:info, r""),
                     MLJBase.update(model, 2, fitresult, cache, $X, $y));
 
-         # optimiser "state" is preserved in update
-         # if $accel_ex isa CPU1
-         #     model.epochs = 1
-         #     mach = machine(model, $X, $y);
+         end)
 
-         #     # two epochs in stages:
-         #     Random.seed!(123)
-         #     fit!(mach, verbosity=0, force=true);
-         #     model.epochs = model.epochs + 1
-         #     fit!(mach, verbosity=0);
-         #     l1 = MLJBase.report(mach).training_losses[end]
+    return true
+end
 
-         #     # two epochs in one go:
-         #     Random.seed!(123)
-         #     fit!(mach, verbosity=1, force=true)
-         #     l2 = MLJBase.report(mach).training_losses[end]
+# to test the optimiser "state" is preserved in update (warm restart):
+function optimisertest(ModelType, X, y, builder, optimiser, accel)
 
-         #     @test l1 ≈ l2
-         # end
-;         end)
+    ModelType_str = string(ModelType)
+    ModelType_ex = Meta.parse(ModelType_str)
+    accel_ex = Meta.parse(string(accel))
+    optimiser = deepcopy(optimiser)
+
+    eval(quote
+         model = $ModelType_ex(builder=$builder,
+                               optimiser=$optimiser,
+                               acceleration=$accel_ex,
+                               epochs=1)
+
+             mach = machine(model, $X, $y);
+
+             # two epochs in stages:
+             seed!($accel_ex)
+             fit!(mach, verbosity=0, force=true);
+             model.epochs = model.epochs + 1
+             fit!(mach, verbosity=0);
+             l1 = MLJBase.report(mach).training_losses[end]
+
+             # two epochs in one go:
+             seed!($accel_ex)
+             fit!(mach, verbosity=1, force=true)
+             l2 = MLJBase.report(mach).training_losses[end]
+
+             @test isapprox(l1, l2)
+         end)
 
     return true
 end

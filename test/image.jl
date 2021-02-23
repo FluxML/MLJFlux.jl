@@ -53,6 +53,9 @@ losses = []
     @test basictest(MLJFlux.ImageClassifier, images, labels,
                            model.builder, model.optimiser, 0.95, accel)
 
+    @test optimisertest(MLJFlux.ImageClassifier, images, labels,
+                           model.builder, model.optimiser, accel)
+
 end
 
 # check different resources (CPU1, CUDALibs, etc)) give about the same loss:
@@ -152,6 +155,9 @@ losses = []
                                     batch_size=2,
                                     acceleration=accel)
     fitresult, cache, _report = MLJBase.fit(model, 0, images, labels);
+
+    @test optimisertest(MLJFlux.ImageClassifier, images, labels,
+                           model.builder, model.optimiser, accel)
 
 end
 

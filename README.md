@@ -207,16 +207,14 @@ When instantiating a model for training on a GPU, specify
 ```julia
 using MLJ
 ImageClassifier = @load ImageClassifier
-clf = ImageClassifier(epochs=10, acceleration=CUDALibs())
+model = ImageClassifier(epochs=10, acceleration=CUDALibs())
+mach = machine(model, X, y) |> fit!
 ```
 
-At present, data bound to a MLJ model `model` in an MLJ machine is
-copied onto the GPU when a machine `mach` bound to the model is `fit!`
-for the first time. Further calls to `fit!`, after increments
-`model.epochs`, make use of a cached version of this data, unless some
-other hyperparameters are mutated, in which case `fit!` triggers a cold
-restart. The Flux chain used in training is always copied back to the
-CPU at then end of the `fit!` all, and available as
+In this example, the data `X, y` is copied onto the GPU under the hood
+on the call to `fit!` and cached for use in any warm restart (see
+above). The Flux chain used in training is always copied back to the
+CPU at then conclusion of `fit!`, and made available as
 `fitted_params(mach)`.
 
 

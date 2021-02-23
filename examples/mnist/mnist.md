@@ -167,7 +167,7 @@ ImageClassifier(
     lambda = 0.0,
     alpha = 0.0,
     optimiser_changes_trigger_retraining = false,
-    acceleration = CPU1{Nothing}(nothing)) @688
+    acceleration = CPU1{Nothing}(nothing)) @399
 ```
 
 You can add Flux options `optimiser=...` and `loss=...` here. At
@@ -188,28 +188,28 @@ nothing #hide
 ```
 
 ```
-┌ Info: Training Machine{ImageClassifier{MyConvBuilder,…},…} @053.
+┌ Info: Training Machine{ImageClassifier{MyConvBuilder,…},…} @078.
 └ @ MLJBase /Users/anthony/.julia/packages/MLJBase/4DmTL/src/machines.jl:341
 ┌ Info: Loss is 2.239
-└ @ MLJFlux /Users/anthony/.julia/packages/MLJFlux/AWa8J/src/core.jl:122
+└ @ MLJFlux /Users/anthony/.julia/packages/MLJFlux/wj7HX/src/core.jl:122
 ┌ Info: Loss is 2.109
-└ @ MLJFlux /Users/anthony/.julia/packages/MLJFlux/AWa8J/src/core.jl:122
+└ @ MLJFlux /Users/anthony/.julia/packages/MLJFlux/wj7HX/src/core.jl:122
 ┌ Info: Loss is 1.814
-└ @ MLJFlux /Users/anthony/.julia/packages/MLJFlux/AWa8J/src/core.jl:122
+└ @ MLJFlux /Users/anthony/.julia/packages/MLJFlux/wj7HX/src/core.jl:122
 ┌ Info: Loss is 1.269
-└ @ MLJFlux /Users/anthony/.julia/packages/MLJFlux/AWa8J/src/core.jl:122
+└ @ MLJFlux /Users/anthony/.julia/packages/MLJFlux/wj7HX/src/core.jl:122
 ┌ Info: Loss is 0.7602
-└ @ MLJFlux /Users/anthony/.julia/packages/MLJFlux/AWa8J/src/core.jl:122
+└ @ MLJFlux /Users/anthony/.julia/packages/MLJFlux/wj7HX/src/core.jl:122
 ┌ Info: Loss is 0.5445
-└ @ MLJFlux /Users/anthony/.julia/packages/MLJFlux/AWa8J/src/core.jl:122
+└ @ MLJFlux /Users/anthony/.julia/packages/MLJFlux/wj7HX/src/core.jl:122
 ┌ Info: Loss is 0.4606
-└ @ MLJFlux /Users/anthony/.julia/packages/MLJFlux/AWa8J/src/core.jl:122
+└ @ MLJFlux /Users/anthony/.julia/packages/MLJFlux/wj7HX/src/core.jl:122
 ┌ Info: Loss is 0.341
-└ @ MLJFlux /Users/anthony/.julia/packages/MLJFlux/AWa8J/src/core.jl:122
+└ @ MLJFlux /Users/anthony/.julia/packages/MLJFlux/wj7HX/src/core.jl:122
 ┌ Info: Loss is 0.2975
-└ @ MLJFlux /Users/anthony/.julia/packages/MLJFlux/AWa8J/src/core.jl:122
+└ @ MLJFlux /Users/anthony/.julia/packages/MLJFlux/wj7HX/src/core.jl:122
 ┌ Info: Loss is 0.258
-└ @ MLJFlux /Users/anthony/.julia/packages/MLJFlux/AWa8J/src/core.jl:122
+└ @ MLJFlux /Users/anthony/.julia/packages/MLJFlux/wj7HX/src/core.jl:122
 
 ```
 
@@ -264,9 +264,9 @@ nothing #hide
 ```
 
 ```
-┌ Info: Updating Machine{ImageClassifier{MyConvBuilder,…},…} @053.
+┌ Info: Updating Machine{ImageClassifier{MyConvBuilder,…},…} @078.
 └ @ MLJBase /Users/anthony/.julia/packages/MLJBase/4DmTL/src/machines.jl:342
-Optimising neural net:  3%[>                        ]  ETA: 0:00:00[KOptimising neural net:  6%[=>                       ]  ETA: 0:00:10[KOptimising neural net: 10%[==>                      ]  ETA: 0:00:12[KOptimising neural net: 13%[===>                     ]  ETA: 0:00:12[KOptimising neural net: 16%[====>                    ]  ETA: 0:00:12[KOptimising neural net: 19%[====>                    ]  ETA: 0:00:12[KOptimising neural net: 23%[=====>                   ]  ETA: 0:00:12[KOptimising neural net: 26%[======>                  ]  ETA: 0:00:12[KOptimising neural net: 29%[=======>                 ]  ETA: 0:00:11[KOptimising neural net: 32%[========>                ]  ETA: 0:00:11[KOptimising neural net: 35%[========>                ]  ETA: 0:00:10[KOptimising neural net: 39%[=========>               ]  ETA: 0:00:10[KOptimising neural net: 42%[==========>              ]  ETA: 0:00:10[KOptimising neural net: 45%[===========>             ]  ETA: 0:00:09[KOptimising neural net: 48%[============>            ]  ETA: 0:00:09[KOptimising neural net: 52%[============>            ]  ETA: 0:00:08[KOptimising neural net: 55%[=============>           ]  ETA: 0:00:08[KOptimising neural net: 58%[==============>          ]  ETA: 0:00:07[KOptimising neural net: 61%[===============>         ]  ETA: 0:00:07[KOptimising neural net: 65%[================>        ]  ETA: 0:00:06[KOptimising neural net: 68%[================>        ]  ETA: 0:00:06[KOptimising neural net: 71%[=================>       ]  ETA: 0:00:05[KOptimising neural net: 74%[==================>      ]  ETA: 0:00:05[KOptimising neural net: 77%[===================>     ]  ETA: 0:00:04[KOptimising neural net: 81%[====================>    ]  ETA: 0:00:03[KOptimising neural net: 84%[====================>    ]  ETA: 0:00:03[KOptimising neural net: 87%[=====================>   ]  ETA: 0:00:02[KOptimising neural net: 90%[======================>  ]  ETA: 0:00:02[KOptimising neural net: 94%[=======================> ]  ETA: 0:00:01[KOptimising neural net: 97%[========================>]  ETA: 0:00:01[KOptimising neural net:100%[=========================] Time: 0:00:18[K
+Optimising neural net:  3%[>                        ]  ETA: 0:00:00[KOptimising neural net:  6%[=>                       ]  ETA: 0:00:08[KOptimising neural net: 10%[==>                      ]  ETA: 0:00:09[KOptimising neural net: 13%[===>                     ]  ETA: 0:00:10[KOptimising neural net: 16%[====>                    ]  ETA: 0:00:10[KOptimising neural net: 19%[====>                    ]  ETA: 0:00:10[KOptimising neural net: 23%[=====>                   ]  ETA: 0:00:09[KOptimising neural net: 26%[======>                  ]  ETA: 0:00:09[KOptimising neural net: 29%[=======>                 ]  ETA: 0:00:09[KOptimising neural net: 32%[========>                ]  ETA: 0:00:09[KOptimising neural net: 35%[========>                ]  ETA: 0:00:08[KOptimising neural net: 39%[=========>               ]  ETA: 0:00:08[KOptimising neural net: 42%[==========>              ]  ETA: 0:00:08[KOptimising neural net: 45%[===========>             ]  ETA: 0:00:07[KOptimising neural net: 48%[============>            ]  ETA: 0:00:07[KOptimising neural net: 52%[============>            ]  ETA: 0:00:06[KOptimising neural net: 55%[=============>           ]  ETA: 0:00:06[KOptimising neural net: 58%[==============>          ]  ETA: 0:00:06[KOptimising neural net: 61%[===============>         ]  ETA: 0:00:05[KOptimising neural net: 65%[================>        ]  ETA: 0:00:05[KOptimising neural net: 68%[================>        ]  ETA: 0:00:04[KOptimising neural net: 71%[=================>       ]  ETA: 0:00:04[KOptimising neural net: 74%[==================>      ]  ETA: 0:00:03[KOptimising neural net: 77%[===================>     ]  ETA: 0:00:03[KOptimising neural net: 81%[====================>    ]  ETA: 0:00:03[KOptimising neural net: 84%[====================>    ]  ETA: 0:00:02[KOptimising neural net: 87%[=====================>   ]  ETA: 0:00:02[KOptimising neural net: 90%[======================>  ]  ETA: 0:00:01[KOptimising neural net: 94%[=======================> ]  ETA: 0:00:01[KOptimising neural net: 97%[========================>]  ETA: 0:00:00[KOptimising neural net:100%[=========================] Time: 0:00:13[K
 
 ```
 
@@ -297,7 +297,7 @@ evaluate!(mach,
 ┌───────────────────────┬───────────────┬────────────────┐
 │ _.measure             │ _.measurement │ _.per_fold     │
 ├───────────────────────┼───────────────┼────────────────┤
-│ LogLoss{Float64} @919 │ 0.366         │ Float32[0.366] │
+│ LogLoss{Float64} @457 │ 0.366         │ Float32[0.366] │
 └───────────────────────┴───────────────┴────────────────┘
 _.per_observation = [[[6.14, 0.186, ..., 0.000432]]]
 _.fitted_params_per_fold = [ … ]

@@ -354,10 +354,10 @@ uuid = "42e2da0e-8278-4e71-bc24-59509adca0fe"
 version = "1.0.0"
 
 [[HTTP]]
-deps = ["Base64", "Dates", "IniFile", "MbedTLS", "Sockets", "URIs"]
-git-tree-sha1 = "942c1a9c750bbe79912b7bd060a420932afd35b8"
+deps = ["Base64", "Dates", "IniFile", "MbedTLS", "NetworkOptions", "Sockets", "URIs"]
+git-tree-sha1 = "c9f380c76d8aaa1fa7ea9cf97bddbc0d5b15adc2"
 uuid = "cd3eb016-35fb-5094-929b-558a96fad6f3"
-version = "0.9.3"
+version = "0.9.5"
 
 [[IRTools]]
 deps = ["InteractiveUtils", "MacroTools", "Test"]
@@ -554,9 +554,9 @@ version = "0.17.3"
 
 [[MLJFlux]]
 deps = ["CategoricalArrays", "ColorTypes", "ComputationalResources", "Flux", "LossFunctions", "MLJModelInterface", "ProgressMeter", "Statistics", "Tables"]
-git-tree-sha1 = "ec28ac45b96417161649f138c35f0f6c921355c9"
+git-tree-sha1 = "8420374d44e7d138c31251480db0e607f09403f5"
 uuid = "094fc8d1-fd35-5302-93ea-dabda2abf845"
-version = "0.1.6"
+version = "0.1.7"
 
 [[MLJModelInterface]]
 deps = ["Random", "ScientificTypes", "StatisticalTraits"]
@@ -646,6 +646,11 @@ version = "0.7.14"
 git-tree-sha1 = "bfe47e760d60b82b66b61d2d44128b62e3a369fb"
 uuid = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
 version = "0.3.5"
+
+[[NetworkOptions]]
+git-tree-sha1 = "ed3157f48a05543cce9b241e1f2815f7e843d96e"
+uuid = "ca575930-c2e3-43a9-ace4-1e988b2c1908"
+version = "1.2.0"
 
 [[Ogg_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]

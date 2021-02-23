@@ -57,7 +57,7 @@ NeuralNetworkClassifier(
     lambda = 0.0,
     alpha = 0.0,
     optimiser_changes_trigger_retraining = false,
-    acceleration = CPU1{Nothing}(nothing)) @002
+    acceleration = CPU1{Nothing}(nothing)) @252
 ```
 
 ## Incremental training
@@ -85,18 +85,18 @@ nothing #hide
 ```
 
 ```
-┌ Info: Updating Machine{NeuralNetworkClassifier{Short,…},…} @226.
+┌ Info: Updating Machine{NeuralNetworkClassifier{Short,…},…} @545.
 └ @ MLJBase /Users/anthony/.julia/packages/MLJBase/4DmTL/src/machines.jl:342
 ┌ Info: Loss is 0.853
-└ @ MLJFlux /Users/anthony/.julia/packages/MLJFlux/AWa8J/src/core.jl:122
+└ @ MLJFlux /Users/anthony/.julia/packages/MLJFlux/wj7HX/src/core.jl:122
 ┌ Info: Loss is 0.8207
-└ @ MLJFlux /Users/anthony/.julia/packages/MLJFlux/AWa8J/src/core.jl:122
+└ @ MLJFlux /Users/anthony/.julia/packages/MLJFlux/wj7HX/src/core.jl:122
 ┌ Info: Loss is 0.8072
-└ @ MLJFlux /Users/anthony/.julia/packages/MLJFlux/AWa8J/src/core.jl:122
+└ @ MLJFlux /Users/anthony/.julia/packages/MLJFlux/wj7HX/src/core.jl:122
 ┌ Info: Loss is 0.752
-└ @ MLJFlux /Users/anthony/.julia/packages/MLJFlux/AWa8J/src/core.jl:122
+└ @ MLJFlux /Users/anthony/.julia/packages/MLJFlux/wj7HX/src/core.jl:122
 ┌ Info: Loss is 0.7077
-└ @ MLJFlux /Users/anthony/.julia/packages/MLJFlux/AWa8J/src/core.jl:122
+└ @ MLJFlux /Users/anthony/.julia/packages/MLJFlux/wj7HX/src/core.jl:122
 
 ```
 

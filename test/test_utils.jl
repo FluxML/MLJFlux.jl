@@ -135,21 +135,23 @@ function optimisertest(ModelType, X, y, builder, optimiser, accel)
              mach = machine(model, $X, $y);
 
              # two epochs in stages:
-             Random.seed!(123)
-             #seed!($accel_ex)
+             Random.seed!(123) # chains are always initialized on CPU
              fit!(mach, verbosity=0, force=true);
-             @show mach.cache[end]
              model.epochs = model.epochs + 1
              fit!(mach, verbosity=0); # update
              l1 = MLJBase.report(mach).training_losses[end]
 
              # two epochs in one go:
-             Random.seed!(123)
-             #seed!($accel_ex)
+             Random.seed!(123) # chains are always initialized on CPU
              fit!(mach, verbosity=1, force=true)
              l2 = MLJBase.report(mach).training_losses[end]
 
-             @test isapprox(l1, l2)
+             if accel isa CPU1
+                 @test isapprox(l1, l2)
+             else
+                 @test_broken isapprox(l1, l2, rtol=1e-8)
+             end
+
          end)
 
     return true

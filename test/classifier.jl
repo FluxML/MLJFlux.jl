@@ -57,6 +57,14 @@ losses = []
     push!(losses, first_last_training_loss[2])
     yhat = MLJBase.predict(mach, rows=test);
     @test mean(MLJBase.cross_entropy(yhat, y[test])) < 0.95*loss_baseline
+
+    optimisertest(MLJFlux.NeuralNetworkClassifier,
+                  X,
+                  y,
+                  builder,
+                  optimiser,
+                  accel)
+
 end
 
 # check different resources (CPU1, CUDALibs, etc)) give about the same loss:

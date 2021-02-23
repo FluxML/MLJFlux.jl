@@ -17,7 +17,7 @@ train, test = MLJBase.partition(1:N, 0.7)
 @testset_accelerated "NeuralNetworkRegressor" accel begin
 
     Random.seed!(123)
-    
+
     basictest(MLJFlux.NeuralNetworkRegressor,
               X,
               y,
@@ -38,6 +38,14 @@ train, test = MLJBase.partition(1:N, 0.7)
     truth = y[test]
     goal = 0.9*model.loss(truth .- mean(truth), 0)
     @test model.loss(yhat, truth) < goal
+
+    optimisertest(MLJFlux.NeuralNetworkRegressor,
+                  X,
+                  y,
+                  builder,
+                  optimiser,
+                  accel)
+
 end
 
 # check different resources (CPU1, CUDALibs, etc)) give about the same loss:
@@ -53,7 +61,7 @@ losses = []
 @testset_accelerated "MultitargetNeuralNetworkRegressor" accel begin
 
     Random.seed!(123)
-    
+
     basictest(MLJFlux.MultitargetNeuralNetworkRegressor,
               X,
               y,
@@ -69,11 +77,19 @@ losses = []
         fit(model, 0, MLJBase.selectrows(X, train), selectrows(y, train))
     first_last_training_loss = rpt[1][[1, end]]
     push!(losses, first_last_training_loss[2])
-#    @show first_last_training_loss
+#   @show first_last_training_loss
     yhat = predict(model, fitresult, selectrows(X, test))
     truth = ymatrix[test]
     goal = 0.9*model.loss(truth .- mean(truth), 0)
     @test model.loss(Tables.matrix(yhat), truth) < goal
+
+    optimisertest(MLJFlux.MultitargetNeuralNetworkRegressor,
+              X,
+              y,
+              builder,
+              optimiser,
+              accel)
+
 end
 
 # check different resources (CPU1, CUDALibs, etc)) give about the same loss:

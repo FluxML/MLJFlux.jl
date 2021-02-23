@@ -4,7 +4,22 @@ An interface to the Flux deep learning models for the
 [MLJ](https://github.com/alan-turing-institute/MLJ.jl) machine
 learning framework
 
-[![Build Status](https://github.com/alan-turing-institute/MLJFlux.jl/workflows/CI/badge.svg)](https://github.com/alan-turing-institute/MLJFlux.jl/actions) [![Coverage Status](https://coveralls.io/repos/github/alan-turing-institute/MLJFlux.jl/badge.svg?branch=master)](https://coveralls.io/github/alan-turing-institute/MLJFlux.jl?branch=master)
+| Branch   | Julia | CPU CI | GPU CI | Coverage |
+| -------- | ----- | ------ | -----  | -------- |
+| `master` | v1    | [![Continuous Integration (CPU)][gha-img-master]][gha-url] | [![Continuous Integration (GPU)][buildkite-julia1-img-master]][buildkite-url] | [![Code Coverage][coveralls-img-master]][coveralls-url] |
+| `dev`    | v1    | [![Continuous Integration (CPU)][gha-img-dev]][gha-url] | [![Continuous Integration (GPU)][buildkite-julia1-img-dev]][buildkite-url] | [![Code Coverage][coveralls-img-dev]][coveralls-url] |
+
+[gha-img-master]: https://github.com/FluxML/MLJFlux.jl/workflows/CI/badge.svg?branch=master "Continuous Integration (CPU)"
+[gha-img-dev]: https://github.com/FluxML/MLJFlux.jl/workflows/CI/badge.svg?branch=dev "Continuous Integration (CPU)"
+[gha-url]: https://github.com/FluxML/MLJFlux.jl/actions/workflows/ci.yml
+
+[buildkite-julia1-img-master]: https://badge.buildkite.com/ae439e1f6ed6f178342a0ed166d0983de6ec1b72325e4e3e7e.svg?branch=master&step=Julia%20v1 "Continuous Integration (GPU)"
+[buildkite-julia1-img-dev]: https://badge.buildkite.com/ae439e1f6ed6f178342a0ed166d0983de6ec1b72325e4e3e7e.svg?branch=dev&step=Julia%20v1 "Continuous Integration (GPU)"
+[buildkite-url]: https://buildkite.com/julialang/mljflux-dot-jl
+
+[coveralls-img-master]: https://coveralls.io/repos/github/alan-turing-institute/MLJFlux.jl/badge.svg?branch=master "Code Coverage"
+[coveralls-img-dev]: https://coveralls.io/repos/github/alan-turing-institute/MLJFlux.jl/badge.svg?branch=dev "Code Coverage"
+[coveralls-url]: https://github.com/FluxML/MLJFlux.jl/actions/workflows/ci.yml
 
 MLJFlux makes it possible to apply the machine learning
 meta-algorithms provided by MLJ - such as out-of-sample performance
@@ -203,7 +218,7 @@ All models share the following hyper-parameters:
 
 7. `alpha`: The L2/L1 mix of regularization. Default = 0. Range = [0, 1]
 
-8. `acceleration`: Use `CUDALibs()` for training on GPU; default is `CPU1()`. 
+8. `acceleration`: Use `CUDALibs()` for training on GPU; default is `CPU1()`.
 
 9. `optimiser_changes_trigger_retraining`: True if fitting an
    associated machine should trigger retraining from scratch whenever
@@ -244,7 +259,7 @@ function MLJFlux.build(nn::MyNetwork, n_in, n_out)
 end
 ```
 
-Note here that `n_in` and `n_out` depend on the size of the data (see 
+Note here that `n_in` and `n_out` depend on the size of the data (see
 Table 1).
 
 More generally, defining a new builder means defining a new struct
@@ -298,7 +313,7 @@ you *should* use MLJ loss functions in MLJ meta-algorithms.
 
 We define a builder that builds a chain with six alternating
 convolution and max-pool layers, and a final dense layer, which we
-apply to the MNIST image dataset. 
+apply to the MNIST image dataset.
 
 First we define a generic builder (working for any image size, color
 or gray):
@@ -390,4 +405,3 @@ julia> evaluate!(mach,
 │ misclassification_rate │ 0.0467        │ [0.0467]   │
 └────────────────────────┴───────────────┴────────────┘
 ```
-

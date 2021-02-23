@@ -20,7 +20,7 @@ function NeuralNetworkRegressor(; builder::B   = Linear()
                                 , optimiser_changes_trigger_retraining=false
                                 , acceleration  = CPU1()
                                 ) where {B,O,L}
-    
+
     model = NeuralNetworkRegressor{B,O,L}(builder
                                           , optimiser
                                           , loss
@@ -30,10 +30,10 @@ function NeuralNetworkRegressor(; builder::B   = Linear()
                                           , alpha
                                           , optimiser_changes_trigger_retraining
                                           , acceleration)
-    
+
    message = clean!(model)
    isempty(message) || @warn message
-    
+
     return model
 end
 
@@ -75,7 +75,7 @@ function MultitargetNeuralNetworkRegressor(; builder::B   = Linear()
 
     return model
 end
-    
+
 const Regressor =
     Union{NeuralNetworkRegressor, MultitargetNeuralNetworkRegressor}
 
@@ -107,7 +107,9 @@ function MLJModelInterface.fit(model::Regressor, verbosity::Int, X, y)
                           data,
                           model.acceleration)
 
-    cache = (deepcopy(model), data, history, n_input, n_output)
+    # note: "state" part of `optimiser` is now mutated!
+
+    cache = (deepcopy(model), data, history, n_input, n_output, optimiser)
     fitresult = (chain, target_is_multivariate, target_column_names)
     report = (training_losses=history,)
 
@@ -122,7 +124,11 @@ function MLJModelInterface.update(model::Regressor,
                                   X,
                                   y)
 
-    old_model, data, old_history, n_input, n_output = old_cache
+    # note: the `optimiser` in `old_cache` stores "state" (eg,
+    # momentum); the "state" part of the `optimiser` field of `model`
+    # and of `old_model` play no role
+
+    old_model, data, old_history, n_input, n_output, optimiser = old_cache
     old_chain, target_is_multivariate, target_column_names = old_fitresult
 
     optimiser_flag = model.optimiser_changes_trigger_retraining &&
@@ -140,7 +146,12 @@ function MLJModelInterface.update(model::Regressor,
         epochs = model.epochs
     end
 
-    optimiser = deepcopy(model.optimiser)
+    # we only get to keep the optimiser "state" carried over from
+    # previous training if we're doing a warm restart and the user has not
+    # changed the optimiser hyper-parameter:
+    if !keep_chain || model.optimiser != old_model.optimiser
+        optimiser = deepcopy(model.optimiser)
+    end
 
     chain, history = fit!(chain,
                           optimiser,
@@ -155,8 +166,9 @@ function MLJModelInterface.update(model::Regressor,
         # note: history[1] = old_history[end]
         history = vcat(old_history[1:end-1], history)
     end
+
     fitresult = (chain, target_is_multivariate, target_column_names)
-    cache = (deepcopy(model), data, history, n_input, n_output)
+    cache = (deepcopy(model), data, history, n_input, n_output, optimiser)
     report = (training_losses=history,)
 
     return fitresult, cache, report
@@ -167,16 +179,16 @@ function MLJModelInterface.predict(model::Regressor, fitresult, Xnew_)
 
     chain , target_is_multivariate, target_column_names = fitresult
 
-    Xnew_ = MLJModelInterface.matrix(Xnew_) 
+    Xnew_ = MLJModelInterface.matrix(Xnew_)
 
     if target_is_multivariate
         ypred = [chain(values.(Xnew_[i, :]))
-                 for i in 1:size(Xnew_, 1)] 
+                 for i in 1:size(Xnew_, 1)]
         return MLJModelInterface.table(reduce(hcat, y for y in ypred)',
                                        names=target_column_names)
     else
         return [chain(values.(Xnew_[i, :]))[1]
-                for i in 1:size(Xnew_, 1)] 
+                for i in 1:size(Xnew_, 1)]
     end
 end
 

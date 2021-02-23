@@ -1,6 +1,6 @@
 ## EXPOSE OPTIMISERS TO MLJ (for eg, tuning)
 
-# Here we: (i) Make the optimiser structs "transarent" so that their
+# Here we: (i) Make the optimiser structs "transparent" so that their
 # field values are exposed by calls to MLJ.params; and (ii) Overload
 # `==` for optimisers, so that we can detect when their parameters
 # remain unchanged on calls to MLJModelInterface.update methods.
@@ -134,7 +134,7 @@ function  fit!(chain, optimiser, loss, epochs,
         verbosity != 1 || next!(meter)
 
     end
-    
+
     return Flux.cpu(chain), history
 
 end

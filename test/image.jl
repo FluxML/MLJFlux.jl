@@ -53,6 +53,9 @@ losses = []
     @test basictest(MLJFlux.ImageClassifier, images, labels,
                            model.builder, model.optimiser, 0.95, accel)
 
+    @test optimisertest(MLJFlux.ImageClassifier, images, labels,
+                           model.builder, model.optimiser, accel)
+
 end
 
 # check different resources (CPU1, CUDALibs, etc)) give about the same loss:
@@ -112,7 +115,7 @@ end
 
 # check different resources (CPU1, CUDALibs, etc)) give about the same loss:
 reference = losses[1]
-@test all(x->abs(x - reference)/reference < 1e-4, losses[2:end])
+@test all(x->abs(x - reference)/reference < 1e-3, losses[2:end])
 
 
 ## BASIC IMAGE TESTS COLOR
@@ -139,7 +142,7 @@ losses = []
     # tests update logic, etc (see test_utililites.jl):
     @test basictest(MLJFlux.ImageClassifier, images, labels,
                            model.builder, model.optimiser, 0.95, accel)
-    
+
     @time fitresult, cache, _report = MLJBase.fit(model, 0, images, labels)
     pred = MLJBase.predict(model, fitresult, images[1:6])
     first_last_training_loss = _report[1][[1, end]]
@@ -152,6 +155,9 @@ losses = []
                                     batch_size=2,
                                     acceleration=accel)
     fitresult, cache, _report = MLJBase.fit(model, 0, images, labels);
+
+    @test optimisertest(MLJFlux.ImageClassifier, images, labels,
+                           model.builder, model.optimiser, accel)
 
 end
 

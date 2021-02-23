@@ -1,3 +1,6 @@
+seed!(::CPU1, i=123) = Random.seed!(i)
+seed!(::CUDALibs, i=123) = Flux.CUDA.seed!(i)
+
 macro testset_accelerated(name::String, var, ex)
     testset_accelerated(name, var, ex)
 end
@@ -38,7 +41,7 @@ function testset_accelerated(name::String, var, ex; exclude=[])
     end
 
     return esc(final_ex)
-    
+
 end
 
 
@@ -109,6 +112,45 @@ function basictest(ModelType, X, y, builder, optimiser, threshold, accel)
          @test_logs((:info, r""), # one line of :info per extra epoch
                     (:info, r""),
                     MLJBase.update(model, 2, fitresult, cache, $X, $y));
+
+         end)
+
+    return true
+end
+
+# to test the optimiser "state" is preserved in update (warm restart):
+function optimisertest(ModelType, X, y, builder, optimiser, accel)
+
+    ModelType_str = string(ModelType)
+    ModelType_ex = Meta.parse(ModelType_str)
+    accel_ex = Meta.parse(string(accel))
+    optimiser = deepcopy(optimiser)
+
+    eval(quote
+         model = $ModelType_ex(builder=$builder,
+                               optimiser=$optimiser,
+                               acceleration=$accel_ex,
+                               epochs=1)
+
+             mach = machine(model, $X, $y);
+
+             # two epochs in stages:
+             Random.seed!(123) # chains are always initialized on CPU
+             fit!(mach, verbosity=0, force=true);
+             model.epochs = model.epochs + 1
+             fit!(mach, verbosity=0); # update
+             l1 = MLJBase.report(mach).training_losses[end]
+
+             # two epochs in one go:
+             Random.seed!(123) # chains are always initialized on CPU
+             fit!(mach, verbosity=1, force=true)
+             l2 = MLJBase.report(mach).training_losses[end]
+
+             if accel isa CPU1
+                 @test isapprox(l1, l2)
+             else
+                 @test_broken isapprox(l1, l2, rtol=1e-8)
+             end
 
          end)
 

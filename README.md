@@ -174,6 +174,20 @@ model type | prediction type | `scitype(X) <: _` | `scitype(y) <: _`
 
 > Table 1. Input and output types for MLJFlux models
 
+#### Non-tabular input
+
+Any `AbstractMatrix{<:AbstractFloat}` object `Xmat` can be forced to
+have scitype `Table(Continuous)` by replacing it with ` X =
+MLJ.table(Xmat)`. Furthermore, this wrapping, and subsequent
+unwrapping under the hood, will compile to a no-op. At present this
+includes support for sparse matrix data, but the implementation has
+not been optimized for sparse data at this time and so should be used
+with caution.
+
+Instructions for coercing common image formats into some
+`AbstractVector{<:Image}` are
+[here](https://alan-turing-institute.github.io/MLJScientificTypes.jl/dev/#Type-coercion-for-image-data-1).
+
 
 ### Warm restart
 
@@ -189,7 +203,7 @@ models, `fit!(mach)` will use a warm restart if:
   comparison). This allows one to dynamically modify learning rates,
   for example.
   
-- Here `model=mach.model` is the associated MLJ model
+Here `model=mach.model` is the associated MLJ model.
   
 The warm restart feature makes it possible to apply early stopping
 criteria, as defined in
@@ -218,22 +232,7 @@ CPU at then conclusion of `fit!`, and made available as
 `fitted_params(mach)`.
 
 
-#### Non-tabular input
-
-Any `AbstractMatrix{<:AbstractFloat}` object `Xmat` can be forced to
-have scitype `Table(Continuous)` by replacing it with ` X =
-MLJ.table(Xmat)`. Furthermore, this wrapping, and subsequent
-unwrapping under the hood, will compile to a no-op. At present this
-includes support for sparse matrix data, but the implementation has
-not been optimized for sparse data at this time and so should be used
-with caution.
-
-Instructions for coercing common image formats into some
-`AbstractVector{<:Image}` are
-[here](https://alan-turing-institute.github.io/MLJScientificTypes.jl/dev/#Type-coercion-for-image-data-1).
-
-
-#### Built-in builders
+### Built-in builders
 
 MLJ provides two simple builders out of the box:
 

@@ -24,10 +24,16 @@ learning framework
 MLJFlux makes it possible to apply the machine learning
 meta-algorithms provided by MLJ - such as out-of-sample performance
 evaluation and hyper-parameter optimization - to some classes of
-supervised deep learning models. It does this by providing an
+**supervised deep learning models**. It does this by providing an
 interface to the [Flux](https://fluxml.ai/Flux.jl/stable/)
 framework.
 
+The guiding vision of this package is to make evaluating and
+optimizing basic Flux models more convenient to users already familiar
+with the MLJ workflow. This goal will likely place restrictions of the
+class of Flux models that can used, at least in the medium term. For
+example, online learning, re-enforcement learning, and adversarial
+networks are currently out of scope.
 
 ### Basic idea
 
@@ -40,8 +46,9 @@ and this will require familiarity with the [Flux
 API](https://fluxml.ai/Flux.jl/stable/) for defining a neural network
 chain.
 
-In the future MLJFlux may provided an assortment of more sophisticated
-canned builders.
+In the future MLJFlux may provide a larger assortment of canned
+builders. Pull requests introducing new ones are most welcome.
+
 
 ### Installation
 
@@ -56,7 +63,11 @@ Pkg.add("RDatasets")  # for the demo below
 ### Example
 
 Following is an introductory example using a default builder and no
-standardization of input features.
+standardization of input features ([notebook/script](/examples/iris)).
+
+For a more advanced illustration, see the [MNIST dataset
+example](https://github.com/FluxML/MLJFlux.jl/blob/dev/examples/mnist).
+
 
 
 #### Loading some data and instantiating a model
@@ -66,7 +77,7 @@ using MLJ
 import RDatasets
 iris = RDatasets.dataset("datasets", "iris");
 y, X = unpack(iris, ==(:Species), colname -> true, rng=123);
-@load NeuralNetworkClassifier
+NeuralNetworkClassifier = @load NeuralNetworkClassifier
 
 julia> clf = NeuralNetworkClassifier()
 NeuralNetworkClassifier(
@@ -94,7 +105,7 @@ fit!(mach)
 julia> training_loss = cross_entropy(predict(mach, X), y) |> mean
 0.89526004f0
 
-# increase learning rate and add iterations:
+# Increasing learning rate and adding iterations:
 clf.optimiser.eta = clf.optimiser.eta * 2
 clf.epochs = clf.epochs + 5
 
@@ -135,7 +146,7 @@ plot(curve.parameter_values,
 
 ```
 
-![learning_curve.png](learning_curve.png)
+![](examples/iris/iris_history.png)
 
 
 ### Models
@@ -179,7 +190,50 @@ Instructions for coercing common image formats into some
 [here](https://alan-turing-institute.github.io/MLJScientificTypes.jl/dev/#Type-coercion-for-image-data-1).
 
 
-#### Built-in builders
+### Warm restart
+
+MLJ machines cache state enabling the "warm restart" of model
+training, as demonstrated in the example above. In the case of MLJFlux
+models, `fit!(mach)` will use a warm restart if:
+
+- only `model.epochs` has changed since the last call; or 
+
+- only `model.epochs` or `model.optimiser` have changed since the last
+  call and `model.optimiser_changes_trigger_retraining == false` (the
+  default) (the "state" part of the optimiser is ignored in this
+  comparison). This allows one to dynamically modify learning rates,
+  for example.
+  
+Here `model=mach.model` is the associated MLJ model.
+  
+The warm restart feature makes it possible to apply early stopping
+criteria, as defined in
+[EarlyStopping.jl](https://github.com/ablaom/EarlyStopping.jl). For an
+example, see [/examples/mnist/](/examples/mnist/). (Eventually, this
+will be handled by an MLJ model wrapper for controlling arbitrary
+iterative models.)
+
+
+### Training on a GPU
+
+When instantiating a model for training on a GPU, specify
+`acceleration=CUDALibs()`, as in
+
+```julia
+using MLJ
+ImageClassifier = @load ImageClassifier
+model = ImageClassifier(epochs=10, acceleration=CUDALibs())
+mach = machine(model, X, y) |> fit!
+```
+
+In this example, the data `X, y` is copied onto the GPU under the hood
+on the call to `fit!` and cached for use in any warm restart (see
+above). The Flux chain used in training is always copied back to the
+CPU at then conclusion of `fit!`, and made available as
+`fitted_params(mach)`.
+
+
+### Built-in builders
 
 MLJ provides two simple builders out of the box:
 
@@ -262,6 +316,9 @@ end
 Note here that `n_in` and `n_out` depend on the size of the data (see
 Table 1).
 
+For a concrete image classification example, see
+[examples/mnist](examples/mnist).
+
 More generally, defining a new builder means defining a new struct
 sub-typing `MLJFlux.Builder` and defining a new `MLJFlux.build` method
 with one of these signatures:
@@ -279,15 +336,12 @@ following conditions:
     - for any `x <: Vector{<:AbstractFloat}` of length `n_in` (for use
       with one of the first three model types); or
 
-    - for any `x <: Array{<:Float32, 3}` of size
-      `(W, H, n_channels)`, where `n_in = (W, H)` and `n_channels` is
-      1 or 3 (for use with `ImageClassifier`)
+    - for any `x <: Array{<:Float32, 4}` of size `(W, H, n_channels,
+      batch_size)`, where `(W, H) = n_in`, `n_channels` is 1 or 3, and
+      `batch_size` is any integer (for use with `ImageClassifier`)
 
 - The object returned by `chain(x)` must be an `AbstractFloat` vector
   of length `n_out`.
-
-For an builder example for use with `ImageClassifier` see
-[below](an-image-classification-example).
 
 
 ### Loss functions
@@ -295,7 +349,7 @@ For an builder example for use with `ImageClassifier` see
 Currently, the loss function specified by `loss=...` is applied
 internally by Flux and needs to conform to the Flux API. You cannot,
 for example, supply one of MLJ's probabilistic loss functions, such as
-`MLJ.cross_entropy` to one of the classifiers constructors, although
+`MLJ.cross_entropy` to one of the classifier constructors, although
 you *should* use MLJ loss functions in MLJ meta-algorithms.
 
 
@@ -310,6 +364,9 @@ you *should* use MLJ loss functions in MLJ meta-algorithms.
 <!-- stability than vanilla `Flux.crossentropy`. -->
 
 ### An image classification example
+
+An expanded version of this example, with early stopping, is available
+[here](/examples/mnist).
 
 We define a builder that builds a chain with six alternating
 convolution and max-pool layers, and a final dense layer, which we
@@ -328,7 +385,7 @@ function flatten(x::AbstractArray)
 end
 
 import MLJFlux
-mutable struct MyConvBuilder <: MLJFlux.Builder
+mutable struct MyConvBuilder 
     filter_size::Int
     channels1::Int
     channels2::Int
@@ -384,7 +441,7 @@ y = coerce(y, Multiclass);
 Instantiating an image classifier model:
 
 ```julia
-@load ImageClassifier
+ImageClassifier = @load ImageClassifier
 clf = ImageClassifier(builder=MyConvBuilder(3, 16, 32, 32),
                       epochs=10,
                       loss=Flux.crossentropy)

@@ -115,7 +115,7 @@ end
 
 # check different resources (CPU1, CUDALibs, etc)) give about the same loss:
 reference = losses[1]
-@test all(x->abs(x - reference)/reference < 1e-3, losses[2:end])
+@test all(x->abs(x - reference)/reference < 0.05, losses[2:end])
 
 
 ## BASIC IMAGE TESTS COLOR

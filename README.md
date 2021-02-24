@@ -1,4 +1,4 @@
-# MLJFlux 
+# MLJFlux
 
 An interface to the Flux deep learning models for the
 [MLJ](https://github.com/alan-turing-institute/MLJ.jl) machine

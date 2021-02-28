@@ -104,8 +104,10 @@ function MLJModelInterface.fit(model::Regressor, verbosity::Int, X, y)
                           model.lambda,
                           model.alpha,
                           verbosity,
-                          data,
-                          model.acceleration)
+                          #data,
+                          model.acceleration,
+                          data[1],
+                          data[2])
 
     # note: "state" part of `optimiser` is now mutated!
 
@@ -160,8 +162,10 @@ function MLJModelInterface.update(model::Regressor,
                           model.lambda,
                           model.alpha,
                           verbosity,
-                          data,
-                          model.acceleration)
+                          #data,
+                          model.acceleration,
+                          data[1],
+                          data[2])
     if keep_chain
         # note: history[1] = old_history[end]
         history = vcat(old_history[1:end-1], history)

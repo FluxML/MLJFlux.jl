@@ -70,8 +70,9 @@ function MLJModelInterface.fit(model::ImageClassifier,
                           model.lambda,
                           model.alpha,
                           verbosity,
-                          data,
-                          model.acceleration)
+                          model.acceleration,
+                          data[1],
+                          data[2])
 
     # `optimiser` is now mutated
 
@@ -136,8 +137,9 @@ function MLJModelInterface.update(model::ImageClassifier,
                           model.lambda,
                           model.alpha,
                           verbosity,
-                          data,
-                          model.acceleration)
+                          model.acceleration,
+                          data[1],
+                          data[2])
     if keep_chain
         # note: history[1] = old_history[end]
         history = vcat(old_history[1:end-1], history)

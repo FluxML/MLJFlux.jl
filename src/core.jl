@@ -72,8 +72,9 @@ end
          lambda,
          alpha,
          verbosity,
-         data,
-         acceleration)
+         acceleration,
+         X,
+         y)
 
 Optimize a Flux model `chain` using the regularization parameters
 `lambda` (strength) and `alpha` (l2/l1 mix), where `loss(yhat, y) ` is
@@ -83,7 +84,8 @@ target predictions `yhat` and target observations `y`.
 Here `chain` is a `Flux.Chain` object, or other "Flux model" such that
 `Flux.params(chain)` returns the parameters to be optimised.
 
-The training `data` is a vector of tuples of the form `(X, y)` where:
+The `X` argument is the training features and `y` argument is the
+target:
 
 - `X` and `y` have type `Array{<:AbstractFloat}`
 

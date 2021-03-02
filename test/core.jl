@@ -30,8 +30,9 @@ end
     model = MLJFlux.NeuralNetworkClassifier()
     model.batch_size = 3
     data = MLJFlux.collate(model, X, y)
-    print(data)
-    @test first.(data) == (Xmatrix'[:,1:3], [1 0 1; 0 1 0])
+
+    @test data == ([Xmatrix'[:,1:3], Xmatrix'[:,4:6], Xmatrix'[:,7:9], Xmatrix'[:,10:10]],
+        [[1 0 1; 0 1 0], [1 0 1; 0 1 0], [1 1 0; 0 0 1], reshape([1; 0], (2,1))])
 
     # MultitargetNeuralNetworRegressor:
     ymatrix = rand(10, 2)

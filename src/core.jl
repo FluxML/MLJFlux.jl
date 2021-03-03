@@ -47,6 +47,24 @@ end
 (::Mover{<:CUDALibs})(data) = Flux.gpu(data)
 
 """
+Custom training loop. Here, `loss_func` is the objective
+function to optimise, `parameters` are the model parameters,
+`optimiser` is the optimizer to be used, `X` (input features)is a
+vector of arrays where the last dimension is the batch size. `y`
+is the target observation vector.
+"""
+function train!(loss_func, parameters, optimiser, X, y)
+    for i=1:length(X)
+        gs = Flux.gradient(parameters) do
+            training_loss = loss_func(X[i], y[i])
+            return training_loss
+        end
+        Flux.update!(optimiser, parameters, gs)
+    end
+end
+
+
+"""
     fit!(chain,
          optimiser,
          loss,
@@ -54,8 +72,9 @@ end
          lambda,
          alpha,
          verbosity,
-         data,
-         acceleration)
+         acceleration,
+         X,
+         y)
 
 Optimize a Flux model `chain` using the regularization parameters
 `lambda` (strength) and `alpha` (l2/l1 mix), where `loss(yhat, y) ` is
@@ -65,7 +84,8 @@ target predictions `yhat` and target observations `y`.
 Here `chain` is a `Flux.Chain` object, or other "Flux model" such that
 `Flux.params(chain)` returns the parameters to be optimised.
 
-The training `data` is a vector of tuples of the form `(X, y)` where:
+The `X` argument is the training features and `y` argument is the
+target:
 
 - `X` and `y` have type `Array{<:AbstractFloat}`
 
@@ -95,7 +115,7 @@ mutate the argument `chain`, depending on cpu <-> gpu movements.
 
 """
 function  fit!(chain, optimiser, loss, epochs,
-               lambda, alpha, verbosity, data, acceleration)
+               lambda, alpha, verbosity, acceleration, X, y)
 
     # intitialize and start progress meter:
     meter = Progress(epochs+1, dt=0, desc="Optimising neural net:",
@@ -103,21 +123,22 @@ function  fit!(chain, optimiser, loss, epochs,
     verbosity != 1 || next!(meter)
 
     move = Mover(acceleration)
-    data = move(data)
+    X = move(X)
+    y = move(y)
     chain = move(chain)
 
     loss_func(x, y) = loss(chain(x), y)
 
     # initiate history:
-    prev_loss = mean(loss_func(data[i][1], data[i][2]) for i=1:length(data))
+    prev_loss = mean(loss_func(X[i], y[i]) for i=1:length(X))
     history = [prev_loss,]
 
     for i in 1:epochs
         # We're taking data in a Flux-fashion.
 #        @show i rand()
-        Flux.train!(loss_func, Flux.params(chain), data, optimiser)
+        train!(loss_func, Flux.params(chain), optimiser, X, y)
         current_loss =
-            mean(loss_func(data[i][1], data[i][2]) for i=1:length(data))
+            mean(loss_func(X[i], y[i]) for i=1:length(X))
         verbosity < 2 ||
             @info "Loss is $(round(current_loss; sigdigits=4))"
         push!(history, current_loss)
@@ -282,5 +303,5 @@ function collate(model, X, y)
     row_batches = Base.Iterators.partition(1:nrows(y), model.batch_size)
     Xmatrix = reformat(X)
     ymatrix = reformat(y)
-    return [(_get(Xmatrix, b), _get(ymatrix, b)) for b in row_batches]
+    return [_get(Xmatrix, b) for b in row_batches], [_get(ymatrix, b) for b in row_batches]
 end

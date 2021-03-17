@@ -1,7 +1,7 @@
 name = "MLJFlux"
 uuid = "094fc8d1-fd35-5302-93ea-dabda2abf845"
 authors = ["Anthony D. Blaom <anthony.blaom@gmail.com>", "Ayush Shridhar <ayush.shridhar1999@gmail.com>"]
-version = "0.1.8"
+version = "0.1.9"
 
 [deps]
 CategoricalArrays = "324d7699-5711-5eae-9e2f-1d82baa6b597"
@@ -20,7 +20,7 @@ ColorTypes = "^0.10.3"
 ComputationalResources = "^0.3.2"
 Flux = "^0.10.4, ^0.11"
 LossFunctions = "^0.5, ^0.6"
-MLJModelInterface = "^0.3,^0.4"
+MLJModelInterface = "^0.4.1"
 ProgressMeter = "^1.1"
 Tables = "^1.0"
 julia = "^1.3"

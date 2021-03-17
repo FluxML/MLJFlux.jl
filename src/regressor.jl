@@ -216,3 +216,4 @@ MLJModelInterface.metadata_model(MultitargetNeuralNetworkRegressor,
                        "`Continuous` multi-target, presented "*
                        "as a table, given a table of "*
                        "`Continuous` features. ")
+

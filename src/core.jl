@@ -178,7 +178,14 @@ end
 
 abstract type Builder <: MLJModelInterface.MLJType end
 
-# baby example 1:
+"""
+    Linear(; σ=Flux.relu)
+
+MLJFlux builder that constructs a fully connected two layer network
+with activation function `σ`. The number of input and output nodes is
+determined from the data.
+
+"""
 mutable struct Linear <: Builder
     σ
 end
@@ -186,7 +193,17 @@ Linear(; σ=Flux.relu) = Linear(σ)
 build(builder::Linear, n::Integer, m::Integer) =
     Flux.Chain(Flux.Dense(n, m, builder.σ))
 
-# baby example 2:
+"""
+    Short(; n_hidden=0, dropout=0.5, σ=Flux.sigmoid)
+
+MLJFlux builder that constructs a full-connected three-layer network
+using `n_hidden` nodes in the hidden layer and the specified `dropout`
+(defaulting to 0.5). An activation function `σ` is applied between the
+hidden and final layers. If `n_hidden=0` (the default) then `n_hidden`
+is the geometric mean of the number of input and output nodes.  The
+number of input and output nodes is determined from the data.
+
+"""
 mutable struct Short <: Builder
     n_hidden::Int     # if zero use geometric mean of input/output
     dropout::Float64

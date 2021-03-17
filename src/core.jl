@@ -305,3 +305,5 @@ function collate(model, X, y)
     ymatrix = reformat(y)
     return [_get(Xmatrix, b) for b in row_batches], [_get(ymatrix, b) for b in row_batches]
 end
+
+

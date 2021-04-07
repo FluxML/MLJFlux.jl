@@ -26,6 +26,10 @@ function MLJModelInterface.clean!(model::MLJFluxModel)
         warning *= "`acceleration isa CUDALibs` "*
             "but no CUDA device (GPU) currently live. "
     end
+    if ! (model.acceleration isa CUDALibs || model.acceleration isa CPU1)
+        warning *= "`Undefined acceleration, falling back to CPU`"
+        model.acceleration = CPU1()
+    end
     return warning
 end
 

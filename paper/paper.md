@@ -21,7 +21,7 @@ bibliography: paper.bib
 
 # Introduction
 
-We present _MLJFlux.jl_ [@MLJFlux.jl], an interface between the _MLJ_ machine learning toolbox [@Blaom2020] and _Flux.jl_ deep learning framework [@Innes2018] written in the _Julia_ programming language[@Julia-2017]. MLJFlux makes it possible to implement supervised deep learning models while adhering to the MLJ workflow. This means that users familiar with the MLJ design can write their models in Flux with a few slight modifications and perform all tasks provided by the MLJ model spec. The interface also provides options to train the model on different hardware and warm start the model after changing some specific hyper-parameters.
+We present _MLJFlux.jl_ [@MLJFlux.jl], an interface between the _MLJ_ machine learning toolbox [@Blaom2020] and the _Flux.jl_ deep learning framework [@Innes2018] written in the _Julia_ programming language[@Julia-2017]. MLJFlux makes it possible to implement supervised deep learning models while adhering to the MLJ workflow. This means that users familiar with the MLJ design can write their models in Flux with a few slight modifications and perform all tasks provided by the MLJ model spec. The interface also provides options to train the model on different hardware and warm start the model after changing some specific hyper-parameters.
 
 Julia solves the _"two language problem"_ in scientific computing, where high-level languages such as Python or Ruby are easy to use but often slow and low-level languages are fast but difficult to use. Using _just-in-time_ compilation and _multiple dispatch_, Julia makes the best of both worlds by matching the performance of low-level languages while also being adaptable[@JuliaBenchmarks] .
 

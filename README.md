@@ -65,9 +65,11 @@ Pkg.add("RDatasets")  # for the demo below
 Following is an introductory example using a default builder and no
 standardization of input features ([notebook/script](/examples/iris)).
 
-For a more advanced illustration, see the [MNIST dataset
+For an example implementing early stopping and snapshots, using MLJ's
+[`IteratedModel`
+wrapper](https://alan-turing-institute.github.io/MLJ.jl/dev/controlling_iterative_models/),
+see the [MNIST dataset
 example](https://github.com/FluxML/MLJFlux.jl/blob/dev/examples/mnist).
-
 
 
 #### Loading some data and instantiating a model
@@ -365,8 +367,8 @@ you *should* use MLJ loss functions in MLJ meta-algorithms.
 
 ### An image classification example
 
-An expanded version of this example, with early stopping, is available
-[here](/examples/mnist).
+An expanded version of this example, with early stopping and
+snapshots, is available [here](/examples/mnist).
 
 We define a builder that builds a chain with six alternating
 convolution and max-pool layers, and a final dense layer, which we

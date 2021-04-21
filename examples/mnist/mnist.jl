@@ -1,7 +1,8 @@
 # # Using MLJ to classifiy the MNIST image dataset
 
 using Pkg
-Pkg.activate(@__DIR__)
+const DIR = @__DIR__
+Pkg.activate(DIR)
 Pkg.instantiate()
 
 using MLJ
@@ -52,7 +53,7 @@ images[1]
 # convolution layer is customisable.
 
 import MLJFlux
-mutable struct MyConvBuilder
+struct MyConvBuilder
     filter_size::Int
     channels1::Int
     channels2::Int
@@ -143,61 +144,78 @@ evaluate!(mach,
           verbosity=0)
 
 
-# ## Using out-of-sample loss estimates to terminate training:
+# ## Wrapping the MLJFlux model with iteration controls
 
-# MLJ will eventually provide model wrappers for controlling iterative
-# models. In the meantime some control can be implememted using the
-# [EarlyStopping.jl](https://github.com/ablaom/EarlyStopping.jl)
-# package, and without the usual need for callbacks.
+# Any iterative MLJ model implementing the warm restart functionality
+# illustrated above for `ImageClassifier` can be wrapped in *iteration
+# controls*, as we demonstrate next. For more on MLJ's
+# `IteratedModel` wrapper, see the [MLJ
+# documentation](https://alan-turing-institute.github.io/MLJ.jl/dev/controlling_iterative_models/).
 
-# Defining an `EarlyStopper` object combining three separate stopping
-# critera:
+# The "self-iterating" model, called `imodel` below, is for iterating the
+# image classifier defined above until one of the following stopping
+# criterion apply:
 
-using EarlyStopping
-stopper = EarlyStopper(NotANumber(), Patience(3), UP())
+# - `Patience(3)` (3 consecutive increases in the loss)
 
-losses = Float32[]
-training_losses = Float32[];
+# - `InvalidValue()` (an out-of-sample loss, or a training loss,
+#   is `NaN`, `Inf`, or `-Inf`)
 
-# Resetting the number of epochs to zero:
+# - `TimeLimit(t=1/60)` (training time has exceeded one minute)
 
-clf.epochs = 0;
+# Additionally, training a machine bound to `imodel` will:
 
-# Defining a function to increment the number of epochs, re-evaluate,
-# and test for early stopping:
+# - save a snapshot of the machine every three epochs
 
-function done()
-    clf.epochs = clf.epochs + 1
-    e = evaluate!(mach,
-                  resampling=Holdout(fraction_train=0.5),
-                  measure=cross_entropy,
-                  rows=1:1000,
-                  verbosity=0)
-    loss = e.measurement[1][1]
-    push!(losses, loss)
-    training_loss = report(mach).training_losses[end]
-    push!(training_losses, training_loss)
-    println("out-of-sample loss: $loss")
-    return done!(stopper, loss)
-end;
+# - record the out-of-sample loss and training losses for plotting
 
-# **Note.** Each time the number of epochs is increased and
-# `evaluate!` is called, warm-start training is used (assuming
-# `resampling isa Holdout`). This is because MLJ machines cache
-# hyper-parameters and learned parameters to avoid unnecessary
-# retraining. In other frameworks the same behaviour is implemented
-# using callbacks, but we don't need this here.
+# For a complete list of controls, see [this
+# table](https://alan-turing-institute.github.io/MLJ.jl/dev/controlling_iterative_models/#Controls-provided).
 
-while !done() end
-message(stopper)
+losses = []
+training_losses = [];
+
+add_loss(loss) = push!(losses, loss)
+add_training_loss(losses) = push!(training_losses, losses[end])
+
+imodel = IteratedModel(model=clf,
+                       controls=[Step(1),      # train one epoch at a time
+                                 Patience(2),
+                                 InvalidValue(),
+                                 TimeLimit(0.5),
+                                 Save(joinpath(DIR, "mnist_machine.jlso")),
+                                 WithLossDo(), # for logging to `Info`
+                                 WithLossDo(add_loss),
+                                 WithTrainingLossesDo(add_training_loss)],
+                       resampling=Holdout(fraction_train=0.7),
+                       measure=log_loss,
+                       retrain=false)
+
+
+# Binding our self-iterating model to data:
+
+mach = machine(imodel, images, labels)
+
+# And training on the first 500 images:
+
+fit!(mach, rows=1:500)
 
 # A comparison of the training and out-of-sample losses:
+
 plot(losses,
      title="Cross Entropy",
      xlab = "epoch",
      label="out-of-sample")
 plot!(training_losses, label="training")
 
+# Retrieving a snapshot for a prediction:
+
+mach2 = machine(joinpath(DIR, "mnist_machine5.jlso"))
+predict_mode(mach2, images[501:503])
+
+#-
+
 using Literate #src
-Literate.markdown(@__FILE__, @__DIR__, execute=true) #src
-Literate.notebook(@__FILE__, @__DIR__, execute=true) #src
+Literate.markdown(@__FILE__, @__DIR__, execute=false) #src
+Literate.notebook(@__FILE__, @__DIR__, execute=false) #src
+

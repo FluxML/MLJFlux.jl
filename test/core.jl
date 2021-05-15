@@ -4,6 +4,7 @@ Random.seed!(123)
     @test Flux.Momentum() == Flux.Momentum()
     @test Flux.Momentum(0.1) != Flux.Momentum(0.2)
     @test Flux.ADAM(0.1) != Flux.ADAM(0.2)
+    @test MLJFlux.MLJModelInterface.istransparent(Flux.ADAM(0.1))
 end
 
 @testset "nrows" begin

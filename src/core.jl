@@ -11,29 +11,29 @@
 # hyperparameters because some fields of `optimisers` carry "state"
 # information which is mutated during chain updates.)
 
-for opt in (:Descent, :Momentum, :Nesterov, :RMSProp, :ADAM, :AdaMax,
-        :ADAGrad, :ADADelta, :AMSGrad, :NADAM, :Optimiser,
-        :InvDecay, :ExpDecay, :WeightDecay)
+for opt in (:Descent,
+            :Momentum,
+            :Nesterov,
+            :RMSProp,
+            :ADAM,
+            :RADAM,
+            :AdaMax,
+            :OADAM,
+            :ADAGrad,
+            :ADADelta,
+            :AMSGrad,
+            :NADAM,
+            :AdaBelief,
+            :Optimiser,
+            :InvDecay, :ExpDecay, :WeightDecay,
+            :ClipValue,
+            :ClipNorm) # last updated: Flux.jl 0.12.3
 
     @eval begin
-
-        # TODO: Uncomment next line when
-        # https://github.com/alan-turing-institute/MLJModelInterface.jl/issues/28
-        # is resolved:
-
-        # MLJModelInterface.istransparent(m::Flux.$opt) = true
-
-        function ==(m1::Flux.$opt, m2::Flux.$opt)
-            same_values = true
-            for fld in fieldnames(Flux.$opt)
-                same_values = same_values &&
-                    getfield(m1, fld) == getfield(m2, fld)
-            end
-            return same_values
-        end
-
+        MLJModelInterface.istransparent(m::Flux.$opt) = true
+        ==(m1::Flux.$opt, m2::Flux.$opt) =
+            MLJModelInterface._equal_to_depth_one(m1, m2)
     end
-
 end
 
 
@@ -322,5 +322,3 @@ function collate(model, X, y)
     ymatrix = reformat(y)
     return [_get(Xmatrix, b) for b in row_batches], [_get(ymatrix, b) for b in row_batches]
 end
-
-

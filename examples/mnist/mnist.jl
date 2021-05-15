@@ -5,6 +5,8 @@ const DIR = @__DIR__
 Pkg.activate(DIR)
 Pkg.instantiate()
 
+# **Julia version** is assumed to be 1.6.*
+
 using MLJ
 using Flux
 import MLJFlux

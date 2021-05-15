@@ -1,8 +1,15 @@
 ModelType = MLJFlux.NeuralNetworkRegressor
 
-@test "equality" begin
-    model1 = ImageClassifier()
-    @test model1 == deepcopy(ImageClassifier())
+@testset "equality" begin
+    model = MLJFlux.ImageClassifier()
+    clone = deepcopy(model)
+    @test model == clone
+    clone.optimiser.eta *= 10
+    @test model != clone
+
+    clone = deepcopy(model)
+    clone.builder.dropout *= 0.5
+    @test clone != model
 end
 
 @testset "clean!" begin

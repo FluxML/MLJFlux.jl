@@ -1,15 +1,7 @@
 ## EXPOSE OPTIMISERS TO MLJ (for eg, tuning)
 
-# Here we: (i) Make the optimiser structs "transparent" so that their
-# field values are exposed by calls to MLJ.params; and (ii) Overload
-# `==` for optimisers, so that we can detect when their parameters
-# remain unchanged on calls to MLJModelInterface.update methods.
-
-# We define optimisers of to be `==` if: (i) They have identical type
-# AND (ii) their defined field values are `==`. (Note that our `fit`
-# methods will only use deep copies of optimisers specified as
-# hyperparameters because some fields of `optimisers` carry "state"
-# information which is mutated during chain updates.)
+# Here we make the optimiser structs "transparent" so that their
+# field values are exposed by calls to MLJ.params
 
 for opt in (:Descent,
             :Momentum,
@@ -31,8 +23,6 @@ for opt in (:Descent,
 
     @eval begin
         MLJModelInterface.istransparent(m::Flux.$opt) = true
-        ==(m1::Flux.$opt, m2::Flux.$opt) =
-            MLJModelInterface._equal_to_depth_one(m1, m2)
     end
 end
 

@@ -151,7 +151,9 @@ function MLJModelInterface.update(model::Regressor,
     # we only get to keep the optimiser "state" carried over from
     # previous training if we're doing a warm restart and the user has not
     # changed the optimiser hyper-parameter:
-    if !keep_chain || model.optimiser != old_model.optimiser
+    if !keep_chain ||
+        !MLJModelInterface._equal_to_depth_one(model.optimiser,
+                                              old_model.optimiser)
         optimiser = deepcopy(model.optimiser)
     end
 

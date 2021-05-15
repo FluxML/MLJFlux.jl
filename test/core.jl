@@ -1,11 +1,6 @@
 Random.seed!(123)
 
-@testset "optimiser equality" begin
-    @test Flux.Momentum() == Flux.Momentum()
-    @test Flux.Momentum(0.1) != Flux.Momentum(0.2)
-    @test Flux.ADAM(0.1) != Flux.ADAM(0.2)
-    @test MLJFlux.MLJModelInterface.istransparent(Flux.ADAM(0.1))
-end
+@test MLJFlux.MLJModelInterface.istransparent(Flux.ADAM(0.1))
 
 @testset "nrows" begin
     Xmatrix = rand(10, 3)
@@ -40,13 +35,13 @@ end
     y = MLJBase.table(ymatrix) # a rowaccess table
     model = MLJFlux.NeuralNetworkRegressor()
     model.batch_size= 3
-    @test MLJFlux.collate(model, X, y) == 
+    @test MLJFlux.collate(model, X, y) ==
         ([Xmatrix'[:,1:3], Xmatrix'[:,4:6], Xmatrix'[:,7:9], Xmatrix'[:,10:10]],
                 [ymatrix'[:,1:3], ymatrix'[:,4:6], ymatrix'[:,7:9], ymatrix'[:,10:10]])
 
     y = Tables.columntable(y) # try a columnaccess table
     @test MLJFlux.collate(model, X, y) ==
-        ([Xmatrix'[:,1:3], Xmatrix'[:,4:6], Xmatrix'[:,7:9], Xmatrix'[:,10:10]], 
+        ([Xmatrix'[:,1:3], Xmatrix'[:,4:6], Xmatrix'[:,7:9], Xmatrix'[:,10:10]],
             [ymatrix'[:,1:3], ymatrix'[:,4:6], ymatrix'[:,7:9], ymatrix'[:,10:10]])
 
     # ImageClassifier
@@ -74,7 +69,7 @@ data = [(Xmatrix'[:,1:20], y[1:20]),
         (Xmatrix'[:,41:60], y[41:60]),
         (Xmatrix'[:,61:80], y[61:80]),
         (Xmatrix'[:, 81:100], y[81:100])]
-    
+
 data = ([Xmatrix'[:,1:20], Xmatrix'[:,21:40], Xmatrix'[:,41:60], Xmatrix'[:,61:80], Xmatrix'[:,81:100]],
             [y[1:20], y[21:40], y[41:60], y[61:80], y[81:100]])
 
@@ -104,9 +99,9 @@ epochs = 10
     _chain_yes_drop, history = MLJFlux.fit!(chain_yes_drop,
                                             Flux.Optimise.ADAM(0.001),
                                             Flux.mse, epochs, 0, 0, 0, accel, data[1], data[2])
-    
+
     println()
-    
+
     Random.seed!(123)
 
     _chain_no_drop, history = MLJFlux.fit!(chain_no_drop,

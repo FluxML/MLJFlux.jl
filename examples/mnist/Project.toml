@@ -1,5 +1,4 @@
 [deps]
-EarlyStopping = "792122b4-ca99-40de-a6bc-6742525f08b6"
 Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c"
 Literate = "98b081ad-f1c9-55d3-8b20-4c87d4299306"
 MLJ = "add582a8-e3ab-11e8-2d5e-e98b27df1bc7"

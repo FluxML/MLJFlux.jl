@@ -3,6 +3,16 @@ MLJFluxModel = Union{NeuralNetworkRegressor,
                      NeuralNetworkClassifier,
                      ImageClassifier}
 
+
+# # EQUALITY
+
+# to address #124 and #129:
+MLJModelInterface.deep_properties(::Type{<:MLJFluxModel}) =
+    (:optimiser, :builder)
+
+
+# # CLEAN METHOD
+
 function MLJModelInterface.clean!(model::MLJFluxModel)
     warning = ""
     if model.lambda < 0

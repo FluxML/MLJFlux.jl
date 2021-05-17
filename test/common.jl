@@ -1,5 +1,17 @@
 ModelType = MLJFlux.NeuralNetworkRegressor
 
+@testset "equality" begin
+    model = MLJFlux.ImageClassifier()
+    clone = deepcopy(model)
+    @test model == clone
+    clone.optimiser.eta *= 10
+    @test model != clone
+
+    clone = deepcopy(model)
+    clone.builder.dropout *= 0.5
+    @test clone != model
+end
+
 @testset "clean!" begin
     model = @test_logs (:warn, r"`lambda") begin
         ModelType(lambda = -1)
@@ -42,3 +54,4 @@ end
     @test losses == MLJBase.report(mach).training_losses[2:end]
     @test length(losses) == 10
 end
+

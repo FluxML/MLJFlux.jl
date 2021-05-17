@@ -4,6 +4,8 @@ using Pkg
 Pkg.activate(@__DIR__)
 Pkg.instantiate()
 
+# **Julia version** is assumed to be 1.6.*
+
 using MLJ
 using Flux
 import RDatasets
@@ -75,5 +77,5 @@ plot(curve.parameter_values,
 savefig("iris_history.png")
 
 using Literate #src
-Literate.markdown(@__FILE__, @__DIR__, execute=true) #src
+Literate.markdown(@__FILE__, @__DIR__, execute=false) #src
 Literate.notebook(@__FILE__, @__DIR__, execute=true) #src

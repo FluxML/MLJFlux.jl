@@ -126,7 +126,9 @@ function MLJModelInterface.update(model::ImageClassifier,
     # we only get to keep the optimiser "state" carried over from
     # previous training if we're doing a warm restart and the user has not
     # changed the optimiser hyper-parameter:
-    if !keep_chain || model.optimiser != old_model.optimiser
+    if !keep_chain ||
+        !MLJModelInterface._equal_to_depth_one(model.optimiser,
+                                              old_model.optimiser)
         optimiser = deepcopy(model.optimiser)
     end
 
@@ -157,7 +159,7 @@ MLJModelInterface.fitted_params(::ImageClassifier, fitresult) =
     (chain=fitresult[1],)
 
 MLJModelInterface.metadata_model(ImageClassifier,
-               input=AbstractVector{<:MLJModelInterface.GrayImage},
+               input=AbstractVector{<:MLJModelInterface.Image},
                target=AbstractVector{<:Multiclass},
                path="MLJFlux.ImageClassifier",
                descr="A neural network model for making probabilistic predictions of a `GrayImage` target,

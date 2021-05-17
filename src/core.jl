@@ -1,39 +1,29 @@
 ## EXPOSE OPTIMISERS TO MLJ (for eg, tuning)
 
-# Here we: (i) Make the optimiser structs "transparent" so that their
-# field values are exposed by calls to MLJ.params; and (ii) Overload
-# `==` for optimisers, so that we can detect when their parameters
-# remain unchanged on calls to MLJModelInterface.update methods.
+# Here we make the optimiser structs "transparent" so that their
+# field values are exposed by calls to MLJ.params
 
-# We define optimisers of to be `==` if: (i) They have identical type
-# AND (ii) their defined field values are `==`. (Note that our `fit`
-# methods will only use deep copies of optimisers specified as
-# hyperparameters because some fields of `optimisers` carry "state"
-# information which is mutated during chain updates.)
-
-for opt in (:Descent, :Momentum, :Nesterov, :RMSProp, :ADAM, :AdaMax,
-        :ADAGrad, :ADADelta, :AMSGrad, :NADAM, :Optimiser,
-        :InvDecay, :ExpDecay, :WeightDecay)
+for opt in (:Descent,
+            :Momentum,
+            :Nesterov,
+            :RMSProp,
+            :ADAM,
+            :RADAM,
+            :AdaMax,
+            :OADAM,
+            :ADAGrad,
+            :ADADelta,
+            :AMSGrad,
+            :NADAM,
+            :AdaBelief,
+            :Optimiser,
+            :InvDecay, :ExpDecay, :WeightDecay,
+            :ClipValue,
+            :ClipNorm) # last updated: Flux.jl 0.12.3
 
     @eval begin
-
-        # TODO: Uncomment next line when
-        # https://github.com/alan-turing-institute/MLJModelInterface.jl/issues/28
-        # is resolved:
-
-        # MLJModelInterface.istransparent(m::Flux.$opt) = true
-
-        function ==(m1::Flux.$opt, m2::Flux.$opt)
-            same_values = true
-            for fld in fieldnames(Flux.$opt)
-                same_values = same_values &&
-                    getfield(m1, fld) == getfield(m2, fld)
-            end
-            return same_values
-        end
-
+        MLJModelInterface.istransparent(m::Flux.$opt) = true
     end
-
 end
 
 
@@ -322,5 +312,3 @@ function collate(model, X, y)
     ymatrix = reformat(y)
     return [_get(Xmatrix, b) for b in row_batches], [_get(ymatrix, b) for b in row_batches]
 end
-
-

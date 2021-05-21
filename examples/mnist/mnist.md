@@ -32,9 +32,10 @@ nothing #hide
 Downloading the MNIST image dataset:
 
 ```@example mnist
-import Flux.Data.MNIST
-images, labels = MNIST.images(), MNIST.labels();
-nothing #hide
+import MLDatasets
+
+ENV["DATADEPS_ALWAYS_ACCEPT"] = true
+images, labels = MNIST.traindata();
 ```
 
 In MLJ, integers cannot be used for encoding categorical data, so we
@@ -45,6 +46,7 @@ Data](https://alan-turing-institute.github.io/MLJ.jl/dev/working_with_categorica
 
 ```@example mnist
 labels = coerce(labels, Multiclass);
+images = coerce(images, GrayImage);
 nothing #hide
 ```
 

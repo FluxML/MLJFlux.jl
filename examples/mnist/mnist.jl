@@ -22,8 +22,10 @@ pyplot(size=(600, 300*(sqrt(5)-1)));
 
 # Downloading the MNIST image dataset:
 
-import Flux.Data.MNIST
-images, labels = MNIST.images(), MNIST.labels();
+import MLDatasets
+
+ENV["DATADEPS_ALWAYS_ACCEPT"] = true
+images, labels = MNIST.traindata();
 
 # In MLJ, integers cannot be used for encoding categorical data, so we
 # must force the labels to have the `Multiclass` [scientific
@@ -32,6 +34,7 @@ images, labels = MNIST.images(), MNIST.labels();
 # Data](https://alan-turing-institute.github.io/MLJ.jl/dev/working_with_categorical_data/).
 
 labels = coerce(labels, Multiclass);
+images = coerce(images, GrayImage);
 
 # Checking scientific types:
 

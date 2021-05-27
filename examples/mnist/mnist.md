@@ -1,5 +1,5 @@
 ```@meta
-EditURL = "<unknown>/../../MLJFlux/examples/mnist/mnist.jl"
+EditURL = "<unknown>/mnist.jl"
 ```
 
 # Using MLJ to classifiy the MNIST image dataset
@@ -32,10 +32,11 @@ nothing #hide
 Downloading the MNIST image dataset:
 
 ```@example mnist
-import MLDatasets
+import MLDatasets: MNIST
 
 ENV["DATADEPS_ALWAYS_ACCEPT"] = true
 images, labels = MNIST.traindata();
+nothing #hide
 ```
 
 In MLJ, integers cannot be used for encoding categorical data, so we

@@ -380,6 +380,7 @@ or gray):
 ```julia
 using MLJ
 using Flux
+using MLDatasets
 
 # helper function
 function flatten(x::AbstractArray)
@@ -425,13 +426,19 @@ conform to those is the table above:
 
 ```julia
 N = 1000
-X, y = Flux.Data.MNIST.images()[1:N], Flux.Data.MNIST.labels()[1:N];
+X, y = MNIST.traindata();
 
 julia> scitype(X)
 AbstractArray{GrayImage{28,28},1}
 
 julia> scitype(y)
 AbstractArray{Count,1}
+```
+
+Inputs should have scitype `GrayImage`
+
+```julia
+X = coerce(X, GrayImage);
 ```
 
 For classifiers, target must have element scitype `<: Finite`, so we fix this:

@@ -22,7 +22,7 @@ pyplot(size=(600, 300*(sqrt(5)-1)));
 
 # Downloading the MNIST image dataset:
 
-import MLDatasets
+import MLDatasets: MNIST
 
 ENV["DATADEPS_ALWAYS_ACCEPT"] = true
 images, labels = MNIST.traindata();

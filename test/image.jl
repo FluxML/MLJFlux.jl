@@ -67,10 +67,11 @@ reference = losses[1]
 
 mutable struct MyConvBuilder <: MLJFlux.Builder end
 
-using Flux.Data:MNIST
+using MLDatasets
 
-images, labels = MNIST.images(), MNIST.labels();
-
+ENV["DATADEPS_ALWAYS_ACCEPT"] = true
+images, labels = MNIST.traindata()
+images = coerce(images, GrayImage);
 labels = categorical(labels);
 
 function flatten(x::AbstractArray)

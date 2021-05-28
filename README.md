@@ -55,9 +55,10 @@ builders. Pull requests introducing new ones are most welcome.
 ```julia
 using Pkg
 Pkg.activate("my_environment", shared=true)
-Pkg.add("MLJFlux")
 Pkg.add("MLJ")
+Pkg.add("MLJFlux")
 Pkg.add("RDatasets")  # for the demo below
+Pkg.add("Plots")
 ```
 
 ### Example
@@ -105,23 +106,26 @@ mach = machine(clf, X, y)
 fit!(mach)
 
 julia> training_loss = cross_entropy(predict(mach, X), y) |> mean
-0.89526004f0
+0.9064070459118777
 
 # Increasing learning rate and adding iterations:
 clf.optimiser.eta = clf.optimiser.eta * 2
 clf.epochs = clf.epochs + 5
 
 julia> fit!(mach, verbosity=2)
-[ Info: Updating Machine{NeuralNetworkClassifier{Short,…}} @240.
-[ Info: Loss is 0.853
-[ Info: Loss is 0.8207
-[ Info: Loss is 0.8072
-[ Info: Loss is 0.752
-[ Info: Loss is 0.7077
-Machine{NeuralNetworkClassifier{Short,…}} @ 1…42
+[ Info: Updating Machine{NeuralNetworkClassifier{Short,…},…} @804.
+[ Info: Loss is 0.8686
+[ Info: Loss is 0.8228
+[ Info: Loss is 0.7706
+[ Info: Loss is 0.7565
+[ Info: Loss is 0.7347
+Machine{NeuralNetworkClassifier{Short,…},…} @804 trained 2 times; caches data
+  args:
+    1:  Source @985 ⏎ `Table{AbstractVector{Continuous}}`
+    2:  Source @367 ⏎ `AbstractVector{Multiclass{3}}`
 
 julia> training_loss = cross_entropy(predict(mach, X), y) |> mean
-0.7076618f0
+0.7347092796453824
 ```
 
 #### Accessing the Flux chain (model)
@@ -198,16 +202,16 @@ MLJ machines cache state enabling the "warm restart" of model
 training, as demonstrated in the example above. In the case of MLJFlux
 models, `fit!(mach)` will use a warm restart if:
 
-- only `model.epochs` has changed since the last call; or 
+- only `model.epochs` has changed since the last call; or
 
 - only `model.epochs` or `model.optimiser` have changed since the last
   call and `model.optimiser_changes_trigger_retraining == false` (the
   default) (the "state" part of the optimiser is ignored in this
   comparison). This allows one to dynamically modify learning rates,
   for example.
-  
+
 Here `model=mach.model` is the associated MLJ model.
-  
+
 The warm restart feature makes it possible to apply early stopping
 criteria, as defined in
 [EarlyStopping.jl](https://github.com/ablaom/EarlyStopping.jl). For an
@@ -380,6 +384,7 @@ or gray):
 ```julia
 using MLJ
 using Flux
+using MLDatasets
 
 # helper function
 function flatten(x::AbstractArray)
@@ -387,7 +392,7 @@ function flatten(x::AbstractArray)
 end
 
 import MLJFlux
-mutable struct MyConvBuilder 
+mutable struct MyConvBuilder
     filter_size::Int
     channels1::Int
     channels2::Int
@@ -425,13 +430,19 @@ conform to those is the table above:
 
 ```julia
 N = 1000
-X, y = Flux.Data.MNIST.images()[1:N], Flux.Data.MNIST.labels()[1:N];
+X, y = MNIST.traindata();
 
 julia> scitype(X)
 AbstractArray{GrayImage{28,28},1}
 
 julia> scitype(y)
 AbstractArray{Count,1}
+```
+
+Inputs should have scitype `GrayImage`
+
+```julia
+X = coerce(X, GrayImage);
 ```
 
 For classifiers, target must have element scitype `<: Finite`, so we fix this:

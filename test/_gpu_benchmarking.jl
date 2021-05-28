@@ -4,10 +4,12 @@ using MLJFlux, BenchmarkTools, Flux, ComputationalResources
 
 mutable struct MyConvBuilder <: MLJFlux.Builder end
 
-using Flux.Data:MNIST
+using MLDatasets:MNIST
 
 N = 500
-images, labels = MNIST.images()[1:N], MNIST.labels()[1:N];
+ENV["DATADEPS_ALWAYS_ACCEPT"] = true
+images, labels = MNIST.traindata()
+images = coerce(image, GrayImage)
 
 labels = categorical(labels);
 

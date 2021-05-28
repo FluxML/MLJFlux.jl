@@ -222,5 +222,5 @@ predict_mode(mach2, images[501:503])
 
 using Literate #src
 Literate.markdown(@__FILE__, @__DIR__, execute=false) #src
-Literate.notebook(@__FILE__, @__DIR__, execute=false) #src
+Literate.notebook(@__FILE__, @__DIR__, execute=true) #src
 

@@ -1,7 +1,3 @@
-```@meta
-EditURL = "<unknown>/mnist.jl"
-```
-
 # Using MLJ to classifiy the MNIST image dataset
 
 ```@example mnist

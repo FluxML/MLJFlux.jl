@@ -276,6 +276,14 @@ function reformat(X, ::Type{<:AbstractVector{<:ColorImage}})
 end
 
 # ------------------------------------------------------------
+# Reformatting vectors of lengthh n into matrices of dimension n * 1
+# This enables compatibility with Flux's BatchNorm.
+
+function tomat end
+tomat(x::Matrix) = x
+tomat(x::Vector) = reshape(x, size(x, 1), 1)
+
+# ------------------------------------------------------------
 # Reformatting vectors of "scalar" types
 
 reformat(y, ::Type{<:AbstractVector{<:Continuous}}) = y

@@ -280,8 +280,12 @@ function reformat(X, ::Type{<:AbstractVector{<:ColorImage}})
 end
 
 # ------------------------------------------------------------
-# Reformatting vectors of lengthh n into matrices of dimension n * 1
-# This enables compatibility with Flux's BatchNorm.
+# Reformatting vectors of length n into matrices of dimension n * 1
+# This enables compatibility with Flux's BatchNorm. This is currently
+# used only in `predict`. In the future, when MLJ's "data front end"
+# is implemented, `tomat` and the `reformat` of continuous vectors
+# that follows will be collapsed and there will be some
+# simplification.
 
 function tomat end
 tomat(x::Matrix) = x

@@ -188,12 +188,12 @@ function MLJModelInterface.predict(model::Regressor, fitresult, Xnew_)
     Xnew_ = MLJModelInterface.matrix(Xnew_)
 
     if target_is_multivariate
-        ypred = [chain(values.(Xnew_[i, :]))
+        ypred = [chain(values.(tomat(Xnew_[i, :])))
                  for i in 1:size(Xnew_, 1)]
         return MLJModelInterface.table(reduce(hcat, y for y in ypred)',
                                        names=target_column_names)
     else
-        return [chain(values.(Xnew_[i, :]))[1]
+        return [chain(values.(tomat(Xnew_[i, :])))[1]
                 for i in 1:size(Xnew_, 1)]
     end
 end

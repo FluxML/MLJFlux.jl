@@ -77,18 +77,22 @@ Here `chain` is a `Flux.Chain` object, or other "Flux model" such that
 The `X` argument is the training features and `y` argument is the
 target:
 
-- `X` and `y` have type `Array{<:AbstractFloat}`
+- `X` and `y` have type `Vector{<:Array{<:AbstractFloat}}`
 
-- the shape of `X` is `(n1, n2, ..., nk, batch_size)` where `(n1, n2,
-  ..., nk)` is the shape of the inputs of `chain`
+- the shape of each elment of `X` is `(n1, n2, ..., nk, batch_size)`
+  where `(n1, n2, ..., nk)` is the shape of the inputs of `chain`
 
-- the shape of `y` is `(m1, m2, ..., mk, batch_size)` where `(m1, m2,
-  ..., mk)` is the shape of the `chain` outputs.
+- the shape of each element of `y` is `(m1, m2, ..., mk, batch_size)`
+  where `(m1, m2, ..., mk)` is the shape of the `chain` outputs (even
+  if `batch_size == 1`).
 
-The contribution to the objective function of a single input/output
-instance `(X, y)` is
+- the vectors `X` and `y` have the same length, coinciding with the
+  total number of training batches.
 
-    loss(chain(X), y) + lambda*(model.alpha*l1) + (1 - model.alpha)*l2
+The contribution to the objective function of a single training batch
+`(X[i], y[i])` is
+
+    loss(chain(X[i]), y[i]) + lambda*(model.alpha*l1) + (1 - model.alpha)*l2
 
 where `l1 = sum(norm, params(chain)` and `l2 = sum(norm, params(chain))`.
 
@@ -276,9 +280,21 @@ function reformat(X, ::Type{<:AbstractVector{<:ColorImage}})
 end
 
 # ------------------------------------------------------------
+# Reformatting vectors of length n into matrices of dimension n * 1
+# This enables compatibility with Flux's BatchNorm. This is currently
+# used only in `predict`. In the future, when MLJ's "data front end"
+# is implemented, `tomat` and the `reformat` of continuous vectors
+# that follows will be collapsed and there will be some
+# simplification.
+
+function tomat end
+tomat(x::Matrix) = x
+tomat(x::Vector) = reshape(x, size(x, 1), 1)
+
+# ------------------------------------------------------------
 # Reformatting vectors of "scalar" types
 
-reformat(y, ::Type{<:AbstractVector{<:Continuous}}) = y
+reformat(y, ::Type{<:AbstractVector{<:Continuous}}) = reshape(y, 1, length(y))
 function reformat(y, ::Type{<:AbstractVector{<:Finite}})
     levels = y |> first |> MLJModelInterface.classes
     return hcat([Flux.onehot(ele, levels) for ele in y]...,)

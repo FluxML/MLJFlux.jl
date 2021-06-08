@@ -61,9 +61,9 @@ function basictest(ModelType, X, y, builder, optimiser, threshold, accel)
                                optimiser=$optimiser,
                                acceleration=$accel_ex)
 
-         fitresult, cache, report = MLJBase.fit(model, 0, $X, $y);
+         fitresult, cache, _report = MLJBase.fit(model, 0, $X, $y);
 
-         history = report.training_losses;
+         history = _report.training_losses;
          @test length(history) == model.epochs + 1
 
          # test improvement in training loss:
@@ -72,7 +72,7 @@ function basictest(ModelType, X, y, builder, optimiser, threshold, accel)
          # increase iterations and check update is incremental:
          model.epochs = model.epochs + 3
 
-         fitresult, cache, report =
+         fitresult, cache, _report =
          @test_logs((:info, r""), # one line of :info per extra epoch
                     (:info, r""),
                     (:info, r""),
@@ -82,7 +82,7 @@ function basictest(ModelType, X, y, builder, optimiser, threshold, accel)
 
          yhat = MLJBase.predict(model, fitresult, $X)
 
-         history = report.training_losses;
+         history = _report.training_losses;
          @test length(history) == model.epochs + 1
 
          # start fresh with small epochs:
@@ -91,18 +91,18 @@ function basictest(ModelType, X, y, builder, optimiser, threshold, accel)
                                epochs=2,
                                acceleration=$accel_ex)
 
-         fitresult, cache, report = MLJBase.fit(model, 0, $X, $y);
+         fitresult, cache, _report = MLJBase.fit(model, 0, $X, $y);
 
          # change batch_size and check it performs cold restart:
          model.batch_size = 2
-         fitresult, cache, report =
+         fitresult, cache, _report =
          @test_logs((:info, r""), # one line of :info per extra epoch
                     (:info, r""),
                     MLJBase.update(model, 2, fitresult, cache, $X, $y ));
 
          # change learning rate and check it does *not* restart:
          model.optimiser.eta /= 2
-         fitresult, cache, report =
+         fitresult, cache, _report =
          @test_logs(MLJBase.update(model, 2, fitresult, cache, $X, $y));
 
          # set `optimiser_changes_trigger_retraining = true` and change

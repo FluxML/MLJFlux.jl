@@ -282,7 +282,7 @@ end
 # ------------------------------------------------------------
 # Reformatting vectors of "scalar" types
 
-reformat(y, ::Type{<:AbstractVector{<:Continuous}}) = y
+reformat(y, ::Type{<:AbstractVector{<:Continuous}}) = reshape(y, 1, length(y))
 function reformat(y, ::Type{<:AbstractVector{<:Finite}})
     levels = y |> first |> MLJModelInterface.classes
     return hcat([Flux.onehot(ele, levels) for ele in y]...,)

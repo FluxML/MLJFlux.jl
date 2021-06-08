@@ -80,7 +80,7 @@ function MLJModelInterface.predict(model::NeuralNetworkClassifier,
                                    Xnew_)
     chain, levels = fitresult
     Xnew = MLJModelInterface.matrix(Xnew_)
-    probs = vcat([chain(Xnew[i, :])' for i in 1:size(Xnew, 1)]...)
+    probs = vcat([chain(tomat(Xnew[i, :]))' for i in 1:size(Xnew, 1)]...)
     return MLJModelInterface.UnivariateFinite(levels, probs)
 end
 

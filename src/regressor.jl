@@ -212,7 +212,7 @@ MLJModelInterface.metadata_model(NeuralNetworkRegressor,
 MLJModelInterface.metadata_model(MultitargetNeuralNetworkRegressor,
                input=Table(Continuous),
                target=Table(Continuous),
-               path="MLJFlux.NeuralNetworkRegressor",
+               path="MLJFlux.MultitargetNeuralNetworkRegressor",
                descr = "A neural network model for making "*
                        "deterministic predictions of a "*
                        "`Continuous` multi-target, presented "*

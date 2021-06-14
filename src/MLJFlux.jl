@@ -15,6 +15,7 @@ using ComputationalResources
 
 include("core.jl")
 include("builders.jl")
+include("types.jl")
 include("regressor.jl")
 include("classifier.jl")
 include("image.jl")

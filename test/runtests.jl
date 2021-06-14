@@ -46,6 +46,10 @@ include("test_utils.jl")
     include("core.jl")
 end
 
+@testset "builders" begin
+    include("builders.jl")
+end
+
 @testset "common" begin
     include("common.jl")
 end

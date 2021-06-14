@@ -1,4 +1,4 @@
-module MLJFlux 
+module MLJFlux
 
 export CUDALibs, CPU1
 
@@ -14,6 +14,7 @@ using ColorTypes
 using ComputationalResources
 
 include("core.jl")
+include("builders.jl")
 include("regressor.jl")
 include("classifier.jl")
 include("image.jl")

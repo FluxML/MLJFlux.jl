@@ -13,6 +13,7 @@
 
 abstract type Builder <: MLJModelInterface.MLJType end
 
+
 """
     Linear(; σ=Flux.relu)
 
@@ -25,8 +26,8 @@ mutable struct Linear <: Builder
     σ
 end
 Linear(; σ=Flux.relu) = Linear(σ)
-build(builder::Linear, n::Integer, m::Integer) =
-    Flux.Chain(Flux.Dense(n, m, builder.σ))
+build(builder::Linear, rng, n::Integer, m::Integer) =
+    Flux.Chain(Flux.Dense(n, m, builder.σ, init=Flux.glorot_uniform(rng)))
 
 """
     Short(; n_hidden=0, dropout=0.5, σ=Flux.sigmoid)
@@ -48,8 +49,10 @@ Short(; n_hidden=0, dropout=0.5, σ=Flux.sigmoid) = Short(n_hidden, dropout, σ)
 function build(builder::Short, n, m)
     n_hidden =
         builder.n_hidden == 0 ? round(Int, sqrt(n*m)) : builder.n_hidden
-    return Flux.Chain(Flux.Dense(n, n_hidden, builder.σ),
-                      Flux.Dropout(builder.dropout),
-                       Flux.Dense(n_hidden, m))
+    Flux.Chain(
+        Flux.Dense(n, n_hidden, builder.σ, init=Flux.glorot_uniform(rng)),
+        # TODO: fix next after https://github.com/FluxML/Flux.jl/issues/1617
+        Flux.Dropout(builder.dropout),
+        Flux.Dense(n_hidden, m, init=Flux.glorot_uniform(rng)))
 end
 

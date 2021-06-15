@@ -11,8 +11,8 @@ function shape(model::ImageClassifier, X, y)
     return (n_input, n_output, n_channels)
 end
 
-build(model::ImageClassifier, shape) =
-    Flux.Chain(build(model.builder, shape...),
+build(model::ImageClassifier, rng, shape) =
+    Flux.Chain(build(model.builder, rng, shape...),
                model.finaliser)
 
 fitresult(model::ImageClassifier, chain, y) =

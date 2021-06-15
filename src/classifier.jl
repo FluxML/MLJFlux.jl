@@ -1,4 +1,4 @@
-# if `b` is a builder, then `b(model, shape...)` is called to make a
+# if `b` is a builder, then `b(model, rng, shape...)` is called to make a
 # new chain, where `shape` is the return value of this method:
 function MLJFlux.shape(model::NeuralNetworkClassifier, X, y)
     levels = MLJModelInterface.classes(y[1])
@@ -8,8 +8,8 @@ function MLJFlux.shape(model::NeuralNetworkClassifier, X, y)
 end
 
 # builds the end-to-end Flux chain needed, given the `model` and `shape`:
-MLJFlux.build(model::NeuralNetworkClassifier, shape) =
-    Flux.Chain(build(model.builder, shape...),
+MLJFlux.build(model::NeuralNetworkClassifier, rng, shape) =
+    Flux.Chain(build(model.builder, rng, shape...),
                model.finaliser)
 
 # returns the model `fitresult` (see "Adding Models for General Use"

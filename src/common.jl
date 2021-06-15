@@ -40,6 +40,8 @@ end
 
 # # FIT AND  UPDATE
 
+true_rng(model) = model.rng isa Integer ? MersenneTwister(model.rng) : model.rng
+
 function MLJModelInterface.fit(model::MLJFluxModel,
                                verbosity::Int,
                                X,
@@ -47,8 +49,10 @@ function MLJModelInterface.fit(model::MLJFluxModel,
 
     data = collate(model, X, y)
 
+    rng = true_rng(model)
+
     shape = MLJFlux.shape(model, X, y)
-    chain = build(model, shape)
+    chain = build(model, rng, shape)
 
     optimiser = deepcopy(model.optimiser)
 
@@ -65,7 +69,7 @@ function MLJModelInterface.fit(model::MLJFluxModel,
 
     # `optimiser` is now mutated
 
-    cache = (deepcopy(model), data, history, shape, optimiser)
+    cache = (deepcopy(model), data, history, shape, optimiser, deepcopy(rng))
     fitresult = MLJFlux.fitresult(model, chain, y)
 
     report = (training_losses=history, )
@@ -80,7 +84,7 @@ function MLJModelInterface.update(model::MLJFluxModel,
                                   X,
                                   y)
 
-    old_model, data, old_history, shape, optimiser = old_cache
+    old_model, data, old_history, shape, optimiser, rng = old_cache
     old_chain = old_fitresult[1]
 
     optimiser_flag = model.optimiser_changes_trigger_retraining &&
@@ -93,7 +97,8 @@ function MLJModelInterface.update(model::MLJFluxModel,
         chain = old_chain
         epochs = model.epochs - old_model.epochs
     else
-        chain = build(model, shape)
+        rng = true_rng(model)
+        chain = build(model, rng, shape)
         data = collate(model, X, y)
         epochs = model.epochs
     end
@@ -123,7 +128,7 @@ function MLJModelInterface.update(model::MLJFluxModel,
     end
 
     fitresult = MLJFlux.fitresult(model, chain, y)
-    cache = (deepcopy(model), data, history, shape, optimiser)
+    cache = (deepcopy(model), data, history, shape, optimiser, deepcopy(rng))
     report = (training_losses=history, )
 
     return fitresult, cache, report

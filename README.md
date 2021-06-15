@@ -437,12 +437,15 @@ Next, we load some of the MNIST data and check scientific types
 conform to those is the table above:
 
 ```julia
+N = 500
 Xraw, yraw = MNIST.traindata();
+Xraw = Xraw[:,:,1:N];
+yraw = yraw[1:N];
 
 julia> scitype(Xraw)
-AbstractVector{Unknown}
+AbstractArray{Unknown, 3}
 
-julia> scitype(y)
+julia> scitype(yraw)
 AbstractArray{Count,1}
 ```
 

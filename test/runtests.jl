@@ -34,9 +34,10 @@ Short2(; n_hidden=0, σ=Flux.sigmoid) = Short2(n_hidden, σ)
 function MLJFlux.build(builder::Short2, rng, n, m)
     n_hidden =
         builder.n_hidden == 0 ? round(Int, sqrt(n*m)) : builder.n_hidden
+    init = Flux.glorot_uniform(rng)
     return Flux.Chain(
-        Flux.Dense(n, n_hidden, builder.σ, init=Flux.glorot_uniform(rng)),
-        Flux.Dense(n_hidden, m, init=Flux.glorot_uniform(rng)))
+        Flux.Dense(n, n_hidden, builder.σ, init=init),
+        Flux.Dense(n_hidden, m, init=init))
 end
 
 seed!(123)

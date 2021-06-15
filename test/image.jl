@@ -7,12 +7,14 @@ mutable struct MyNeuralNetwork <: MLJFlux.Builder
     kernel2
 end
 
-MLJFlux.build(model::MyNeuralNetwork, rng, ip, op, n_channels) =
+function MLJFlux.build(model::MyNeuralNetwork, rng, ip, op, n_channels)
+    init = Flux.glorot_uniform(rng)
     Flux.Chain(
-        Flux.Conv(model.kernel1, n_channels=>2, init=Flux.glorot_uniform(rng)),
-        Flux.Conv(model.kernel2, 2=>1, init=Flux.glorot_uniform(rng)),
+        Flux.Conv(model.kernel1, n_channels=>2, init=init),
+        Flux.Conv(model.kernel2, 2=>1, init=init),
         x->reshape(x, :, size(x)[end]),
-        Flux.Dense(16, op, init=Flux.glorot_uniform(rng)))
+        Flux.Dense(16, op, init=init))
+end 
 
 builder = MyNeuralNetwork((2,2), (2,2))
 
@@ -81,16 +83,16 @@ end
 
 function MLJFlux.build(builder::MyConvBuilder, rng, n_in, n_out, n_channels)
     cnn_output_size = [3,3,32]
-
+    init = Flux.glorot_uniform(rng)
     return Chain(
-        Conv((3, 3), n_channels=>16, pad=(1,1), relu, init=Flux.glorot_uniform(rng)),
+        Conv((3, 3), n_channels=>16, pad=(1,1), relu, init=init),
         MaxPool((2,2)),
-        Conv((3, 3), 16=>32, pad=(1,1), relu, init=Flux.glorot_uniform(rng)),
+        Conv((3, 3), 16=>32, pad=(1,1), relu, init=init),
         MaxPool((2,2)),
-        Conv((3, 3), 32=>32, pad=(1,1), relu, init=Flux.glorot_uniform(rng)),
+        Conv((3, 3), 32=>32, pad=(1,1), relu, init=init),
         MaxPool((2,2)),
         flatten,
-        Dense(prod(cnn_output_size), n_out, init=Flux.glorot_uniform(rng)))
+        Dense(prod(cnn_output_size), n_out, init=init))
 end
 
 losses = []

@@ -241,11 +241,13 @@ CPU at then conclusion of `fit!`, and made available as
 
 ### Built-in builders
 
-MLJ provides two simple builders out of the box:
+MLJ provides two simple builders out of the box. In all cases weights
+  are intitialized using `glorot_uniform(rng)` where `rng` is the RNG
+  (or `MersenneTwister` seed) specified by the MLJFlux model.
 
-- `MLJFlux.Linear(σ=...)` builds a fully connected two layer
-  network with `n_in` inputs and `n_out` outputs, with activation
-  function `σ`, defaulting to a `MLJFlux.relu`.
+- `MLJFlux.Linear(σ=...)` builds a fully connected two layer network
+  with `n_in` inputs and `n_out` outputs, with activation function
+  `σ`, defaulting to a `MLJFlux.relu`.
 
 - `MLJFlux.Short(n_hidden=..., dropout=..., σ=...)` builds a
   full-connected three-layer network with `n_in` inputs and `n_out`
@@ -268,7 +270,8 @@ All models share the following hyper-parameters:
 2. `optimiser`: The optimiser to use for training. Default =
    `Flux.ADAM()`
 
-3. `loss`: The loss function used for training. Default = `Flux.mse` (regressors) and `Flux.crossentropy` (classifiers)
+3. `loss`: The loss function used for training. Default = `Flux.mse`
+   (regressors) and `Flux.crossentropy` (classifiers)
 
 4. `n_epochs`: Number of epochs to train for. Default = `10`
 
@@ -278,9 +281,15 @@ All models share the following hyper-parameters:
 
 7. `alpha`: The L2/L1 mix of regularization. Default = 0. Range = [0, 1]
 
-8. `acceleration`: Use `CUDALibs()` for training on GPU; default is `CPU1()`.
+8. `rng`: The random number generator (RNG) passed to builders, for
+   weight intitialization, for example. Can be any `AbstractRNG` or
+   the seed (integer) for a `MersenneTwister` that is reset on every
+   cold restart of model (machine) training. Default =
+   `GLOBAL_RNG`.
 
-9. `optimiser_changes_trigger_retraining`: True if fitting an
+9. `acceleration`: Use `CUDALibs()` for training on GPU; default is `CPU1()`.
+
+10. `optimiser_changes_trigger_retraining`: True if fitting an
    associated machine should trigger retraining from scratch whenever
    the optimiser changes. Default = `false`
 
@@ -309,13 +318,16 @@ any of the first three models in Table 1. The definition includes one
 mutable struct and one method:
 
 ```julia
-mutable struct MyNetwork <: MLJFlux.Builder
+mutable struct MyBuilder <: MLJFlux.Builder
     n1 :: Int
     n2 :: Int
 end
 
-function MLJFlux.build(nn::MyNetwork, n_in, n_out)
-    return Chain(Dense(n_in, nn.n1), Dense(nn.n1, nn.n2), Dense(nn.n2, n_out))
+function MLJFlux.build(nn::MyBuilder, rng, n_in, n_out)
+    init = Flux.glorot_uniform(rng)
+    return Chain(Dense(n_in, nn.n1, init=init),
+                 Dense(nn.n1, nn.n2, init=init),
+                 Dense(nn.n2, n_out, init=init))
 end
 ```
 
@@ -330,8 +342,8 @@ sub-typing `MLJFlux.Builder` and defining a new `MLJFlux.build` method
 with one of these signatures:
 
 ```julia
-MLJFlux.build(builder::MyNetwork, n_in, n_out)
-MLJFlux.build(builder::MyNetwork, n_in, n_out, n_channels) # for use with `ImageClassifier`
+MLJFlux.build(builder::MyBuilder, rng, n_in, n_out)
+MLJFlux.build(builder::MyBuilder, rng, n_in, n_out, n_channels) # for use with `ImageClassifier`
 ```
 
 This method must return a `Flux.Chain` instance, `chain`, subject to the
@@ -399,7 +411,7 @@ mutable struct MyConvBuilder
     channels3::Int
 end
 
-function MLJFlux.build(b::MyConvBuilder, n_in, n_out, n_channels)
+function MLJFlux.build(b::MyConvBuilder, rng, n_in, n_out, n_channels)
 
     k, c1, c2, c3 = b.filter_size, b.channels1, b.channels2, b.channels3
 
@@ -408,20 +420,16 @@ function MLJFlux.build(b::MyConvBuilder, n_in, n_out, n_channels)
     # padding to preserve image size on convolution:
     p = div(k - 1, 2)
 
-    # compute size, in first two dims, of output of final maxpool layer:
-    half(x) = div(x, 2)
-    h = n_in[1] |> half |> half |> half
-    w = n_in[2] |> half |> half |> half
-
-    return Chain(
-        Conv((k, k), n_channels => c1, pad=(p, p), relu),
-        MaxPool((2, 2)),
-        Conv((k, k), c1 => c2, pad=(p, p), relu),
-        MaxPool((2, 2)),
-        Conv((k, k), c2 => c3, pad=(p, p), relu),
-        MaxPool((2 ,2)),
-        flatten,
-        Dense(h*w*c3, n_out))
+    front = Chain(
+               Conv((k, k), n_channels => c1, pad=(p, p), relu),
+               MaxPool((2, 2)),
+               Conv((k, k), c1 => c2, pad=(p, p), relu),
+               MaxPool((2, 2)),
+               Conv((k, k), c2 => c3, pad=(p, p), relu),
+               MaxPool((2 ,2)),
+               flatten)
+    d = Flux.outputsize(front, (n_in..., n_channels, 1)) |> first
+    return Chain(front, Dense(d, n_out))
 end
 ```
 
@@ -429,25 +437,25 @@ Next, we load some of the MNIST data and check scientific types
 conform to those is the table above:
 
 ```julia
-X, y = MNIST.traindata();
+Xraw, yraw = MNIST.traindata();
 
-julia> scitype(X)
-AbstractArray{GrayImage{28,28},1}
+julia> scitype(Xraw)
+AbstractVector{Unknown}
 
 julia> scitype(y)
 AbstractArray{Count,1}
 ```
 
-Inputs should have scitype `GrayImage`
+Inputs should have element scitype `GrayImage`:
 
 ```julia
-X = coerce(X, GrayImage);
+X = coerce(Xraw, GrayImage);
 ```
 
-For classifiers, target must have element scitype `<: Finite`, so we fix this:
+For classifiers, target must have element scitype `<: Finite`:
 
 ```julia
-y = coerce(y, Multiclass);
+y = coerce(yraw, Multiclass);
 ```
 
 Instantiating an image classifier model:

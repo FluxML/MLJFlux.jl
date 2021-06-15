@@ -234,7 +234,7 @@ end
 
 function tomat end
 tomat(x::Matrix) = x
-tomat(x::Vector) = reshape(x, size(x, 1), 1)
+tomat(y::Vector) = reshape(y, size(y, 1), 1)
 
 # ------------------------------------------------------------
 # Reformatting vectors of "scalar" types

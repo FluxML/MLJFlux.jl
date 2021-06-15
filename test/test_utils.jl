@@ -78,7 +78,7 @@ function basictest(ModelType, X, y, builder, optimiser, threshold, accel)
                     (:info, r""),
                     MLJBase.update(model, 2,fitresult, cache, $X, $y));
 
-         @test MLJBase.fitted_params(model, fitresult).chain isa Flux.Chain
+         @test :chain in keys(MLJBase.fitted_params(model, fitresult))
 
          yhat = MLJBase.predict(model, fitresult, $X)
 

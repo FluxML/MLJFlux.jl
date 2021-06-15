@@ -1,7 +1,12 @@
+abstract type MLJFluxProbabilistic <: MLJModelInterface.Probabilistic end
+abstract type MLJFluxDeterministic <: MLJModelInterface.Deterministic end
+
+const MLJFluxModel = Union{MLJFluxProbabilistic,MLJFluxDeterministic}
+
 for Model in [:NeuralNetworkClassifier, :ImageClassifier]
 
     ex = quote
-        mutable struct $Model{B,F,O,L} <: MLJModelInterface.Probabilistic
+        mutable struct $Model{B,F,O,L} <: MLJFluxProbabilistic
             builder::B
             finaliser::F
             optimiser::O   # mutable struct from Flux/src/optimise/optimisers.jl
@@ -51,7 +56,7 @@ end
 for Model in [:NeuralNetworkRegressor, :MultitargetNeuralNetworkRegressor]
 
     ex = quote
-        mutable struct $Model{B,O,L} <: MLJModelInterface.Deterministic
+        mutable struct $Model{B,O,L} <: MLJFluxDeterministic
             builder::B
             optimiser::O  # mutable struct from Flux/src/optimise/optimisers.jl
             loss::L       # can be called as in `loss(yhat, y)`

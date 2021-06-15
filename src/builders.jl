@@ -49,10 +49,10 @@ Short(; n_hidden=0, dropout=0.5, σ=Flux.sigmoid) = Short(n_hidden, dropout, σ)
 function build(builder::Short, n, m)
     n_hidden =
         builder.n_hidden == 0 ? round(Int, sqrt(n*m)) : builder.n_hidden
+    init=Flux.glorot_uniform(rng)
     Flux.Chain(
-        Flux.Dense(n, n_hidden, builder.σ, init=Flux.glorot_uniform(rng)),
+        Flux.Dense(n, n_hidden, builder.σ, init=init),
         # TODO: fix next after https://github.com/FluxML/Flux.jl/issues/1617
         Flux.Dropout(builder.dropout),
-        Flux.Dense(n_hidden, m, init=Flux.glorot_uniform(rng)))
+        Flux.Dense(n_hidden, m, init=init))
 end
-

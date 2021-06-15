@@ -134,6 +134,8 @@ function optimisertest(ModelType, X, y, builder, optimiser, accel)
 
              mach = machine(model, $X, $y);
 
+             # USING GLOBAL RNG
+
              # two epochs in stages:
              Random.seed!(123) # chains are always initialized on CPU
              fit!(mach, verbosity=0, force=true);
@@ -143,6 +145,27 @@ function optimisertest(ModelType, X, y, builder, optimiser, accel)
 
              # two epochs in one go:
              Random.seed!(123) # chains are always initialized on CPU
+             fit!(mach, verbosity=1, force=true)
+             l2 = MLJBase.report(mach).training_losses[end]
+
+             if accel isa CPU1
+                 @test isapprox(l1, l2)
+             else
+                 @test_broken isapprox(l1, l2, rtol=1e-8)
+             end
+
+             # USING USER SPECIFIED RNG SEED
+
+             # two epochs in stages:
+             model.rng = 1234
+             mach = machine(model, $X, $y);
+
+             fit!(mach, verbosity=0, force=true);
+             model.epochs = model.epochs + 1
+             fit!(mach, verbosity=0); # update
+             l1 = MLJBase.report(mach).training_losses[end]
+
+             # two epochs in one go:
              fit!(mach, verbosity=1, force=true)
              l2 = MLJBase.report(mach).training_losses[end]
 

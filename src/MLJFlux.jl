@@ -12,6 +12,7 @@ using Tables
 using Statistics
 using ColorTypes
 using ComputationalResources
+using Random
 
 include("core.jl")
 include("builders.jl")

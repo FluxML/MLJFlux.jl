@@ -31,11 +31,12 @@ mutable struct Short2 <: MLJFlux.Builder
     σ
 end
 Short2(; n_hidden=0, σ=Flux.sigmoid) = Short2(n_hidden, σ)
-function MLJFlux.build(builder::Short2, n, m)
+function MLJFlux.build(builder::Short2, rng, n, m)
     n_hidden =
         builder.n_hidden == 0 ? round(Int, sqrt(n*m)) : builder.n_hidden
-    return Flux.Chain(Flux.Dense(n, n_hidden, builder.σ),
-                       Flux.Dense(n_hidden, m))
+    return Flux.Chain(
+        Flux.Dense(n, n_hidden, builder.σ, init=Flux.glorot_uniform(rng)),
+        Flux.Dense(n_hidden, m, init=Flux.glorot_uniform(rng)))
 end
 
 seed!(123)

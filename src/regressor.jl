@@ -6,8 +6,8 @@ function shape(model::NeuralNetworkRegressor, X, y)
     return (n_input, 1)
 end
 
-build(model::NeuralNetworkRegressor, shape) =
-    build(model.builder, shape...)
+build(model::NeuralNetworkRegressor, rng, shape) =
+    build(model.builder, rng, shape...)
 
 fitresult(model::NeuralNetworkRegressor, chain, y) = (chain, nothing)
 
@@ -38,8 +38,8 @@ function shape(model::MultitargetNeuralNetworkRegressor, X, y)
     return (n_input, n_output)
 end
 
-build(model::MultitargetNeuralNetworkRegressor, shape) =
-    build(model.builder, shape...)
+build(model::MultitargetNeuralNetworkRegressor, rng, shape) =
+    build(model.builder, rng, shape...)
 
 function fitresult(model::MultitargetNeuralNetworkRegressor, chain, y)
     target_column_names = Tables.schema(y).names

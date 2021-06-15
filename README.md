@@ -429,7 +429,6 @@ Next, we load some of the MNIST data and check scientific types
 conform to those is the table above:
 
 ```julia
-N = 1000
 X, y = MNIST.traindata();
 
 julia> scitype(X)

@@ -2,7 +2,7 @@
 myinit(n, m) = reshape(float(1:n*m), n , m)
 
 mutable struct TESTBuilder <: MLJFlux.Builder end
-MLJFlux.build(builder::TESTBuilder, n_in, n_out) =
+MLJFlux.build(builder::TESTBuilder, rng, n_in, n_out) =
     Flux.Chain(Flux.Dense(n_in, n_out, init=myinit))
 
 @testset_accelerated "issue #152" accel begin
@@ -15,10 +15,11 @@ MLJFlux.build(builder::TESTBuilder, n_in, n_out) =
     y = X.x1 .^2 + X.x2 .* X.x3 - 4 * X.x4
 
     # train a model on all the data using batch size > 1:
-    model = MLJFlux.NeuralNetworkRegressor(builder = TESTBuilder(),
-                                   batch_size=25,
-                                   epochs=1,
-                                   loss=Flux.mse)
+    model = MLJFlux.NeuralNetworkRegressor(builder=TESTBuilder(),
+                                           batch_size=25,
+                                           epochs=1,
+                                           loss=Flux.mse,
+                                           acceleration=accel)
     mach = machine(model, X, y)
     fit!(mach, verbosity=0)
 

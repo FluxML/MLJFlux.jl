@@ -84,18 +84,18 @@ NeuralNetworkClassifier = @load NeuralNetworkClassifier
 
 julia> clf = NeuralNetworkClassifier()
 NeuralNetworkClassifier(
-    builder = Short(
-            n_hidden = 0,
-            dropout = 0.5,
-            σ = NNlib.σ),
-    finaliser = NNlib.softmax,
-    optimiser = ADAM(0.001, (0.9, 0.999), IdDict{Any,Any}()),
-    loss = Flux.crossentropy,
-    epochs = 10,
-    batch_size = 1,
-    lambda = 0.0,
-    alpha = 0.0,
-    optimiser_changes_trigger_retraining = false) @ 1…60
+	builder = Short(
+			n_hidden = 0,
+			dropout = 0.5,
+			σ = NNlib.σ),
+	finaliser = NNlib.softmax,
+	optimiser = ADAM(0.001, (0.9, 0.999), IdDict{Any,Any}()),
+	loss = Flux.crossentropy,
+	epochs = 10,
+	batch_size = 1,
+	lambda = 0.0,
+	alpha = 0.0,
+	optimiser_changes_trigger_retraining = false) @ 1…60
 ```
 
 #### Incremental training
@@ -121,8 +121,8 @@ julia> fit!(mach, verbosity=2)
 [ Info: Loss is 0.7347
 Machine{NeuralNetworkClassifier{Short,…},…} @804 trained 2 times; caches data
   args:
-    1:  Source @985 ⏎ `Table{AbstractVector{Continuous}}`
-    2:  Source @367 ⏎ `AbstractVector{Multiclass{3}}`
+	1:  Source @985 ⏎ `Table{AbstractVector{Continuous}}`
+	2:  Source @367 ⏎ `AbstractVector{Multiclass{3}}`
 
 julia> training_loss = cross_entropy(predict(mach, X), y) |> mean
 0.7347092796453824
@@ -140,15 +140,15 @@ Chain(Chain(Dense(4, 3, σ), Flux.Dropout{Float64}(0.5, false), Dense(3, 3)), so
 ```julia
 r = range(clf, :epochs, lower=1, upper=200, scale=:log10)
 curve = learning_curve(clf, X, y,
-                       range=r,
-                       resampling=Holdout(fraction_train=0.7),
-                       measure=cross_entropy)
+					   range=r,
+					   resampling=Holdout(fraction_train=0.7),
+					   measure=cross_entropy)
 using Plots
 plot(curve.parameter_values,
-       curve.measurements,
-       xlab=curve.parameter_name,
-       xscale=curve.parameter_scale,
-       ylab = "Cross Entropy")
+	   curve.measurements,
+	   xlab=curve.parameter_name,
+	   xscale=curve.parameter_scale,
+	   ylab = "Cross Entropy")
 
 ```
 
@@ -239,6 +239,22 @@ CPU at then conclusion of `fit!`, and made available as
 `fitted_params(mach)`.
 
 
+### Random number generators and reproducibility
+
+Every MLJFlux model includes an `rng` hyper-parameter that is passed
+to builders for the purposes of weight initialization. This can be
+any `AbstractRNG` or the seed (integer) for a `MersenneTwister` that
+will be reset on every cold restart of model (machine) training.
+
+Until there is a [mechanism for
+doing so](https://github.com/FluxML/Flux.jl/issues/1617) `rng` is *not*
+passed to dropout layers and one must manually seed the `GLOBAL_RNG`
+for reproducibility purposes, when using a builder that includes
+`Dropout` (such as `MLJFlux.Short`). If training models on a
+GPU (i.e., `acceleration isa CUDALibs`) one must additionally call
+`CUDA.seed!(...)`.
+
+
 ### Built-in builders
 
 MLJ provides two simple builders out of the box. In all cases weights
@@ -319,15 +335,15 @@ mutable struct and one method:
 
 ```julia
 mutable struct MyBuilder <: MLJFlux.Builder
-    n1 :: Int
-    n2 :: Int
+	n1 :: Int
+	n2 :: Int
 end
 
 function MLJFlux.build(nn::MyBuilder, rng, n_in, n_out)
-    init = Flux.glorot_uniform(rng)
-    return Chain(Dense(n_in, nn.n1, init=init),
-                 Dense(nn.n1, nn.n2, init=init),
-                 Dense(nn.n2, n_out, init=init))
+	init = Flux.glorot_uniform(rng)
+	return Chain(Dense(n_in, nn.n1, init=init),
+				 Dense(nn.n1, nn.n2, init=init),
+				 Dense(nn.n2, n_out, init=init))
 end
 ```
 
@@ -351,13 +367,13 @@ following conditions:
 
 - `chain(x)` must make sense:
 
-    - for any `x <: Array{<:AbstractFloat, 2}` of size `(n_in,
-      batch_size)` where `batch_size` is any integer (for use with one
-      of the first three model types); or
+	- for any `x <: Array{<:AbstractFloat, 2}` of size `(n_in,
+	  batch_size)` where `batch_size` is any integer (for use with one
+	  of the first three model types); or
 
-    - for any `x <: Array{<:Float32, 4}` of size `(W, H, n_channels,
-      batch_size)`, where `(W, H) = n_in`, `n_channels` is 1 or 3, and
-      `batch_size` is any integer (for use with `ImageClassifier`)
+	- for any `x <: Array{<:Float32, 4}` of size `(W, H, n_channels,
+	  batch_size)`, where `(W, H) = n_in`, `n_channels` is 1 or 3, and
+	  `batch_size` is any integer (for use with `ImageClassifier`)
 
 - The object returned by `chain(x)` must be an `AbstractFloat` vector
   of length `n_out`.
@@ -401,36 +417,36 @@ using MLDatasets
 
 # helper function
 function flatten(x::AbstractArray)
-    return reshape(x, :, size(x)[end])
+	return reshape(x, :, size(x)[end])
 end
 
 import MLJFlux
 mutable struct MyConvBuilder
-    filter_size::Int
-    channels1::Int
-    channels2::Int
-    channels3::Int
+	filter_size::Int
+	channels1::Int
+	channels2::Int
+	channels3::Int
 end
 
 function MLJFlux.build(b::MyConvBuilder, rng, n_in, n_out, n_channels)
 
-    k, c1, c2, c3 = b.filter_size, b.channels1, b.channels2, b.channels3
+	k, c1, c2, c3 = b.filter_size, b.channels1, b.channels2, b.channels3
 
-    mod(k, 2) == 1 || error("`filter_size` must be odd. ")
+	mod(k, 2) == 1 || error("`filter_size` must be odd. ")
 
-    # padding to preserve image size on convolution:
-    p = div(k - 1, 2)
+	# padding to preserve image size on convolution:
+	p = div(k - 1, 2)
 
-    front = Chain(
-               Conv((k, k), n_channels => c1, pad=(p, p), relu),
-               MaxPool((2, 2)),
-               Conv((k, k), c1 => c2, pad=(p, p), relu),
-               MaxPool((2, 2)),
-               Conv((k, k), c2 => c3, pad=(p, p), relu),
-               MaxPool((2 ,2)),
-               flatten)
-    d = Flux.outputsize(front, (n_in..., n_channels, 1)) |> first
-    return Chain(front, Dense(d, n_out))
+	front = Chain(
+			   Conv((k, k), n_channels => c1, pad=(p, p), relu),
+			   MaxPool((2, 2)),
+			   Conv((k, k), c1 => c2, pad=(p, p), relu),
+			   MaxPool((2, 2)),
+			   Conv((k, k), c2 => c3, pad=(p, p), relu),
+			   MaxPool((2 ,2)),
+			   flatten)
+	d = Flux.outputsize(front, (n_in..., n_channels, 1)) |> first
+	return Chain(front, Dense(d, n_out))
 end
 ```
 
@@ -467,8 +483,8 @@ Instantiating an image classifier model:
 ```julia
 ImageClassifier = @load ImageClassifier
 clf = ImageClassifier(builder=MyConvBuilder(3, 16, 32, 32),
-                      epochs=10,
-                      loss=Flux.crossentropy)
+					  epochs=10,
+					  loss=Flux.crossentropy)
 ```
 
 And evaluating the accuracy of the model on a 30% holdout set:
@@ -477,9 +493,9 @@ And evaluating the accuracy of the model on a 30% holdout set:
 mach = machine(clf, X, y)
 
 julia> evaluate!(mach,
-                 resampling=Holdout(rng=123, fraction_train=0.7),
-                 operation=predict_mode,
-                 measure=misclassification_rate)
+				 resampling=Holdout(rng=123, fraction_train=0.7),
+				 operation=predict_mode,
+				 measure=misclassification_rate)
 ┌────────────────────────┬───────────────┬────────────┐
 │ _.measure              │ _.measurement │ _.per_fold │
 ├────────────────────────┼───────────────┼────────────┤

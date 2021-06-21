@@ -36,3 +36,15 @@ MLJFlux.build(builder::TESTBuilder, rng, n_in, n_out) =
     @test pretraining_loss ≈ pretraining_loss_by_hand
 
 end
+
+@testset_accelerated "Short" accel begin
+    builder = MLJFlux.Short(n_hidden=4, σ=Flux.relu, dropout=0)
+    chain = MLJFlux.build(builder, StableRNGs.StableRNG(123), 5, 3)
+    ps = Flux.params(chain)
+    @test size.(ps) == [(4, 5), (4,), (3, 4), (3,)]
+
+    # reproducibility (without dropout):
+    chain2 = MLJFlux.build(builder, StableRNGs.StableRNG(123), 5, 3)
+    x = rand(5)
+    @test chain(x) ≈ chain2(x)
+end

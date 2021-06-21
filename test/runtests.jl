@@ -10,6 +10,7 @@ import Random.seed!
 using Statistics
 import StatsBase
 using MLJModelInterface.ScientificTypes
+using StableRNGs
 
 using ComputationalResources
 using ComputationalResources: CPU1, CUDALibs
@@ -19,9 +20,9 @@ EXCLUDED_RESOURCE_TYPES = Any[]
 
 MLJFlux.gpu_isdead() && push!(EXCLUDED_RESOURCE_TYPES, CUDALibs)
 
-@info "Available computational resources: $RESOURCES"
+@info "MLJFlux supports these computational resources:\n$RESOURCES"
 @info "Current test run to exclude resources with "*
-    "these types: $EXCLUDED_RESOURCE_TYPES\n"*
+    "these types, as unavailable:\n$EXCLUDED_RESOURCE_TYPES\n"*
     "Excluded tests marked as \"broken\"."
 
 # alternative version of Short builder with no dropout; see

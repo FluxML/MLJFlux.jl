@@ -46,7 +46,7 @@ mutable struct Short <: Builder
     σ
 end
 Short(; n_hidden=0, dropout=0.5, σ=Flux.sigmoid) = Short(n_hidden, dropout, σ)
-function build(builder::Short, n, m)
+function build(builder::Short, rng, n, m)
     n_hidden =
         builder.n_hidden == 0 ? round(Int, sqrt(n*m)) : builder.n_hidden
     init=Flux.glorot_uniform(rng)

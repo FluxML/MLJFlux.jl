@@ -13,7 +13,6 @@
 
 abstract type Builder <: MLJModelInterface.MLJType end
 
-
 """
     Linear(; σ=Flux.relu)
 

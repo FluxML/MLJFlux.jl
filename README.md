@@ -84,18 +84,18 @@ NeuralNetworkClassifier = @load NeuralNetworkClassifier
 
 julia> clf = NeuralNetworkClassifier()
 NeuralNetworkClassifier(
-    builder = Short(
-            n_hidden = 0,
-            dropout = 0.5,
-            σ = NNlib.σ),
-    finaliser = NNlib.softmax,
-    optimiser = ADAM(0.001, (0.9, 0.999), IdDict{Any,Any}()),
-    loss = Flux.crossentropy,
-    epochs = 10,
-    batch_size = 1,
-    lambda = 0.0,
-    alpha = 0.0,
-    optimiser_changes_trigger_retraining = false) @ 1…60
+	builder = Short(
+			n_hidden = 0,
+			dropout = 0.5,
+			σ = NNlib.σ),
+	finaliser = NNlib.softmax,
+	optimiser = ADAM(0.001, (0.9, 0.999), IdDict{Any,Any}()),
+	loss = Flux.crossentropy,
+	epochs = 10,
+	batch_size = 1,
+	lambda = 0.0,
+	alpha = 0.0,
+	optimiser_changes_trigger_retraining = false) @ 1…60
 ```
 
 #### Incremental training
@@ -121,8 +121,8 @@ julia> fit!(mach, verbosity=2)
 [ Info: Loss is 0.7347
 Machine{NeuralNetworkClassifier{Short,…},…} @804 trained 2 times; caches data
   args:
-    1:  Source @985 ⏎ `Table{AbstractVector{Continuous}}`
-    2:  Source @367 ⏎ `AbstractVector{Multiclass{3}}`
+	1:  Source @985 ⏎ `Table{AbstractVector{Continuous}}`
+	2:  Source @367 ⏎ `AbstractVector{Multiclass{3}}`
 
 julia> training_loss = cross_entropy(predict(mach, X), y) |> mean
 0.7347092796453824
@@ -140,15 +140,15 @@ Chain(Chain(Dense(4, 3, σ), Flux.Dropout{Float64}(0.5, false), Dense(3, 3)), so
 ```julia
 r = range(clf, :epochs, lower=1, upper=200, scale=:log10)
 curve = learning_curve(clf, X, y,
-                       range=r,
-                       resampling=Holdout(fraction_train=0.7),
-                       measure=cross_entropy)
+					   range=r,
+					   resampling=Holdout(fraction_train=0.7),
+					   measure=cross_entropy)
 using Plots
 plot(curve.parameter_values,
-       curve.measurements,
-       xlab=curve.parameter_name,
-       xscale=curve.parameter_scale,
-       ylab = "Cross Entropy")
+	   curve.measurements,
+	   xlab=curve.parameter_name,
+	   xscale=curve.parameter_scale,
+	   ylab = "Cross Entropy")
 
 ```
 
@@ -239,13 +239,31 @@ CPU at then conclusion of `fit!`, and made available as
 `fitted_params(mach)`.
 
 
+### Random number generators and reproducibility
+
+Every MLJFlux model includes an `rng` hyper-parameter that is passed
+to builders for the purposes of weight initialization. This can be
+any `AbstractRNG` or the seed (integer) for a `MersenneTwister` that
+will be reset on every cold restart of model (machine) training.
+
+Until there is a [mechanism for
+doing so](https://github.com/FluxML/Flux.jl/issues/1617) `rng` is *not*
+passed to dropout layers and one must manually seed the `GLOBAL_RNG`
+for reproducibility purposes, when using a builder that includes
+`Dropout` (such as `MLJFlux.Short`). If training models on a
+GPU (i.e., `acceleration isa CUDALibs`) one must additionally call
+`CUDA.seed!(...)`.
+
+
 ### Built-in builders
 
-MLJ provides two simple builders out of the box:
+MLJ provides two simple builders out of the box. In all cases weights
+  are intitialized using `glorot_uniform(rng)` where `rng` is the RNG
+  (or `MersenneTwister` seed) specified by the MLJFlux model.
 
-- `MLJFlux.Linear(σ=...)` builds a fully connected two layer
-  network with `n_in` inputs and `n_out` outputs, with activation
-  function `σ`, defaulting to a `MLJFlux.relu`.
+- `MLJFlux.Linear(σ=...)` builds a fully connected two layer network
+  with `n_in` inputs and `n_out` outputs, with activation function
+  `σ`, defaulting to a `MLJFlux.relu`.
 
 - `MLJFlux.Short(n_hidden=..., dropout=..., σ=...)` builds a
   full-connected three-layer network with `n_in` inputs and `n_out`
@@ -268,7 +286,8 @@ All models share the following hyper-parameters:
 2. `optimiser`: The optimiser to use for training. Default =
    `Flux.ADAM()`
 
-3. `loss`: The loss function used for training. Default = `Flux.mse` (regressors) and `Flux.crossentropy` (classifiers)
+3. `loss`: The loss function used for training. Default = `Flux.mse`
+   (regressors) and `Flux.crossentropy` (classifiers)
 
 4. `n_epochs`: Number of epochs to train for. Default = `10`
 
@@ -278,9 +297,15 @@ All models share the following hyper-parameters:
 
 7. `alpha`: The L2/L1 mix of regularization. Default = 0. Range = [0, 1]
 
-8. `acceleration`: Use `CUDALibs()` for training on GPU; default is `CPU1()`.
+8. `rng`: The random number generator (RNG) passed to builders, for
+   weight intitialization, for example. Can be any `AbstractRNG` or
+   the seed (integer) for a `MersenneTwister` that is reset on every
+   cold restart of model (machine) training. Default =
+   `GLOBAL_RNG`.
 
-9. `optimiser_changes_trigger_retraining`: True if fitting an
+9. `acceleration`: Use `CUDALibs()` for training on GPU; default is `CPU1()`.
+
+10. `optimiser_changes_trigger_retraining`: True if fitting an
    associated machine should trigger retraining from scratch whenever
    the optimiser changes. Default = `false`
 
@@ -309,13 +334,16 @@ any of the first three models in Table 1. The definition includes one
 mutable struct and one method:
 
 ```julia
-mutable struct MyNetwork <: MLJFlux.Builder
-    n1 :: Int
-    n2 :: Int
+mutable struct MyBuilder <: MLJFlux.Builder
+	n1 :: Int
+	n2 :: Int
 end
 
-function MLJFlux.build(nn::MyNetwork, n_in, n_out)
-    return Chain(Dense(n_in, nn.n1), Dense(nn.n1, nn.n2), Dense(nn.n2, n_out))
+function MLJFlux.build(nn::MyBuilder, rng, n_in, n_out)
+	init = Flux.glorot_uniform(rng)
+	return Chain(Dense(n_in, nn.n1, init=init),
+				 Dense(nn.n1, nn.n2, init=init),
+				 Dense(nn.n2, n_out, init=init))
 end
 ```
 
@@ -330,8 +358,8 @@ sub-typing `MLJFlux.Builder` and defining a new `MLJFlux.build` method
 with one of these signatures:
 
 ```julia
-MLJFlux.build(builder::MyNetwork, n_in, n_out)
-MLJFlux.build(builder::MyNetwork, n_in, n_out, n_channels) # for use with `ImageClassifier`
+MLJFlux.build(builder::MyBuilder, rng, n_in, n_out)
+MLJFlux.build(builder::MyBuilder, rng, n_in, n_out, n_channels) # for use with `ImageClassifier`
 ```
 
 This method must return a `Flux.Chain` instance, `chain`, subject to the
@@ -339,12 +367,13 @@ following conditions:
 
 - `chain(x)` must make sense:
 
-    - for any `x <: Vector{<:AbstractFloat}` of length `n_in` (for use
-      with one of the first three model types); or
+	- for any `x <: Array{<:AbstractFloat, 2}` of size `(n_in,
+	  batch_size)` where `batch_size` is any integer (for use with one
+	  of the first three model types); or
 
-    - for any `x <: Array{<:Float32, 4}` of size `(W, H, n_channels,
-      batch_size)`, where `(W, H) = n_in`, `n_channels` is 1 or 3, and
-      `batch_size` is any integer (for use with `ImageClassifier`)
+	- for any `x <: Array{<:Float32, 4}` of size `(W, H, n_channels,
+	  batch_size)`, where `(W, H) = n_in`, `n_channels` is 1 or 3, and
+	  `batch_size` is any integer (for use with `ImageClassifier`)
 
 - The object returned by `chain(x)` must be an `AbstractFloat` vector
   of length `n_out`.
@@ -388,40 +417,36 @@ using MLDatasets
 
 # helper function
 function flatten(x::AbstractArray)
-    return reshape(x, :, size(x)[end])
+	return reshape(x, :, size(x)[end])
 end
 
 import MLJFlux
 mutable struct MyConvBuilder
-    filter_size::Int
-    channels1::Int
-    channels2::Int
-    channels3::Int
+	filter_size::Int
+	channels1::Int
+	channels2::Int
+	channels3::Int
 end
 
-function MLJFlux.build(b::MyConvBuilder, n_in, n_out, n_channels)
+function MLJFlux.build(b::MyConvBuilder, rng, n_in, n_out, n_channels)
 
-    k, c1, c2, c3 = b.filter_size, b.channels1, b.channels2, b.channels3
+	k, c1, c2, c3 = b.filter_size, b.channels1, b.channels2, b.channels3
 
-    mod(k, 2) == 1 || error("`filter_size` must be odd. ")
+	mod(k, 2) == 1 || error("`filter_size` must be odd. ")
 
-    # padding to preserve image size on convolution:
-    p = div(k - 1, 2)
+	# padding to preserve image size on convolution:
+	p = div(k - 1, 2)
 
-    # compute size, in first two dims, of output of final maxpool layer:
-    half(x) = div(x, 2)
-    h = n_in[1] |> half |> half |> half
-    w = n_in[2] |> half |> half |> half
-
-    return Chain(
-        Conv((k, k), n_channels => c1, pad=(p, p), relu),
-        MaxPool((2, 2)),
-        Conv((k, k), c1 => c2, pad=(p, p), relu),
-        MaxPool((2, 2)),
-        Conv((k, k), c2 => c3, pad=(p, p), relu),
-        MaxPool((2 ,2)),
-        flatten,
-        Dense(h*w*c3, n_out))
+	front = Chain(
+			   Conv((k, k), n_channels => c1, pad=(p, p), relu),
+			   MaxPool((2, 2)),
+			   Conv((k, k), c1 => c2, pad=(p, p), relu),
+			   MaxPool((2, 2)),
+			   Conv((k, k), c2 => c3, pad=(p, p), relu),
+			   MaxPool((2 ,2)),
+			   flatten)
+	d = Flux.outputsize(front, (n_in..., n_channels, 1)) |> first
+	return Chain(front, Dense(d, n_out))
 end
 ```
 
@@ -429,26 +454,28 @@ Next, we load some of the MNIST data and check scientific types
 conform to those is the table above:
 
 ```julia
-N = 1000
-X, y = MNIST.traindata();
+N = 500
+Xraw, yraw = MNIST.traindata();
+Xraw = Xraw[:,:,1:N];
+yraw = yraw[1:N];
 
-julia> scitype(X)
-AbstractArray{GrayImage{28,28},1}
+julia> scitype(Xraw)
+AbstractArray{Unknown, 3}
 
-julia> scitype(y)
+julia> scitype(yraw)
 AbstractArray{Count,1}
 ```
 
-Inputs should have scitype `GrayImage`
+Inputs should have element scitype `GrayImage`:
 
 ```julia
-X = coerce(X, GrayImage);
+X = coerce(Xraw, GrayImage);
 ```
 
-For classifiers, target must have element scitype `<: Finite`, so we fix this:
+For classifiers, target must have element scitype `<: Finite`:
 
 ```julia
-y = coerce(y, Multiclass);
+y = coerce(yraw, Multiclass);
 ```
 
 Instantiating an image classifier model:
@@ -456,8 +483,8 @@ Instantiating an image classifier model:
 ```julia
 ImageClassifier = @load ImageClassifier
 clf = ImageClassifier(builder=MyConvBuilder(3, 16, 32, 32),
-                      epochs=10,
-                      loss=Flux.crossentropy)
+					  epochs=10,
+					  loss=Flux.crossentropy)
 ```
 
 And evaluating the accuracy of the model on a 30% holdout set:
@@ -466,9 +493,9 @@ And evaluating the accuracy of the model on a 30% holdout set:
 mach = machine(clf, X, y)
 
 julia> evaluate!(mach,
-                 resampling=Holdout(rng=123, fraction_train=0.7),
-                 operation=predict_mode,
-                 measure=misclassification_rate)
+				 resampling=Holdout(rng=123, fraction_train=0.7),
+				 operation=predict_mode,
+				 measure=misclassification_rate)
 ┌────────────────────────┬───────────────┬────────────┐
 │ _.measure              │ _.measurement │ _.per_fold │
 ├────────────────────────┼───────────────┼────────────┤

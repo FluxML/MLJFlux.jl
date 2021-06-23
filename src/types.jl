@@ -15,6 +15,7 @@ for Model in [:NeuralNetworkClassifier, :ImageClassifier]
             batch_size::Int  # size of a batch
             lambda::Float64  # regularization strength
             alpha::Float64   # regularizaton mix (0 for all l2, 1 for all l1)
+            rng::Union{AbstractRNG,Int64}
             optimiser_changes_trigger_retraining::Bool
             acceleration::AbstractResource  # eg, `CPU1()` or `CUDALibs()`
         end
@@ -27,6 +28,7 @@ for Model in [:NeuralNetworkClassifier, :ImageClassifier]
                         , batch_size   = 1
                         , lambda       = 0
                         , alpha        = 0
+                        , rng          = Random.GLOBAL_RNG
                         , optimiser_changes_trigger_retraining = false
                         , acceleration = CPU1()
                         ) where {B,F,O,L}
@@ -39,6 +41,7 @@ for Model in [:NeuralNetworkClassifier, :ImageClassifier]
                                     , batch_size
                                     , lambda
                                     , alpha
+                                    , rng
                                     , optimiser_changes_trigger_retraining
                                     , acceleration
                                     )
@@ -64,6 +67,7 @@ for Model in [:NeuralNetworkRegressor, :MultitargetNeuralNetworkRegressor]
             batch_size::Int # size of a batch
             lambda::Float64 # regularization strength
             alpha::Float64  # regularizaton mix (0 for all l2, 1 for all l1)
+            rng::Union{AbstractRNG,Integer}
             optimiser_changes_trigger_retraining::Bool
             acceleration::AbstractResource  # eg, `CPU1()` or `CUDALibs()`
         end
@@ -75,6 +79,7 @@ for Model in [:NeuralNetworkRegressor, :MultitargetNeuralNetworkRegressor]
                         , batch_size   = 1
                         , lambda       = 0
                         , alpha        = 0
+                        , rng          = Random.GLOBAL_RNG
                         , optimiser_changes_trigger_retraining=false
                         , acceleration  = CPU1()
                         ) where {B,O,L}
@@ -86,6 +91,7 @@ for Model in [:NeuralNetworkRegressor, :MultitargetNeuralNetworkRegressor]
                                   , batch_size
                                   , lambda
                                   , alpha
+                                  , rng
                                   , optimiser_changes_trigger_retraining
                                   , acceleration)
 

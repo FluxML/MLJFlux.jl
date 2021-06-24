@@ -2,18 +2,21 @@
 
 Random.seed!(123)
 
-mutable struct mynn <: MLJFlux.Builder
+mutable struct MyNeuralNetwork <: MLJFlux.Builder
     kernel1
     kernel2
 end
 
-MLJFlux.build(model::mynn, ip, op, n_channels) =
-        Flux.Chain(Flux.Conv(model.kernel1, n_channels=>2),
-                   Flux.Conv(model.kernel2, 2=>1),
-                   x->reshape(x, :, size(x)[end]),
-                   Flux.Dense(16, op))
+function MLJFlux.build(model::MyNeuralNetwork, rng, ip, op, n_channels)
+    init = Flux.glorot_uniform(rng)
+    Flux.Chain(
+        Flux.Conv(model.kernel1, n_channels=>2, init=init),
+        Flux.Conv(model.kernel2, 2=>1, init=init),
+        x->reshape(x, :, size(x)[end]),
+        Flux.Dense(16, op, init=init))
+end 
 
-builder = mynn((2,2), (2,2))
+builder = MyNeuralNetwork((2,2), (2,2))
 
 # collection of gray images as a 4D array in WHCN format:
 raw_images = rand(Float32, 6, 6, 1, 50);
@@ -78,18 +81,18 @@ function flatten(x::AbstractArray)
     return reshape(x, :, size(x)[end])
 end
 
-function MLJFlux.build(builder::MyConvBuilder, n_in, n_out, n_channels)
+function MLJFlux.build(builder::MyConvBuilder, rng, n_in, n_out, n_channels)
     cnn_output_size = [3,3,32]
-
+    init = Flux.glorot_uniform(rng)
     return Chain(
-        Conv((3, 3), n_channels=>16, pad=(1,1), relu),
+        Conv((3, 3), n_channels=>16, pad=(1,1), relu, init=init),
         MaxPool((2,2)),
-        Conv((3, 3), 16=>32, pad=(1,1), relu),
+        Conv((3, 3), 16=>32, pad=(1,1), relu, init=init),
         MaxPool((2,2)),
-        Conv((3, 3), 32=>32, pad=(1,1), relu),
+        Conv((3, 3), 32=>32, pad=(1,1), relu, init=init),
         MaxPool((2,2)),
         flatten,
-        Dense(prod(cnn_output_size), n_out))
+        Dense(prod(cnn_output_size), n_out, init=init))
 end
 
 losses = []
@@ -121,7 +124,7 @@ reference = losses[1]
 
 ## BASIC IMAGE TESTS COLOR
 
-builder = mynn((2,2), (2,2))
+builder = MyNeuralNetwork((2,2), (2,2))
 
 # collection of color images as a 4D array in WHCN format:
 raw_images = rand(Float32, 6, 6, 3, 50);

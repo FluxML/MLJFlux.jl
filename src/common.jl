@@ -1,9 +1,3 @@
-MLJFluxModel = Union{NeuralNetworkRegressor,
-                     MultitargetNeuralNetworkRegressor,
-                     NeuralNetworkClassifier,
-                     ImageClassifier}
-
-
 # # EQUALITY
 
 # to address #124 and #129:
@@ -42,6 +36,108 @@ function MLJModelInterface.clean!(model::MLJFluxModel)
     end
     return warning
 end
+
+
+# # FIT AND  UPDATE
+
+true_rng(model) = model.rng isa Integer ? MersenneTwister(model.rng) : model.rng
+
+function MLJModelInterface.fit(model::MLJFluxModel,
+                               verbosity::Int,
+                               X,
+                               y)
+
+    data = collate(model, X, y)
+
+    rng = true_rng(model)
+
+    shape = MLJFlux.shape(model, X, y)
+    chain = build(model, rng, shape)
+
+    optimiser = deepcopy(model.optimiser)
+
+    chain, history = fit!(chain,
+                          optimiser,
+                          model.loss,
+                          model.epochs,
+                          model.lambda,
+                          model.alpha,
+                          verbosity,
+                          model.acceleration,
+                          data[1],
+                          data[2])
+
+    # `optimiser` is now mutated
+
+    cache = (deepcopy(model), data, history, shape, optimiser, deepcopy(rng))
+    fitresult = MLJFlux.fitresult(model, chain, y)
+
+    report = (training_losses=history, )
+
+    return fitresult, cache, report
+end
+
+function MLJModelInterface.update(model::MLJFluxModel,
+                                  verbosity::Int,
+                                  old_fitresult,
+                                  old_cache,
+                                  X,
+                                  y)
+
+    old_model, data, old_history, shape, optimiser, rng = old_cache
+    old_chain = old_fitresult[1]
+
+    optimiser_flag = model.optimiser_changes_trigger_retraining &&
+        model.optimiser != old_model.optimiser
+
+    keep_chain = !optimiser_flag && model.epochs >= old_model.epochs &&
+        MLJModelInterface.is_same_except(model, old_model, :optimiser, :epochs)
+
+    if keep_chain
+        chain = old_chain
+        epochs = model.epochs - old_model.epochs
+    else
+        rng = true_rng(model)
+        chain = build(model, rng, shape)
+        data = collate(model, X, y)
+        epochs = model.epochs
+    end
+
+    # we only get to keep the optimiser "state" carried over from
+    # previous training if we're doing a warm restart and the user has not
+    # changed the optimiser hyper-parameter:
+    if !keep_chain ||
+        !MLJModelInterface._equal_to_depth_one(model.optimiser,
+                                              old_model.optimiser)
+        optimiser = deepcopy(model.optimiser)
+    end
+
+    chain, history = fit!(chain,
+                          optimiser,
+                          model.loss,
+                          epochs,
+                          model.lambda,
+                          model.alpha,
+                          verbosity,
+                          model.acceleration,
+                          data[1],
+                          data[2])
+    if keep_chain
+        # note: history[1] = old_history[end]
+        history = vcat(old_history[1:end-1], history)
+    end
+
+    fitresult = MLJFlux.fitresult(model, chain, y)
+    cache = (deepcopy(model), data, history, shape, optimiser, deepcopy(rng))
+    report = (training_losses=history, )
+
+    return fitresult, cache, report
+
+end
+
+MLJModelInterface.fitted_params(::MLJFluxModel, fitresult) =
+    (chain=fitresult[1],)
+
 
 # # SUPPORT FOR MLJ ITERATION API
 

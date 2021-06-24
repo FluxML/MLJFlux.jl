@@ -1,150 +1,32 @@
-mutable struct NeuralNetworkClassifier{B,F,O,L} <: MLJModelInterface.Probabilistic
-    builder::B
-    finaliser::F
-    optimiser::O    # mutable struct from Flux/src/optimise/optimisers.jl
-    loss::L         # can be called as in `loss(yhat, y)`
-    epochs::Int          # number of epochs
-    batch_size::Int # size of a batch
-    lambda::Float64 # regularization strength
-    alpha::Float64  # regularizaton mix (0 for all l2, 1 for all l1)
-    optimiser_changes_trigger_retraining::Bool
-    acceleration::AbstractResource       # Train on gpu
-end
-
-function NeuralNetworkClassifier(; builder::B   = Short()
-                                 , finaliser::F = Flux.softmax
-                                 , optimiser::O = Flux.Optimise.ADAM()
-                                 , loss::L      = Flux.crossentropy
-                                 , epochs       = 10
-                                 , batch_size   = 1
-                                 , lambda       = 0
-                                 , alpha        = 0
-                                 , optimiser_changes_trigger_retraining = false
-                                 , acceleration = CPU1()
-                                 ) where {B,F,O,L}
-
-    model = NeuralNetworkClassifier{B,F,O,L}(builder
-                                             , finaliser
-                                             , optimiser
-                                             , loss
-                                             , epochs
-                                             , batch_size
-                                             , lambda
-                                             , alpha
-                                             , optimiser_changes_trigger_retraining
-                                             , acceleration
-                                             )
-
-   message = clean!(model)
-   isempty(message) || @warn message
-
-    return model
-end
-
-function MLJModelInterface.fit(model::NeuralNetworkClassifier,
-                               verbosity::Int,
-                               X,
-                               y)
-
-    data = collate(model, X, y)
-
+# if `b` is a builder, then `b(model, rng, shape...)` is called to make a
+# new chain, where `shape` is the return value of this method:
+function MLJFlux.shape(model::NeuralNetworkClassifier, X, y)
     levels = MLJModelInterface.classes(y[1])
     n_output = length(levels)
     n_input = Tables.schema(X).names |> length
-
-    chain = Flux.Chain(build(model.builder, n_input, n_output),
-                       model.finaliser)
-
-    optimiser = deepcopy(model.optimiser)
-
-    chain, history = fit!(chain,
-                          optimiser,
-                          model.loss,
-                          model.epochs,
-                          model.lambda,
-                          model.alpha,
-                          verbosity,
-                          model.acceleration,
-                          data[1],
-                          data[2])
-
-    cache = (deepcopy(model), data, history, n_input, n_output, optimiser)
-    fitresult = (chain, levels)
-    report = (training_losses=history, )
-
-    return fitresult, cache, report
+    return (n_input, n_output)
 end
+
+# builds the end-to-end Flux chain needed, given the `model` and `shape`:
+MLJFlux.build(model::NeuralNetworkClassifier, rng, shape) =
+    Flux.Chain(build(model.builder, rng, shape...),
+               model.finaliser)
+
+# returns the model `fitresult` (see "Adding Models for General Use"
+# section of the MLJ manual) which must always have the form `(chain,
+# metadata)`, where `metadata` is anything extra neede by `predict` may
+# require:
+MLJFlux.fitresult(model::NeuralNetworkClassifier, chain, y) =
+    (chain, MLJModelInterface.classes(y[1]))
 
 function MLJModelInterface.predict(model::NeuralNetworkClassifier,
                                    fitresult,
-                                   Xnew_)
+                                   Xnew)
     chain, levels = fitresult
-    Xnew = MLJModelInterface.matrix(Xnew_)
-    probs = vcat([chain(tomat(Xnew[i, :]))' for i in 1:size(Xnew, 1)]...)
+    X = reformat(Xnew)
+    probs = vcat([chain(tomat(X[:,i]))' for i in 1:size(X, 2)]...)
     return MLJModelInterface.UnivariateFinite(levels, probs)
 end
-
-function MLJModelInterface.update(model::NeuralNetworkClassifier,
-                                  verbosity::Int,
-                                  old_fitresult,
-                                  old_cache,
-                                  X,
-                                  y)
-
-    old_model, data, old_history, n_input, n_output, optimiser = old_cache
-    old_chain, levels = old_fitresult
-
-    optimiser_flag = model.optimiser_changes_trigger_retraining &&
-        model.optimiser != old_model.optimiser
-
-    keep_chain = !optimiser_flag && model.epochs >= old_model.epochs &&
-        MLJModelInterface.is_same_except(model, old_model, :optimiser, :epochs)
-
-    if keep_chain
-        chain = old_chain
-        epochs = model.epochs - old_model.epochs
-    else
-        chain = Flux.Chain(build(model.builder, n_input, n_output),
-                           model.finaliser)
-        data = collate(model, X, y)
-        epochs = model.epochs
-    end
-
-    # we only get to keep the optimiser "state" carried over from
-    # previous training if we're doing a warm restart and the user has not
-    # changed the optimiser hyper-parameter:
-    if !keep_chain ||
-        !MLJModelInterface._equal_to_depth_one(model.optimiser,
-                                              old_model.optimiser)
-        optimiser = deepcopy(model.optimiser)
-    end
-
-    chain, history = fit!(chain,
-                          optimiser,
-                          model.loss,
-                          epochs,
-                          model.lambda,
-                          model.alpha,
-                          verbosity,
-                          model.acceleration,
-                          data[1],
-                          data[2])
-    if keep_chain
-        # note: history[1] = old_history[end]
-        history = vcat(old_history[1:end-1], history)
-    end
-
-    fitresult = (chain, levels)
-    cache = (deepcopy(model), data, history, n_input, n_output, optimiser)
-    report = (training_losses=history, )
-
-    return fitresult, cache, report
-
-end
-
-MLJModelInterface.fitted_params(::NeuralNetworkClassifier, fitresult) =
-    (chain=fitresult[1],)
-
 
 MLJModelInterface.metadata_model(NeuralNetworkClassifier,
                                  input=Table(Continuous),

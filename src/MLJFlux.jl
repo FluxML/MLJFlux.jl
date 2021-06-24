@@ -1,4 +1,4 @@
-module MLJFlux 
+module MLJFlux
 
 export CUDALibs, CPU1
 
@@ -12,8 +12,11 @@ using Tables
 using Statistics
 using ColorTypes
 using ComputationalResources
+using Random
 
 include("core.jl")
+include("builders.jl")
+include("types.jl")
 include("regressor.jl")
 include("classifier.jl")
 include("image.jl")

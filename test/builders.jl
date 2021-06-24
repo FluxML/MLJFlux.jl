@@ -1,5 +1,5 @@
 # to control chain initialization:
-myinit(n, m) = reshape(float(1:n*m), n , m)
+myinit(n, m) = reshape(convert(Vector{Float32}, (1:n*m)), n , m)
 
 mutable struct TESTBuilder <: MLJFlux.Builder end
 MLJFlux.build(builder::TESTBuilder, rng, n_in, n_out) =
@@ -10,7 +10,8 @@ MLJFlux.build(builder::TESTBuilder, rng, n_in, n_out) =
     # data:
     n = 100
     d = 5
-    Xmat = rand(Float64, n, d)
+    Xmat = rand(Float32, n, d)
+#    Xmat = fill(one(Float32), n, d)
     X = MLJBase.table(Xmat);
     y = X.x1 .^2 + X.x2 .* X.x3 - 4 * X.x4
 
@@ -31,6 +32,7 @@ MLJFlux.build(builder::TESTBuilder, rng, n_in, n_out) =
     pretraining_yhat = Xmat*chain0' |> vec
     @test y isa Vector && pretraining_yhat isa Vector
     pretraining_loss_by_hand =  MLJBase.l2(pretraining_yhat, y) |> mean
+    mean(((pretraining_yhat - y).^2)[1:2])
 
     # compare:
     @test pretraining_loss ≈ pretraining_loss_by_hand

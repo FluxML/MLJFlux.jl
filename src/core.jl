@@ -44,13 +44,17 @@ vector of arrays where the last dimension is the batch size. `y`
 is the target observation vector.
 """
 function train!(loss_func, parameters, optimiser, X, y)
-    for i=1:length(X)
+    n_batches = length(y)
+    training_loss = zero(Float32)
+    for i in 1:n_batches
         gs = Flux.gradient(parameters) do
-            training_loss = loss_func(X[i], y[i])
-            return training_loss
+            batch_loss = loss_func(X[i], y[i])
+            training_loss += batch_loss
+            return batch_loss
         end
         Flux.update!(optimiser, parameters, gs)
     end
+    return training_loss/n_batches
 end
 
 
@@ -124,15 +128,15 @@ function  fit!(chain, optimiser, loss, epochs,
     loss_func(x, y) = loss(chain(x), y)
 
     # initiate history:
-    prev_loss = mean(loss_func(X[i], y[i]) for i=1:length(X))
-    history = [prev_loss,]
+    n_batches = length(y)
+
+    training_loss = mean(loss_func(X[i], y[i]) for i in 1:n_batches)
+    history = [training_loss,]
 
     for i in 1:epochs
         # We're taking data in a Flux-fashion.
 #        @show i rand()
-        train!(loss_func, Flux.params(chain), optimiser, X, y)
-        current_loss =
-            mean(loss_func(X[i], y[i]) for i=1:length(X))
+        current_loss = train!(loss_func, Flux.params(chain), optimiser, X, y)
         verbosity < 2 ||
             @info "Loss is $(round(current_loss; sigdigits=4))"
         push!(history, current_loss)

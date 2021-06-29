@@ -29,7 +29,7 @@ images, labels = MNIST.traindata();
 
 # In MLJ, integers cannot be used for encoding categorical data, so we
 # must force the labels to have the `Multiclass` [scientific
-# type](https://alan-turing-institute.github.io/MLJScientificTypes.jl/dev/). For
+# type](https://alan-turing-institute.github.io/ScientificTypes.jl/dev/). For
 # more on this, see [Working with Categorical
 # Data](https://alan-turing-institute.github.io/MLJ.jl/dev/working_with_categorical_data/).
 
@@ -45,7 +45,7 @@ images = coerce(images, GrayImage);
 
 # For general instructions on coercing image data, see [Type coercion
 # for image
-# data](https://alan-turing-institute.github.io/MLJScientificTypes.jl/dev/#Type-coercion-for-image-data-1)
+# data](https://alan-turing-institute.github.io/ScientificTypes.jl/dev/#Type-coercion-for-image-data-1)
 
 images[1]
 

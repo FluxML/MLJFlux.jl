@@ -9,7 +9,6 @@ import Random
 import Random.seed!
 using Statistics
 import StatsBase
-using MLJModelInterface.ScientificTypes
 using StableRNGs
 
 using ComputationalResources

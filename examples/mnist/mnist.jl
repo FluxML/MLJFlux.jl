@@ -45,7 +45,7 @@ images = coerce(images, GrayImage);
 
 # For general instructions on coercing image data, see [Type coercion
 # for image
-# data](https://alan-turing-institute.github.io/MLJScientificTypes.jl/dev/#Type-coercion-for-image-data-1)
+# data](https://alan-turing-institute.github.io/ScientificTypes.jl/dev/#Type-coercion-for-image-data-1)
 
 images[1]
 

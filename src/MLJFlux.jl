@@ -4,7 +4,7 @@ export CUDALibs, CPU1
 
 import Flux
 using MLJModelInterface
-using MLJModelInterface.ScientificTypes
+using MLJModelInterface.ScientificTypesBase
 import Base.==
 using ProgressMeter
 using CategoricalArrays

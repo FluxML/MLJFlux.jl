@@ -184,12 +184,14 @@ parameters(mach) = make1d.(Flux.params(fitted_params(mach)));
 losses = []
 training_losses = []
 parameter_means = Float32[];
+epochs = []
 
 # To update the traces:
 
 update_loss(loss) = push!(losses, loss)
 update_training_loss(losses) = push!(training_losses, losses[end])
 update_means(mach) = append!(parameter_means, mean.(parameters(mach)));
+update_epochs(epoch) = push!(epochs, epoch)
 
 # The controls to apply:
 
@@ -204,7 +206,8 @@ controls=[Step(2),
           WithLossDo(),
           WithLossDo(update_loss),
           WithTrainingLossesDo(update_training_loss),
-          Callback(update_means)
+          Callback(update_means),
+          WithIterationsDo(update_epochs)
 ];
 
 # The "self-iterating" classifier:
@@ -225,11 +228,11 @@ fit!(mach, rows=1:500);
 
 # ### Comparison of the training and out-of-sample losses:
 
-plot(losses,
+plot(epochs, losses,
      xlab = "epoch",
      ylab = "root squared error",
      label="out-of-sample")
-plot!(training_losses, label="training")
+plot!(epochs, training_losses, label="training")
 
 savefig(joinpath(DIR, "loss.png"))
 
@@ -238,7 +241,7 @@ savefig(joinpath(DIR, "loss.png"))
 n_epochs =  length(losses)
 n_parameters = div(length(parameter_means), n_epochs)
 parameter_means2 = reshape(copy(parameter_means), n_parameters, n_epochs)'
-plot(parameter_means2,
+plot(epochs, parameter_means2,
      title="Flux parameter mean weights",
      xlab = "epoch")
 
@@ -261,11 +264,11 @@ predict_mode(mach2, images[501:503])
 iterated_clf.controls[2] = Patience(4)
 fit!(mach, rows=1:500)
 
-plot(losses,
+plot(epochs, losses,
      xlab = "epoch",
      ylab = "root squared error",
      label="out-of-sample")
-plot!(training_losses, label="training")
+plot!(epochs, training_losses, label="training")
 
 using Literate #src
 Literate.markdown(@__FILE__, @__DIR__, execute=false) #src

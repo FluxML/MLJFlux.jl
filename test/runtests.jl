@@ -44,6 +44,10 @@ seed!(123)
 
 include("test_utils.jl")
 
+@testset "penalized_losses" begin
+    include("penalized_losses.jl")
+end
+
 @testset "core" begin
     include("core.jl")
 end

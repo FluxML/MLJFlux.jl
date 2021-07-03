@@ -47,30 +47,34 @@ function MLJModelInterface.fit(model::MLJFluxModel,
                                X,
                                y)
 
-    data = collate(model, X, y)
+    move = Mover(model.acceleration)
 
     rng = true_rng(model)
-
     shape = MLJFlux.shape(model, X, y)
-    chain = build(model, rng, shape)
+    chain = build(model, rng, shape) |> move
+    penalized_loss = PenalizedLoss(model, chain)
+
+    data = collate(model, move(X), move(y))
 
     optimiser = deepcopy(model.optimiser)
 
-    chain, history = fit!(chain,
+    chain, history = fit!(penalized_loss,
+                          chain,
                           optimiser,
-                          model.loss,
                           model.epochs,
-                          model.lambda,
-                          model.alpha,
                           verbosity,
-                          model.acceleration,
-                          data[1],
+                           data[1],
                           data[2])
 
     # `optimiser` is now mutated
 
-    cache = (deepcopy(model), data, history, shape, optimiser, deepcopy(rng))
-    fitresult = MLJFlux.fitresult(model, chain, y)
+    cache = (deepcopy(model),
+             data,
+             history,
+             shape,
+             optimiser,
+             deepcopy(rng))
+    fitresult = MLJFlux.fitresult(model, Flux.cpu(chain), y)
 
     report = (training_losses=history, )
 
@@ -98,10 +102,13 @@ function MLJModelInterface.update(model::MLJFluxModel,
         epochs = model.epochs - old_model.epochs
     else
         rng = true_rng(model)
-        chain = build(model, rng, shape)
-        data = collate(model, X, y)
+        move = Mover(model.acceleration)
+        chain = build(model, rng, shape) |> move
+        data = collate(model, move(X), move(y))
         epochs = model.epochs
     end
+
+    penalized_loss = PenalizedLoss(model, chain)
 
     # we only get to keep the optimiser "state" carried over from
     # previous training if we're doing a warm restart and the user has not
@@ -112,14 +119,11 @@ function MLJModelInterface.update(model::MLJFluxModel,
         optimiser = deepcopy(model.optimiser)
     end
 
-    chain, history = fit!(chain,
+    chain, history = fit!(penalized_loss,
+                          chain,
                           optimiser,
-                          model.loss,
                           epochs,
-                          model.lambda,
-                          model.alpha,
                           verbosity,
-                          model.acceleration,
                           data[1],
                           data[2])
     if keep_chain
@@ -127,7 +131,7 @@ function MLJModelInterface.update(model::MLJFluxModel,
         history = vcat(old_history[1:end-1], history)
     end
 
-    fitresult = MLJFlux.fitresult(model, chain, y)
+    fitresult = MLJFlux.fitresult(model, Flux.cpu(chain), y)
     cache = (deepcopy(model), data, history, shape, optimiser, deepcopy(rng))
     report = (training_losses=history, )
 

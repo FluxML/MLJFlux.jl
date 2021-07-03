@@ -112,49 +112,32 @@ losses - one intial loss, and one loss per epoch. The method may
 mutate the argument `chain`, depending on cpu <-> gpu movements.
 
 """
-function  fit!(chain, optimiser, loss, epochs,
-               lambda, alpha, verbosity, acceleration, X, y)
+function  fit!(penalized_loss, chain, optimiser, epochs, verbosity, X, y)
 
     # intitialize and start progress meter:
     meter = Progress(epochs+1, dt=0, desc="Optimising neural net:",
                      barglyphs=BarGlyphs("[=> ]"), barlen=25, color=:yellow)
     verbosity != 1 || next!(meter)
 
-    move = Mover(acceleration)
-    X = move(X)
-    y = move(y)
-    chain = move(chain)
-
-    loss_func(x, y) = loss(chain(x), y)
-
     # initiate history:
     n_batches = length(y)
 
-    training_loss = mean(loss_func(X[i], y[i]) for i in 1:n_batches)
+    training_loss = mean(penalized_loss(X[i], y[i]) for i in 1:n_batches)
     history = [training_loss,]
 
     for i in 1:epochs
-        # We're taking data in a Flux-fashion.
-#        @show i rand()
-        current_loss = train!(loss_func, Flux.params(chain), optimiser, X, y)
+        current_loss = train!(penalized_loss,
+                              Flux.params(chain),
+                              optimiser,
+                              X,
+                              y)
         verbosity < 2 ||
             @info "Loss is $(round(current_loss; sigdigits=4))"
-        push!(history, current_loss)
-
-        # Early stopping is to be externally controlled.
-        # So @ablaom has commented next 5 lines :
-        # if current_loss == prev_loss
-        #     @info "Model has reached maximum possible accuracy."*
-        #     "More training won't increase accuracy"
-        #     break
-        # end
-
-        prev_loss = current_loss
         verbosity != 1 || next!(meter)
-
+        push!(history, current_loss)
     end
 
-    return Flux.cpu(chain), history
+    return chain, history
 
 end
 

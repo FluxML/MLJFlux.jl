@@ -90,6 +90,8 @@ chain_yes_drop = Flux.Chain(Flux.Dense(5, 15),
                             Flux.Dense(15, 8),
                             Flux.Dense(8, 1))
 
+model = MLJFlux.NeuralNetworkRegressor() # any model will do here
+
 chain_no_drop = deepcopy(chain_yes_drop)
 chain_no_drop.layers[2].p = 1.0
 
@@ -105,35 +107,29 @@ epochs = 10
     move = MLJFlux.Mover(accel)
 
     Random.seed!(123)
-
-    _chain_yes_drop, history = MLJFlux.fit!(chain_yes_drop,
+    penalized_loss = MLJFlux.PenalizedLoss(model, chain_yes_drop)
+    _chain_yes_drop, history = MLJFlux.fit!(penalized_loss,
+                                            chain_yes_drop,
                                             Flux.Optimise.ADAM(0.001),
-                                            Flux.mse,
                                             epochs,
                                             0,
-                                            0,
-                                            0,
-                                            accel,
                                             data[1],
                                             data[2])
-
     println()
 
     Random.seed!(123)
-
-    _chain_no_drop, history = MLJFlux.fit!(chain_no_drop,
-                                           Flux.Optimise.ADAM(0.001),
-                                           Flux.mse,
-                                           epochs,
-                                           0,
-                                           0,
-                                           0,
-                                           accel,
-                                           data[1],
-                                           data[2])
+    penalized_loss = MLJFlux.PenalizedLoss(model, chain_no_drop)
+    _chain_no_drop, history = MLJFlux.fit!(penalized_loss,
+                                            chain_no_drop,
+                                            Flux.Optimise.ADAM(0.001),
+                                            epochs,
+                                            0,
+                                            data[1],
+                                            data[2])
 
     # check chains have different behaviour after training:
-    @test !(_chain_yes_drop(test_input) ≈ _chain_no_drop(test_input))
+    @test !(_chain_yes_drop(test_input) ≈
+            _chain_no_drop(test_input))
 
     # check chain with dropout is deterministic outside of training
     # (if we do not differentiate):
@@ -143,5 +139,3 @@ epochs = 10
     @test length(history) == epochs + 1
 
 end
-
-

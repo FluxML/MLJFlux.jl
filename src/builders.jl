@@ -61,3 +61,24 @@ function build(builder::Short, rng, n, m)
         Flux.Dropout(builder.dropout),
         Flux.Dense(n_hidden, m, init=init))
 end
+
+"""
+    @build neural_net
+
+Creates a builder for `neural_net`.
+
+# Examples
+```jldoctest
+julia> nn = NeuralNetworkRegressor(builder = @build(Chain(Dense(784, 64, relu),
+                                                          Dense(64, 32, relu),
+                                                          Dense(32, 10))));
+```
+"""
+macro build(nn)
+    name = gensym()
+    quote
+        struct $name <: MLJFlux.Builder end
+        MLJFlux.build(::$name, ::Any, ::Any, ::Any) = $nn
+        $name()
+    end
+end

@@ -43,7 +43,7 @@ end
 true_rng(model) = model.rng isa Integer ? MersenneTwister(model.rng) : model.rng
 
 function MLJModelInterface.fit(model::MLJFluxModel,
-                               verbosity::Int,
+                               verbosity,
                                X,
                                y)
 
@@ -73,7 +73,8 @@ function MLJModelInterface.fit(model::MLJFluxModel,
              history,
              shape,
              optimiser,
-             deepcopy(rng))
+             deepcopy(rng),
+             move)
     fitresult = MLJFlux.fitresult(model, Flux.cpu(chain), y)
 
     report = (training_losses=history, )
@@ -82,13 +83,13 @@ function MLJModelInterface.fit(model::MLJFluxModel,
 end
 
 function MLJModelInterface.update(model::MLJFluxModel,
-                                  verbosity::Int,
+                                  verbosity,
                                   old_fitresult,
                                   old_cache,
                                   X,
                                   y)
 
-    old_model, data, old_history, shape, optimiser, rng = old_cache
+    old_model, data, old_history, shape, optimiser, rng, move = old_cache
     old_chain = old_fitresult[1]
 
     optimiser_flag = model.optimiser_changes_trigger_retraining &&
@@ -98,11 +99,11 @@ function MLJModelInterface.update(model::MLJFluxModel,
         MLJModelInterface.is_same_except(model, old_model, :optimiser, :epochs)
 
     if keep_chain
-        chain = old_chain
+        chain = move(old_chain)
         epochs = model.epochs - old_model.epochs
     else
-        rng = true_rng(model)
         move = Mover(model.acceleration)
+        rng = true_rng(model)
         chain = build(model, rng, shape) |> move
         data = move.(collate(model, X, y))
         epochs = model.epochs

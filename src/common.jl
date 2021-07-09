@@ -54,7 +54,7 @@ function MLJModelInterface.fit(model::MLJFluxModel,
     chain = build(model, rng, shape) |> move
     penalized_loss = PenalizedLoss(model, chain)
 
-    data = collate(model, move(X), move(y))
+    data = move.(collate(model, X, y))
 
     optimiser = deepcopy(model.optimiser)
 
@@ -104,7 +104,7 @@ function MLJModelInterface.update(model::MLJFluxModel,
         rng = true_rng(model)
         move = Mover(model.acceleration)
         chain = build(model, rng, shape) |> move
-        data = collate(model, move(X), move(y))
+        data = move.(collate(model, X, y))
         epochs = model.epochs
     end
 

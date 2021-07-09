@@ -133,7 +133,13 @@ function MLJModelInterface.update(model::MLJFluxModel,
     end
 
     fitresult = MLJFlux.fitresult(model, Flux.cpu(chain), y)
-    cache = (deepcopy(model), data, history, shape, optimiser, deepcopy(rng))
+    cache = (deepcopy(model),
+             data,
+             history,
+             shape,
+             optimiser,
+             deepcopy(rng),
+             move)
     report = (training_losses=history, )
 
     return fitresult, cache, report

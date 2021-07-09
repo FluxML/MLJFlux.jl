@@ -65,20 +65,30 @@ end
 """
     @build neural_net
 
-Creates a builder for `neural_net`.
+Creates a builder for `neural_net`. The variables `n_in`, `n_out` and `n_channels`
+can be used to create builders for arbitrary input and output sizes and number
+of input channels.
 
 # Examples
 ```jldoctest
-julia> nn = NeuralNetworkRegressor(builder = @build(Chain(Dense(784, 64, relu),
+julia> nn = NeuralNetworkRegressor(builder = @build(Chain(Dense(n_in, 64, relu),
                                                           Dense(64, 32, relu),
-                                                          Dense(32, 10))));
+                                                          Dense(32, n_out))));
+
+julia> conv_builder = @build begin
+           front = Chain(Conv((3, 3), n_channels => 16), flatten)
+           d = Flux.outputsize(front, (n_in..., n_channels, 1)) |> first
+           Chain(front, Dense(d, n_out));
+       end
+
+julia> conv_nn = NeuralNetworkRegressor(builder = conv_builder);
 ```
 """
 macro build(nn)
     name = gensym()
-    quote
+    esc(quote
         struct $name <: MLJFlux.Builder end
-        MLJFlux.build(::$name, ::Any, ::Any, ::Any) = $nn
+        MLJFlux.build(::$name, ::Any, n_in, n_out, n_channels = 1) = $nn
         $name()
-    end
+    end)
 end

@@ -5,7 +5,7 @@
 """ Penalizer(λ, α)
 
 Returns a callable object `penalizer` for evaluating regularization
-penalties associated with some numerically array. Specifically,
+penalties associated with some numerical array. Specifically,
 `penalizer(A)` returns
 
    λ*(α*L1 + (1 - α)*L2),

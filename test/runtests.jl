@@ -72,3 +72,6 @@ end
     include("image.jl")
 end
 
+@testset "integration" begin
+    include("integration.jl")
+end

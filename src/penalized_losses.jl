@@ -46,17 +46,18 @@ where `loss = model.loss`, `α = model.alpha`, `λ = model.lambda`.
 See also [`Penalizer`](@ref)
 
 """
-struct PenalizedLoss
+struct PenalizedLoss{P}
     loss
-    penalizer
+    penalizer::P
     chain
     params
     function PenalizedLoss(model, chain)
         loss = model.loss
         penalizer = Penalizer(model.lambda, model.alpha)
         params = Flux.params(chain)
-        return new(loss, penalizer, chain, params)
+        return new{typeof(penalizer)}(loss, penalizer, chain, params)
     end
 end
+(p::PenalizedLoss{Penalizer{Nothing}})(x, y) = p.loss(p.chain(x), y)
 (p::PenalizedLoss)(x, y) = p.loss(p.chain(x), y) +
     sum(p.penalizer(θ) for θ in p.params)

@@ -5,7 +5,7 @@ y, X = unpack(table, ==(:target), _->true, rng=rng)
 
 @testset_accelerated "regularization has an effect" accel begin
 
-    model = NeuralNetworkClassifier(acceleration=accel,
+    model = MLJFlux.NeuralNetworkClassifier(acceleration=accel,
                                     builder=MLJFlux.Linear(),
                                     rng=rng)
     model2 = deepcopy(model)

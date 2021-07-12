@@ -275,8 +275,8 @@ MLJ provides two simple builders out of the box. In all cases weights
 
 See Table 1 above to see how `n_in` and `n_out` relate to the data.
 
-Alternatively, `MLJFlux.@build(neural_net)` automatically creates a builder
-for any valid `neural_net`, e.g. `MLJFlux.@build(Dense(100, 2, tanh))`.
+Alternatively, `MLJFlux.@builder(neural_net)` automatically creates a builder
+for any valid `neural_net`, e.g. `MLJFlux.@builder(Dense(n_in, n_out, tanh))`.
 
 
 ### Model hyperparameters.
@@ -381,7 +381,7 @@ following conditions:
 - The object returned by `chain(x)` must be an `AbstractFloat` vector
   of length `n_out`.
 
-See also `MLJFlux.@build` for an automated way to create new builders.
+See also `MLJFlux.@builder` for an automated way to create generic builders.
 
 ### Loss functions
 

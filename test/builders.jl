@@ -50,3 +50,29 @@ end
     x = rand(5)
     @test chain(x) ≈ chain2(x)
 end
+
+@testset_accelerated "@builder" accel begin
+    builder = MLJFlux.@builder(Flux.Chain(Flux.Dense(n_in, 4,
+                                                     init = (out, in) -> randn(rng, out, in)),
+                                     Flux.Dense(4, n_out)))
+    rng = StableRNGs.StableRNG(123)
+    chain = MLJFlux.build(builder, rng, 5, 3)
+    ps = Flux.params(chain)
+    @test size.(ps) == [(4, 5), (4,), (3, 4), (3,)]
+
+    chain2 = MLJFlux.build(builder, StableRNGs.StableRNG(1), 5, 3)
+    @test chain.layers[1].weight != chain2.layers[1].weight
+
+    chain3 = MLJFlux.build(builder, rng, 5, 3)
+    @test chain.layers[1].weight != chain3.layers[1].weight
+
+    conv_builder = MLJFlux.@builder begin
+        front = Flux.Chain(Flux.Conv((3, 3), n_channels => 16), Flux.flatten)
+        d = Flux.outputsize(front, (n_in..., n_channels, 1)) |> first
+        Flux.Chain(front, Flux.Dense(d, n_out));
+    end
+
+    chain4 = MLJFlux.build(conv_builder, nothing, (5, 5), 3, 2)
+    ps4 = Flux.params(chain4)
+    @test size.(ps4) == [(3, 3, 2, 16), (16,), (3, 144), (3,)]
+end

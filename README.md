@@ -275,8 +275,14 @@ MLJ provides two simple builders out of the box. In all cases weights
 
 See Table 1 above to see how `n_in` and `n_out` relate to the data.
 
-Alternatively, `MLJFlux.@builder(neural_net)` automatically creates a builder
-for any valid `neural_net`, e.g. `MLJFlux.@builder(Dense(n_in, n_out, tanh))`.
+Alternatively, use `MLJFlux.@builder(neural_net)` to automatically create a builder for
+any valid Flux chain expression `neural_net`, where the symbols `n_in`, `n_out`,
+`n_channels` and `rng` can appear literally, with the interpretations explained above. For
+example,
+
+```
+builder = MLJFlux.@builder Chain(Dense(n_in, 128), Dense(128, n_out, tanh))
+```
 
 
 ### Model hyperparameters.

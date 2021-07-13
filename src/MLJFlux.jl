@@ -14,6 +14,7 @@ using ColorTypes
 using ComputationalResources
 using Random
 
+include("penalized_losses.jl")
 include("core.jl")
 include("builders.jl")
 include("types.jl")

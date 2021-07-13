@@ -28,8 +28,8 @@ function (p::Penalizer)(A)
     λ = p.lambda
     α = p.alpha
     # avoiding broadcasting; see Note (1) above
-    L2 = sum(x^2 for x in A)
-    L1 = sum(abs(x) for x in A)
+    L2 = sum(abs2, A)
+    L1 = sum(abs,  A)
     return  λ*(α*L1 + (1 - α)*L2)
 end
 

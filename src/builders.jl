@@ -61,3 +61,39 @@ function build(builder::Short, rng, n, m)
         Flux.Dropout(builder.dropout),
         Flux.Dense(n_hidden, m, init=init))
 end
+
+struct GenericBuilder{F} <: Builder
+    apply::F
+end
+
+"""
+    @builder neural_net
+
+Creates a builder for `neural_net`. The variables `rng`, `n_in`, `n_out` and
+`n_channels` can be used to create builders for any random number generator `rng`,
+input and output sizes `n_in` and `n_out` and number of input channels `n_channels`.
+
+# Examples
+```jldoctest
+julia> import MLJFlux: @builder;
+
+julia> nn = NeuralNetworkRegressor(builder = @builder(Chain(Dense(n_in, 64, relu),
+                                                            Dense(64, 32, relu),
+                                                            Dense(32, n_out))));
+
+julia> conv_builder = @builder begin
+           front = Chain(Conv((3, 3), n_channels => 16), Flux.flatten)
+           d = Flux.outputsize(front, (n_in..., n_channels, 1)) |> first
+           Chain(front, Dense(d, n_out));
+       end
+
+julia> conv_nn = NeuralNetworkRegressor(builder = conv_builder);
+```
+"""
+macro builder(ex)
+    esc(quote
+        MLJFlux.GenericBuilder((rng, n_in, n_out, n_channels) -> $ex)
+    end)
+end
+
+build(b::GenericBuilder, rng, n_in, n_out, n_channels = 1) = b.apply(rng, n_in, n_out, n_channels)

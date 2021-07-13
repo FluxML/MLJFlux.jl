@@ -1,5 +1,5 @@
 ```@meta
-EditURL = "<unknown>/../../MLJFlux/examples/mnist/mnist.jl"
+EditURL = "<unknown>/../MLJFlux/examples/mnist/mnist.jl"
 ```
 
 # Using MLJ to classifiy the MNIST image dataset
@@ -61,7 +61,7 @@ Looks good.
 
 For general instructions on coercing image data, see [Type coercion
 for image
-data](https://alan-turing-institute.github.io/MLJScientificTypes.jl/dev/#Type-coercion-for-image-data-1)
+data](https://alan-turing-institute.github.io/ScientificTypes.jl/dev/#Type-coercion-for-image-data-1)
 
 ```@example mnist
 images[1]
@@ -226,7 +226,7 @@ To store the traces:
 losses = []
 training_losses = []
 parameter_means = Float32[];
-nothing #hide
+epochs = []
 ```
 
 To update the traces:
@@ -235,7 +235,7 @@ To update the traces:
 update_loss(loss) = push!(losses, loss)
 update_training_loss(losses) = push!(training_losses, losses[end])
 update_means(mach) = append!(parameter_means, mean.(parameters(mach)));
-nothing #hide
+update_epochs(epoch) = push!(epochs, epoch)
 ```
 
 The controls to apply:
@@ -252,7 +252,8 @@ controls=[Step(2),
           WithLossDo(),
           WithLossDo(update_loss),
           WithTrainingLossesDo(update_training_loss),
-          Callback(update_means)
+          Callback(update_means),
+          WithIterationsDo(update_epochs)
 ];
 nothing #hide
 ```
@@ -283,11 +284,11 @@ nothing #hide
 ### Comparison of the training and out-of-sample losses:
 
 ```@example mnist
-plot(losses,
+plot(epochs, losses,
      xlab = "epoch",
      ylab = "root squared error",
      label="out-of-sample")
-plot!(training_losses, label="training")
+plot!(epochs, training_losses, label="training")
 
 savefig(joinpath(DIR, "loss.png"))
 ```
@@ -298,7 +299,7 @@ savefig(joinpath(DIR, "loss.png"))
 n_epochs =  length(losses)
 n_parameters = div(length(parameter_means), n_epochs)
 parameter_means2 = reshape(copy(parameter_means), n_parameters, n_epochs)'
-plot(parameter_means2,
+plot(epochs, parameter_means2,
      title="Flux parameter mean weights",
      xlab = "epoch")
 ```
@@ -325,11 +326,11 @@ ignored) will allow you to restart training from where it left off.
 iterated_clf.controls[2] = Patience(4)
 fit!(mach, rows=1:500)
 
-plot(losses,
+plot(epochs, losses,
      xlab = "epoch",
      ylab = "root squared error",
      label="out-of-sample")
-plot!(training_losses, label="training")
+plot!(epochs, training_losses, label="training")
 ```
 
 ---

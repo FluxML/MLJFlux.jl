@@ -219,15 +219,11 @@ tomat(y::Vector) = reshape(y, size(y, 1), 1)
 # ------------------------------------------------------------
 # Reformatting vectors of "scalar" types
 
-reformat(y, ::Type{<:AbstractVector{<:Continuous}}) = reshape(y, 1, length(y))
+reformat(y, ::Type{<:AbstractVector{<:Union{Continuous,Count}}}) =
+    reshape(y, 1, length(y))
 function reformat(y, ::Type{<:AbstractVector{<:Finite}})
     levels = y |> first |> MLJModelInterface.classes
-    return hcat([Flux.onehot(ele, levels) for ele in y]...,)
-end
-
-function reformat(y, ::Type{<:AbstractVector{<:Count}})
-    levels = y |> first |> MLJModelInterface.classes
-    return hcat([Flux.onehot(ele, levels) for ele in y]...,)
+    return Flux.onehotbatch(y, levels)
 end
 
 _get(Xmatrix::AbstractMatrix, b) = Xmatrix[:, b]

@@ -35,6 +35,10 @@ class of Flux models that can used, at least in the medium term. For
 example, online learning, re-enforcement learning, and adversarial
 networks are currently out of scope.
 
+Currently MLJFlux is also limited to training models in the case that all
+training data fits into memory.
+
+
 ### Basic idea
 
 Each MLJFlux model has a *builder* hyperparameter, an object encoding

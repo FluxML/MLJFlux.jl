@@ -63,7 +63,7 @@ function build(builder::Short, rng, n, m)
 end
 
 """
-    MLP(; hidden=(10,), σ=Flux.relu, rng=GLOBAL_RNG)
+    MLP(; hidden=(100,), σ=Flux.relu, rng=GLOBAL_RNG)
 
 MLJFlux builder that constructs a Multi-layer perceptron network. The ith element of `hidden` represents the number of neurons in the ith hidden layer. An activation function `σ` is applied between each layer.
 

@@ -76,14 +76,16 @@ mutable struct MLP{N} <: MLJFlux.Builder
     hidden::NTuple{N, Int}  # count first and last layer
     σ
 end
-MLP(; hidden=(10,), σ=Flux.relu) = MLP(hidden, σ)
+MLP(; hidden=(100,), σ=Flux.relu) = MLP(hidden, σ)
 function MLJFlux.build(mlp::MLP, rng, n_in, n_out)
     init=Flux.glorot_uniform(rng)
+
     hidden = [Flux.Dense(n_in, mlp.hidden[1], mlp.σ, init=init)]
     for i ∈ 2:length(mlp.hidden)
         push!(hidden, Flux.Dense(mlp.hidden[i-1], mlp.hidden[i], mlp.σ, init=init))
     end
     push!(hidden, Flux.Dense(mlp.hidden[end], n_out, init=init))
+
     return Flux.Chain(hidden... )
 end
 

@@ -261,23 +261,14 @@ GPU (i.e., `acceleration isa CUDALibs`) one must additionally call
 
 ### Built-in builders
 
-MLJ provides two simple builders out of the box. In all cases weights
-  are intitialized using `glorot_uniform(rng)` where `rng` is the RNG
-  (or `MersenneTwister` seed) specified by the MLJFlux model.
+The following builders are provided out-of-the-box. Query their
+doc-strings for advanced options and further details.
 
-- `MLJFlux.Linear(σ=...)` builds a fully connected two layer network
-  with `n_in` inputs and `n_out` outputs, with activation function
-  `σ`, defaulting to a `MLJFlux.relu`.
-
-- `MLJFlux.Short(n_hidden=..., dropout=..., σ=...)` builds a
-  full-connected three-layer network with `n_in` inputs and `n_out`
-  outputs using `n_hidden` nodes in the hidden layer and the specified
-  `dropout` (defaulting to 0.5). An activation function `σ` is applied
-  between the hidden and final layers. If `n_hidden=0` (the default)
-  then `n_hidden` is the geometric mean of the number of input and
-  output nodes.
-
-See Table 1 above to see how `n_in` and `n_out` relate to the data.
+|builder                   | description                                          |
+|:-------------------------|:-----------------------------------------------------|
+| `MLJFlux.Linear(σ=relu)` | vanilla linear network with activation function `σ` |
+| `MLJFlux.Short(n_hidden=0, dropout=0.5, σ=sigmoid)` | fully connected network with one hidden layer and dropout|
+| `MLJFlux.MLP(hidden=(10,))`  | general multi-layer perceptron |
 
 
 ### Model hyperparameters.

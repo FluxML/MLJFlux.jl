@@ -35,6 +35,10 @@ class of Flux models that can used, at least in the medium term. For
 example, online learning, re-enforcement learning, and adversarial
 networks are currently out of scope.
 
+Currently MLJFlux is also limited to training models in the case that all
+training data fits into memory.
+
+
 ### Basic idea
 
 Each MLJFlux model has a *builder* hyperparameter, an object encoding
@@ -168,7 +172,7 @@ Flux "models" used in MLJFLux are `Flux.Chain` objects, we call them
 MLJFlux provides four model types, for use with input features `X` and
 targets `y` of the [scientific
 type](https://alan-turing-institute.github.io/MLJScientificTypes.jl/dev/)
-indicated in the table below. The parameters `n_in` and `n_out`
+indicated in the table below. The parameters `n_in`, `n_out` and `n_channels`
 refer to information passed to the builder, as described under
 [Defining a new builder](defining-a-new-builder) below.
 
@@ -257,32 +261,14 @@ GPU (i.e., `acceleration isa CUDALibs`) one must additionally call
 
 ### Built-in builders
 
-MLJ provides two simple builders out of the box. In all cases weights
-  are intitialized using `glorot_uniform(rng)` where `rng` is the RNG
-  (or `MersenneTwister` seed) specified by the MLJFlux model.
+The following builders are provided out-of-the-box. Query their
+doc-strings for advanced options and further details.
 
-- `MLJFlux.Linear(σ=...)` builds a fully connected two layer network
-  with `n_in` inputs and `n_out` outputs, with activation function
-  `σ`, defaulting to a `MLJFlux.relu`.
-
-- `MLJFlux.Short(n_hidden=..., dropout=..., σ=...)` builds a
-  full-connected three-layer network with `n_in` inputs and `n_out`
-  outputs using `n_hidden` nodes in the hidden layer and the specified
-  `dropout` (defaulting to 0.5). An activation function `σ` is applied
-  between the hidden and final layers. If `n_hidden=0` (the default)
-  then `n_hidden` is the geometric mean of the number of input and
-  output nodes.
-
-See Table 1 above to see how `n_in` and `n_out` relate to the data.
-
-Alternatively, use `MLJFlux.@builder(neural_net)` to automatically create a builder for
-any valid Flux chain expression `neural_net`, where the symbols `n_in`, `n_out`,
-`n_channels` and `rng` can appear literally, with the interpretations explained above. For
-example,
-
-```
-builder = MLJFlux.@builder Chain(Dense(n_in, 128), Dense(128, n_out, tanh))
-```
+|builder                   | description                                          |
+|:-------------------------|:-----------------------------------------------------|
+| `MLJFlux.Linear(σ=relu)` | vanilla linear network with activation function `σ` |
+| `MLJFlux.Short(n_hidden=0, dropout=0.5, σ=sigmoid)` | fully connected network with one hidden layer and dropout|
+| `MLJFlux.MLP(hidden=(10,))`  | general multi-layer perceptron |
 
 
 ### Model hyperparameters.
@@ -387,7 +373,14 @@ following conditions:
 - The object returned by `chain(x)` must be an `AbstractFloat` vector
   of length `n_out`.
 
-See also `MLJFlux.@builder` for an automated way to create generic builders.
+Alternatively, use `MLJFlux.@builder(neural_net)` to automatically create a builder for
+any valid Flux chain expression `neural_net`, where the symbols `n_in`, `n_out`,
+`n_channels` and `rng` can appear literally, with the interpretations explained above. For
+example,
+
+```
+builder = MLJFlux.@builder Chain(Dense(n_in, 128), Dense(128, n_out, tanh))
+```
 
 ### Loss functions
 

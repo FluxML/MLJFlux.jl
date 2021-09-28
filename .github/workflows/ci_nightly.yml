@@ -2,11 +2,9 @@ name: CI (Julia nightly)
 on:
   pull_request:
     branches:
-      - master
       - dev
   push:
     branches:
-      - master
       - dev
     tags: '*'
 jobs:

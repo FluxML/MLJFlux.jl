@@ -10,7 +10,6 @@ steps:
       queue: "juliagpu"
       cuda: "*"
     timeout_in_minutes: 60
-    if: build.pull_request.base_branch == "master" || build.pull_request.base_branch == null
 
 env:
   JULIA_PKG_SERVER: "" # it often struggles with our large artifacts

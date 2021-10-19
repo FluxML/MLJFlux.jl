@@ -2,7 +2,7 @@
 
 An interface to the Flux deep learning models for the
 [MLJ](https://github.com/alan-turing-institute/MLJ.jl) machine
-learning framework
+learning framework.
 
 | Branch   | Julia | CPU CI | GPU CI | Coverage |
 | -------- | ----- | ------ | -----  | -------- |
@@ -23,7 +23,7 @@ learning framework
 
 MLJFlux makes it possible to apply the machine learning
 meta-algorithms provided by MLJ - such as out-of-sample performance
-evaluation and hyper-parameter optimization - to some classes of
+evaluation, hyper-parameter optimization, and iteration control - to some classes of
 **supervised deep learning models**. It does this by providing an
 interface to the [Flux](https://fluxml.ai/Flux.jl/stable/)
 framework.

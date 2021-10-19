@@ -4,7 +4,7 @@ N = 200
 X = MLJBase.table(randn(Float32, N, 5));
 
 # TODO: replace Short2 -> Short when
-# https://github.com/FluxML/Flux.jl/issues/1372 is resolved:
+# https://github.com/FluxML/Flux.jl/pull/1618 is resolved:
 builder = Short2(σ=identity)
 optimiser = Flux.Optimise.ADAM()
 
@@ -26,7 +26,7 @@ train, test = MLJBase.partition(1:N, 0.7)
               0.7,
               accel)
 
-    # test a bit better than constant predictor
+    # test model is a bit better than constant predictor:
     model = MLJFlux.NeuralNetworkRegressor(builder=builder,
                                            acceleration=accel)
     @time fitresult, _, rpt =
@@ -70,7 +70,7 @@ losses = []
               1.0,
               accel)
 
-    # test a bit better than constant predictor
+    # test model is a bit better than constant predictor
     model = MLJFlux.MultitargetNeuralNetworkRegressor(acceleration=accel,
                                                       builder=builder)
     @time fitresult, _, rpt =
@@ -79,8 +79,8 @@ losses = []
     push!(losses, first_last_training_loss[2])
 #   @show first_last_training_loss
     yhat = predict(model, fitresult, selectrows(X, test))
-    truth = ymatrix[test]
-    goal = 0.9*model.loss(truth .- mean(truth), 0)
+    truth = ymatrix[test,:]
+    goal = 0.8*model.loss(truth .- mean(truth), 0)
     @test model.loss(Tables.matrix(yhat), truth) < goal
 
     optimisertest(MLJFlux.MultitargetNeuralNetworkRegressor,

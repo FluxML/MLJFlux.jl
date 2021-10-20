@@ -37,22 +37,28 @@ end
 (::Mover{<:CUDALibs})(data) = Flux.gpu(data)
 
 """
-    train!(loss_func, parameters, optimiser, X, y)
+    train!(loss, penalty, chain, optimiser, X, y)
 
 A private method.
 
-Update the parameters of a Flux chain with parameters `parameters`,
-given a Flux-style "loss function" `loss(x, y)`. Here `x` and `y` are
-vectors of batches of the training data, as detailed in the
-[`MLJFlux.fit!`](@ref) document string.
+Update the parameters of a Flux `chain`, where:
+
+- `(yhat, y) -> loss(yhat, y)` is the loss function
+
+- `params -> penalty(params)` is a regularization penalty function
+
+- `X` and `y` are vectors of batches of the training data, as detailed
+  in the [`MLJFlux.fit!`](@ref) document string.
 
 """
-function train!(loss_func, parameters, optimiser, X, y)
+function train!(loss, penalty, chain, optimiser, X, y)
     n_batches = length(y)
     training_loss = zero(Float32)
     for i in 1:n_batches
+        parameters = Flux.params(chain)
         gs = Flux.gradient(parameters) do
-            batch_loss = loss_func(X[i], y[i])
+            yhat = chain(X[i])
+            batch_loss = loss(yhat, y[i]) + penalty(parameters)
             training_loss += batch_loss
             return batch_loss
         end
@@ -63,15 +69,15 @@ end
 
 
 """
-    fit!(penalized_loss, chain, optimiser, epochs, verbosity, X, y)
+    fit!(loss, penalty, chain, optimiser, epochs, verbosity, X, y)
 
 A private method.
 
-Optimize a Flux model `chain`, where `penalized_loss(xb, yb)` is the
-penalized loss associated with a batch of training input features `xb`
-and target observations `yb` (and generally depends on `chain`).
+Optimize a Flux model `chain`, where `(yhat, y) -> loss(yhat, y)` is
+the loss, and `parameters -> penalty(parameters)` is the
+regularization penalty function.
 
-Here `chain` is a `Flux.Chain` object, or other "Flux model" such that
+Here `chain` is a `Flux.Chain` object, or other Flux model such that
 `Flux.params(chain)` returns the parameters to be optimized.
 
 `X`, the vector of input batches and `y` the vector of target
@@ -89,11 +95,6 @@ batches. Specifically, it is expected that:
 - The vectors `X` and `y` have the same length, coinciding with the
   total number of training batches.
 
-The [`MLJFlux.PenalizedLoss`](@ref) constructor is available for
-defining an appropriate `penalized_loss` from an MLJFlux model and
-chain (the model specifies the unpenalized Flux loss, such as `mse`,
-and the regularization parameters).
-
 Both the `chain` and the data `(X, y)` must both live on a CPU or both
 live on a GPU. This `fit!` method takes no responsibility for data
 movement.
@@ -105,7 +106,7 @@ of `chain` and `history` is a vector of penalized losses - one initial
 loss, and one loss per epoch.
 
 """
-function  fit!(penalized_loss, chain, optimiser, epochs, verbosity, X, y)
+function  fit!(loss, penalty, chain, optimiser, epochs, verbosity, X, y)
 
     # intitialize and start progress meter:
     meter = Progress(epochs+1, dt=0, desc="Optimising neural net:",
@@ -115,15 +116,13 @@ function  fit!(penalized_loss, chain, optimiser, epochs, verbosity, X, y)
     # initiate history:
     n_batches = length(y)
 
-    training_loss = mean(penalized_loss(X[i], y[i]) for i in 1:n_batches)
-    history = [training_loss,]
+    parameters = Flux.params(chain)
+    losses = (loss(chain(X[i]), y[i]) +
+              penalty(parameters) for i in 1:n_batches)
+    history = [mean(losses),]
 
     for i in 1:epochs
-        current_loss = train!(penalized_loss,
-                              Flux.params(chain),
-                              optimiser,
-                              X,
-                              y)
+        current_loss = train!(loss, penalty, chain, optimiser, X, y)
         verbosity < 2 ||
             @info "Loss is $(round(current_loss; sigdigits=4))"
         verbosity != 1 || next!(meter)

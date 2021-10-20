@@ -58,5 +58,5 @@ struct Penalty{P}
         return new{typeof(penalizer)}(penalizer)
     end
 end
-(p::Penalty{Penalizer{Nothing}})(w) = 0
+(p::Penalty{Penalizer{Nothing}})(w) = zero(Float32)
 (p::Penalty)(w) = sum(p.penalizer(wt) for wt in w)

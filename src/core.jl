@@ -42,7 +42,7 @@ end
 A private method.
 
 Update the parameters of a Flux chain with parameters `parameters`,
-given a Flux-style "loss function" `loss(x, y)`. Here `X` and `y` are
+given a Flux-style "loss function" `loss(x, y)`. Here `x` and `y` are
 vectors of batches of the training data, as detailed in the
 [`MLJFlux.fit!`](@ref) document string.
 

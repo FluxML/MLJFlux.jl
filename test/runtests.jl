@@ -45,8 +45,8 @@ seed!(123)
 
 include("test_utils.jl")
 
-@testset "penalized_losses" begin
-    include("penalized_losses.jl")
+@testset "penalizers" begin
+    include("penalizers.jl")
 end
 
 @testset "core" begin
@@ -57,8 +57,8 @@ end
     include("builders.jl")
 end
 
-@testset "common" begin
-    include("common.jl")
+@testset "mlj_model_interface" begin
+    include("mlj_model_interface.jl")
 end
 
 @testset "regressor" begin

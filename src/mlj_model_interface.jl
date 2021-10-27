@@ -52,18 +52,18 @@ function MLJModelInterface.fit(model::MLJFluxModel,
     rng = true_rng(model)
     shape = MLJFlux.shape(model, X, y)
     chain = build(model, rng, shape) |> move
-    penalized_loss = PenalizedLoss(model, chain)
-
+    penalty = Penalty(model)
     data = move.(collate(model, X, y))
 
     optimiser = deepcopy(model.optimiser)
 
-    chain, history = fit!(penalized_loss,
+    chain, history = fit!(model.loss,
+                          penalty,
                           chain,
                           optimiser,
                           model.epochs,
                           verbosity,
-                           data[1],
+                          data[1],
                           data[2])
 
     # `optimiser` is now mutated
@@ -109,7 +109,7 @@ function MLJModelInterface.update(model::MLJFluxModel,
         epochs = model.epochs
     end
 
-    penalized_loss = PenalizedLoss(model, chain)
+    penalty = Penalty(model)
 
     # we only get to keep the optimiser "state" carried over from
     # previous training if we're doing a warm restart and the user has not
@@ -120,7 +120,8 @@ function MLJModelInterface.update(model::MLJFluxModel,
         optimiser = deepcopy(model.optimiser)
     end
 
-    chain, history = fit!(penalized_loss,
+    chain, history = fit!(model.loss,
+                          penalty,
                           chain,
                           optimiser,
                           epochs,

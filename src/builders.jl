@@ -9,7 +9,7 @@
 # input/output dimensions/shape.
 
 # Below n or (n1, n2) etc refers to network inputs, while m or (m1,
-# m2) etc refers to outputs.
+# m2) etc refers to outputs. 
 
 abstract type Builder <: MLJModelInterface.MLJType end
 

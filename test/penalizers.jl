@@ -1,6 +1,8 @@
 using Statistics
+import MLJFlux
+import Flux
 
-@testset  "penalties" begin
+@testset  "Penalizer" begin
     A = [-1 2; -3 4]
     lambda = 1
 
@@ -21,19 +23,13 @@ using Statistics
     @test penalty(A) == 0
 end
 
-@testset "penalized_losses" begin
-    # construct a penalized loss function:
+@testset "Penalty" begin
     model = MLJFlux.NeuralNetworkRegressor(lambda=1, alpha=1, loss=Flux.mae)
     chain = Flux.Dense(3, 1, identity)
-    p = MLJFlux.PenalizedLoss(model, chain)
-
-    # construct a batch:
-    b = 5
-    x = rand(Float32, 3, b)
-    y = rand(Float32, 1, b)
+    w = Flux.params(chain)
+    p = MLJFlux.Penalty(model)
 
     # compare loss by hand and with penalized loss function:
     penalty = (sum(abs.(chain.weight)) + abs(chain.bias[1]))
-    yhat = chain(x)
-    @test p(x, y) ≈ Flux.mae(yhat, y) + penalty
+    @test p(w) ≈ penalty
 end

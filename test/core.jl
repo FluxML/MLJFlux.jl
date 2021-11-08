@@ -107,8 +107,9 @@ epochs = 10
     move = MLJFlux.Mover(accel)
 
     Random.seed!(123)
-    penalized_loss = MLJFlux.PenalizedLoss(model, chain_yes_drop)
-    _chain_yes_drop, history = MLJFlux.fit!(penalized_loss,
+    penalty = MLJFlux.Penalty(model)
+    _chain_yes_drop, history = MLJFlux.fit!(model.loss,
+                                            penalty,
                                             chain_yes_drop,
                                             Flux.Optimise.ADAM(0.001),
                                             epochs,
@@ -118,14 +119,15 @@ epochs = 10
     println()
 
     Random.seed!(123)
-    penalized_loss = MLJFlux.PenalizedLoss(model, chain_no_drop)
-    _chain_no_drop, history = MLJFlux.fit!(penalized_loss,
-                                            chain_no_drop,
-                                            Flux.Optimise.ADAM(0.001),
-                                            epochs,
-                                            0,
-                                            data[1],
-                                            data[2])
+    penalty = MLJFlux.Penalty(model)
+    _chain_no_drop, history = MLJFlux.fit!(model.loss,
+                                           penalty,
+                                           chain_no_drop,
+                                           Flux.Optimise.ADAM(0.001),
+                                           epochs,
+                                           0,
+                                           data[1],
+                                           data[2])
 
     # check chains have different behaviour after training:
     @test !(_chain_yes_drop(test_input) ≈

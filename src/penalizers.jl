@@ -33,31 +33,30 @@ function (p::Penalizer)(A)
     return  λ*(α*L1 + (1 - α)*L2)
 end
 
+
+
 """
-    PenalizedLoss(model, chain)
+    Penalty(model)
 
-Returns a callable object `p`, for returning the penalized loss on
-some batch of data `(x, y)`. Specifically, `p(x, y)` returns
+Returns a callable object `p`, for returning the regularization
+penalty `p(w)` associated with some collection of parameters `w`. For
+example, `w = params(chain)` where `chain` is some Flux
+model. Here `model` is an MLJFlux model ("model" in the MLJ
+sense, not the Flux sense). Specifically, `p(w)` returns
 
-   loss(chain(x), y) + sum(Penalizer(λ, α).(params(chain)))
+   sum(Penalizer(λ, α).w)
 
-where `loss = model.loss`, `α = model.alpha`, `λ = model.lambda`.
+where `α = model.alpha`, `λ = model.lambda`.
 
 See also [`Penalizer`](@ref)
 
 """
-struct PenalizedLoss{P}
-    loss
+struct Penalty{P}
     penalizer::P
-    chain
-    params
-    function PenalizedLoss(model, chain)
-        loss = model.loss
+    function Penalty(model)
         penalizer = Penalizer(model.lambda, model.alpha)
-        params = Flux.params(chain)
-        return new{typeof(penalizer)}(loss, penalizer, chain, params)
+        return new{typeof(penalizer)}(penalizer)
     end
 end
-(p::PenalizedLoss{Penalizer{Nothing}})(x, y) = p.loss(p.chain(x), y)
-(p::PenalizedLoss)(x, y) = p.loss(p.chain(x), y) +
-    sum(p.penalizer(θ) for θ in p.params)
+(p::Penalty{Penalizer{Nothing}})(w) = zero(Float32)
+(p::Penalty)(w) = sum(p.penalizer(wt) for wt in w)

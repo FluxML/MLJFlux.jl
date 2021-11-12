@@ -9,22 +9,22 @@ const doc_regressor(model_name) = """
 
 Instantiate an MLJFlux model. Available hyperparameters:
 
-- `builder`: Default = `MLJFlux.Linear(σ=Flux.relu)` (regressors) or
+-  `builder`: Default = `MLJFlux.Linear(σ=Flux.relu)` (regressors) or
    `MLJFlux.Short(n_hidden=0, dropout=0.5, σ=Flux.σ)` (classifiers)
 
 -  `optimiser`: The optimiser to use for training. Default =
    `Flux.ADAM()`
 
-- `loss`: The loss function used for training. Default = `Flux.mse`
+-  `loss`: The loss function used for training. Default = `Flux.mse`
    (regressors) and `Flux.crossentropy` (classifiers)
 
-- `n_epochs`: Number of epochs to train for. Default = `10`
+-  `epochs`: Number of epochs to train for. Default = `10`
 
 -  `batch_size`: The batch_size for the data. Default = 1
 
 -  `lambda`: The regularization strength. Default = 0. Range = [0, ∞)
 
-- `alpha`: The L2/L1 mix of regularization. Default = 0. Range = [0, 1]
+-  `alpha`: The L2/L1 mix of regularization. Default = 0. Range = [0, 1]
 
 -  `rng`: The random number generator (RNG) passed to builders, for
    weight intitialization, for example. Can be any `AbstractRNG` or

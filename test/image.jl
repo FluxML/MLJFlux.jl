@@ -48,8 +48,11 @@ losses = []
     pred = MLJBase.predict(model, fitresult, images[1:6])
 
     # try with batch_size > 1:
-    model = MLJFlux.ImageClassifier(builder=builder, epochs=10, batch_size=2,
-                                    acceleration=accel)
+    model = MLJFlux.ImageClassifier(builder=builder,
+                                    epochs=10,
+                                    batch_size=2,
+                                    acceleration=accel,
+                                    rng=stable_rng)
     model.optimiser.eta = 0.005
     @time fitresult, cache, _report = MLJBase.fit(model, 0, images, labels);
     first_last_training_loss = _report[1][[1, end]]

@@ -47,11 +47,13 @@ losses = []
 
     # check flux model is an improvement on predicting constant
     # distribution:
+    stable_rng = StableRNGs.StableRNG(123)
     model = MLJFlux.NeuralNetworkClassifier(epochs=50,
                                             builder=builder,
                                             optimiser=optimiser,
                                             acceleration=accel,
-                                            batch_size=10)
+                                            batch_size=10,
+                                            rng=stable_rng)
     @time mach = fit!(machine(model, X, y), rows=train, verbosity=0)
     first_last_training_loss = MLJBase.report(mach)[1][[1, end]]
     push!(losses, first_last_training_loss[2])

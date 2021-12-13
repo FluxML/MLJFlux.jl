@@ -1,6 +1,7 @@
 ## BASIC IMAGE TESTS GREY
 
 Random.seed!(123)
+stable_rng = StableRNGs.StableRNG(123)
 
 mutable struct MyNeuralNetwork <: MLJFlux.Builder
     kernel1
@@ -14,12 +15,12 @@ function MLJFlux.build(model::MyNeuralNetwork, rng, ip, op, n_channels)
         Flux.Conv(model.kernel2, 2=>1, init=init),
         x->reshape(x, :, size(x)[end]),
         Flux.Dense(16, op, init=init))
-end 
+end
 
 builder = MyNeuralNetwork((2,2), (2,2))
 
 # collection of gray images as a 4D array in WHCN format:
-raw_images = rand(Float32, 6, 6, 1, 50);
+raw_images = rand(stable_rng, Float32, 6, 6, 1, 50);
 
 # as a vector of Matrix{<:AbstractRGB}
 images = coerce(raw_images, GrayImage);
@@ -30,10 +31,12 @@ losses = []
 @testset_accelerated "ImageClassifier basic tests" accel begin
 
     Random.seed!(123)
+    stable_rng = StableRNGs.StableRNG(123)
 
     model = MLJFlux.ImageClassifier(builder=builder,
                                     epochs=10,
-                                    acceleration=accel)
+                                    acceleration=accel,
+                                    rng=stable_rng)
 
     fitresult, cache, _report = MLJBase.fit(model, 0, images, labels)
 
@@ -47,6 +50,7 @@ losses = []
     # try with batch_size > 1:
     model = MLJFlux.ImageClassifier(builder=builder, epochs=10, batch_size=2,
                                     acceleration=accel)
+    model.optimiser.eta = 0.005
     @time fitresult, cache, _report = MLJBase.fit(model, 0, images, labels);
     first_last_training_loss = _report[1][[1, end]]
     push!(losses, first_last_training_loss[2])
@@ -100,10 +104,12 @@ losses = []
 @testset_accelerated "Image MNIST" accel begin
 
     Random.seed!(123)
+    stable_rng = StableRNGs.StableRNG(123)
 
     model = MLJFlux.ImageClassifier(builder=MyConvBuilder(),
                                     acceleration=accel,
-                                    batch_size=50)
+                                    batch_size=50,
+                                    rng=stable_rng)
 
     @time fitresult, cache, _report =
         MLJBase.fit(model, 0, images[1:500], labels[1:500]);

@@ -76,3 +76,11 @@ end
     ps4 = Flux.params(chain4)
     @test size.(ps4) == [(3, 3, 2, 16), (16,), (3, 144), (3,)]
 end
+
+@testset_accelerated "MLP" accel begin
+    builder = MLJFlux.MLP(hidden = (2, 2))
+    rng = StableRNGs.StableRNG(123)
+    nn = MLJFlux.build(builder, rng, 3, 3)
+    @test length(nn.layers) == 3
+    @test size(nn.layers[1].weight) == (2, 3)
+end

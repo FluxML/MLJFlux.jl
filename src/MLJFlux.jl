@@ -14,14 +14,14 @@ using ColorTypes
 using ComputationalResources
 using Random
 
-include("penalized_losses.jl")
+include("penalizers.jl")
 include("core.jl")
 include("builders.jl")
 include("types.jl")
 include("regressor.jl")
 include("classifier.jl")
 include("image.jl")
-include("common.jl")
+include("mlj_model_interface.jl")
 
 ### Package specific model traits:
 MLJModelInterface.metadata_pkg.((NeuralNetworkRegressor,

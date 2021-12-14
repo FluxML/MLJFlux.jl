@@ -1,4 +1,5 @@
 Random.seed!(123)
+stable_rng = StableRNGs.StableRNG(123)
 
 rowvec(y) = y
 rowvec(y::Vector) = reshape(y, 1, length(y))
@@ -6,7 +7,7 @@ rowvec(y::Vector) = reshape(y, 1, length(y))
 @test MLJFlux.MLJModelInterface.istransparent(Flux.ADAM(0.1))
 
 @testset "nrows" begin
-    Xmatrix = rand(10, 3)
+    Xmatrix = rand(stable_rng, 10, 3)
     X = MLJBase.table(Xmatrix)
     @test MLJFlux.nrows(X) == 10
     @test MLJFlux.nrows(Tables.columntable(X)) == 10
@@ -14,11 +15,11 @@ end
 
 @testset "collate" begin
     # NeuralNetworRegressor:
-    Xmatrix = broadcast(x->round(x, sigdigits=2), rand(10, 3))
+    Xmatrix = broadcast(x->round(x, sigdigits=2), rand(stable_rng, 10, 3))
     # convert to a column table:
     X = MLJBase.table(Xmatrix)
 
-    y = rand(10)
+    y = rand(stable_rng, 10)
     model = MLJFlux.NeuralNetworkRegressor()
     model.batch_size= 3
     @test MLJFlux.collate(model, X, y) ==
@@ -37,7 +38,7 @@ end
                             reshape([1; 0], (2,1))]))
 
     # MultitargetNeuralNetworRegressor:
-    ymatrix = rand(10, 2)
+    ymatrix = rand(stable_rng, 10, 2)
     y = MLJBase.table(ymatrix) # a rowaccess table
     model = MLJFlux.NeuralNetworkRegressor()
     model.batch_size= 3
@@ -53,7 +54,7 @@ end
                   ymatrix'[:,7:9], ymatrix'[:,10:10]]))
 
     # ImageClassifier
-    Xmatrix = coerce(rand(6, 6, 1, 10), GrayImage)
+    Xmatrix = coerce(rand(stable_rng, 6, 6, 1, 10), GrayImage)
     y = categorical(['a', 'b', 'a', 'a', 'b', 'a', 'a', 'a', 'b', 'a'])
     model = MLJFlux.ImageClassifier(batch_size=2)
 
@@ -68,7 +69,7 @@ end
 
 end
 
-Xmatrix = rand(100, 5)
+Xmatrix = rand(stable_rng, 100, 5)
 X = MLJBase.table(Xmatrix)
 y = Xmatrix[:, 1] + Xmatrix[:, 2] + Xmatrix[:, 3] +
     Xmatrix[:, 4] + Xmatrix[:, 5]
@@ -95,7 +96,7 @@ model = MLJFlux.NeuralNetworkRegressor() # any model will do here
 chain_no_drop = deepcopy(chain_yes_drop)
 chain_no_drop.layers[2].p = 1.0
 
-test_input = rand(Float32, 5, 1)
+test_input = rand(stable_rng, Float32, 5, 1)
 
 # check both chains have same behaviour before training:
 @test chain_yes_drop(test_input) == chain_no_drop(test_input)
@@ -107,8 +108,9 @@ epochs = 10
     move = MLJFlux.Mover(accel)
 
     Random.seed!(123)
-    penalized_loss = MLJFlux.PenalizedLoss(model, chain_yes_drop)
-    _chain_yes_drop, history = MLJFlux.fit!(penalized_loss,
+    penalty = MLJFlux.Penalty(model)
+    _chain_yes_drop, history = MLJFlux.fit!(model.loss,
+                                            penalty,
                                             chain_yes_drop,
                                             Flux.Optimise.ADAM(0.001),
                                             epochs,
@@ -118,14 +120,15 @@ epochs = 10
     println()
 
     Random.seed!(123)
-    penalized_loss = MLJFlux.PenalizedLoss(model, chain_no_drop)
-    _chain_no_drop, history = MLJFlux.fit!(penalized_loss,
-                                            chain_no_drop,
-                                            Flux.Optimise.ADAM(0.001),
-                                            epochs,
-                                            0,
-                                            data[1],
-                                            data[2])
+    penalty = MLJFlux.Penalty(model)
+    _chain_no_drop, history = MLJFlux.fit!(model.loss,
+                                           penalty,
+                                           chain_no_drop,
+                                           Flux.Optimise.ADAM(0.001),
+                                           epochs,
+                                           0,
+                                           data[1],
+                                           data[2])
 
     # check chains have different behaviour after training:
     @test !(_chain_yes_drop(test_input) ≈

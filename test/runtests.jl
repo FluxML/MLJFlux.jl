@@ -25,6 +25,7 @@ MLJFlux.gpu_isdead() && push!(EXCLUDED_RESOURCE_TYPES, CUDALibs)
     "Excluded tests marked as \"broken\"."
 
 # alternative version of Short builder with no dropout; see
+# https://github.com/FluxML/Flux.jl/issues/1372 and
 # https://github.com/FluxML/Flux.jl/issues/1372
 mutable struct Short2 <: MLJFlux.Builder
     n_hidden::Int     # if zero use geometric mean of input/output
@@ -44,8 +45,8 @@ seed!(123)
 
 include("test_utils.jl")
 
-@testset "penalized_losses" begin
-    include("penalized_losses.jl")
+@testset "penalizers" begin
+    include("penalizers.jl")
 end
 
 @testset "core" begin
@@ -56,8 +57,8 @@ end
     include("builders.jl")
 end
 
-@testset "common" begin
-    include("common.jl")
+@testset "mlj_model_interface" begin
+    include("mlj_model_interface.jl")
 end
 
 @testset "regressor" begin

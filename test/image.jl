@@ -25,7 +25,7 @@ raw_images = rand(stable_rng, Float32, 6, 6, 1, 50);
 # as a vector of Matrix{<:AbstractRGB}
 images = coerce(raw_images, GrayImage);
 @test scitype(images) == AbstractVector{GrayImage{6,6}}
-labels = categorical(rand(1:5, 50));
+labels = categorical(rand(stable_rng, 1:5, 50));
 
 losses = []
 @testset_accelerated "ImageClassifier basic tests" accel begin
@@ -129,6 +129,7 @@ end
 
 # check different resources (CPU1, CUDALibs, etc)) give about the same loss:
 reference = losses[1]
+@info "Losses for each computational resource: $losses"
 @test all(x->abs(x - reference)/reference < 0.05, losses[2:end])
 
 
@@ -137,7 +138,7 @@ reference = losses[1]
 builder = MyNeuralNetwork((2,2), (2,2))
 
 # collection of color images as a 4D array in WHCN format:
-raw_images = rand(Float32, 6, 6, 3, 50);
+raw_images = rand(stable_rng, Float32, 6, 6, 3, 50);
 
 images = coerce(raw_images, ColorImage);
 @test scitype(images) == AbstractVector{ColorImage{6,6}}
@@ -148,10 +149,12 @@ losses = []
 @testset_accelerated "ColorImages" accel begin
 
     Random.seed!(123)
+    stable_rng = StableRNGs.StableRNG(123)
 
     model = MLJFlux.ImageClassifier(builder=builder,
                                     epochs=10,
-                                    acceleration=accel)
+                                    acceleration=accel,
+                                    rng=stable_rng)
 
     # tests update logic, etc (see test_utililites.jl):
     @test basictest(MLJFlux.ImageClassifier, images, labels,
@@ -167,7 +170,8 @@ losses = []
     model = MLJFlux.ImageClassifier(builder=builder,
                                     epochs=10,
                                     batch_size=2,
-                                    acceleration=accel)
+                                    acceleration=accel,
+                                    rng=stable_rng)
     fitresult, cache, _report = MLJBase.fit(model, 0, images, labels);
 
     @test optimisertest(MLJFlux.ImageClassifier, images, labels,
@@ -177,6 +181,7 @@ end
 
 # check different resources (CPU1, CUDALibs, etc)) give about the same loss:
 reference = losses[1]
+@info "Losses for each computational resource: $losses"
 @test all(x->abs(x - reference)/reference < 1e-5, losses[2:end])
 
 true

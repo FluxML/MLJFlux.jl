@@ -57,9 +57,12 @@ function basictest(ModelType, X, y, builder, optimiser, threshold, accel)
 
     eval(quote
 
+         stable_rng = StableRNGs.StableRNG(123)
+
          model = $ModelType_ex(builder=$builder,
                                optimiser=$optimiser,
-                               acceleration=$accel_ex)
+                               acceleration=$accel_ex,
+                               rng=stable_rng)
 
          fitresult, cache, _report = MLJBase.fit(model, 0, $X, $y);
 
@@ -89,7 +92,8 @@ function basictest(ModelType, X, y, builder, optimiser, threshold, accel)
          model = $ModelType_ex(builder=$builder,
                                optimiser=$optimiser,
                                epochs=2,
-                               acceleration=$accel_ex)
+                               acceleration=$accel_ex,
+                               rng=stable_rng)
 
          fitresult, cache, _report = MLJBase.fit(model, 0, $X, $y);
 
@@ -127,6 +131,7 @@ function optimisertest(ModelType, X, y, builder, optimiser, accel)
     optimiser = deepcopy(optimiser)
 
     eval(quote
+
          model = $ModelType_ex(builder=$builder,
                                optimiser=$optimiser,
                                acceleration=$accel_ex,

@@ -27,8 +27,10 @@ train, test = MLJBase.partition(1:N, 0.7)
               accel)
 
     # test model is a bit better than constant predictor:
+    stable_rng = StableRNGs.StableRNG(123)
     model = MLJFlux.NeuralNetworkRegressor(builder=builder,
-                                           acceleration=accel)
+                                           acceleration=accel,
+                                           rng=stable_rng)
     @time fitresult, _, rpt =
         fit(model, 0, MLJBase.selectrows(X, train), y[train])
     first_last_training_loss = rpt[1][[1, end]]

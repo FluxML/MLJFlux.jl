@@ -177,7 +177,6 @@ iterated_pipe =
     IteratedModel(model=pipe,
                   controls=controls,
                   resampling=Holdout(fraction_train=0.8),
-                  iteration_parameter=:(neural_network_regressor.epochs),
                   measure = l2)
 
 # Training the wrapped model on all the train/validation data:

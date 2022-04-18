@@ -2,7 +2,7 @@
 # # price dataset
 
 using Pkg
-Pkg.activate("env")
+Pkg.activate(@__DIR__)
 Pkg.instantiate()
 
 # **Julia version** is assumed to be 1.6.*
@@ -10,9 +10,6 @@ Pkg.instantiate()
 using MLJ
 using MLJFlux
 using Flux
-
-MLJ.color_off()
-
 using Plots
 
 # This tutorial uses MLJ's `IteratedModel` wrapper to transform the
@@ -52,8 +49,8 @@ X = coerce(X, :RAD => Continuous);
 
 # Let's split off a test set for final testing:
 
-X, Xtest = partition(X, 0.7);
-y, ytest = partition(y, 0.7);
+(X, Xtest), (y, ytest) = partition((X, y), 0.7, multi=true);
+
 
 # ## Defining a builder
 
@@ -81,7 +78,7 @@ NeuralNetworkRegressor = @load NeuralNetworkRegressor
 
 # The following wraps our regressor in feature and target standardizations:
 
-pipe = @pipeline Standardizer model target=Standardizer
+pipe = Standardizer |> TransformedTargetModel(model, target=Standardizer)
 
 # Notice that our original neural network model is now a
 # hyper-parameter of the composite `pipe`, with the automatically
@@ -100,7 +97,7 @@ fit!(mach, verbosity=2)
 # They are also extractable from the training report (which includes
 # the pre-train loss):
 
-report(mach).neural_network_regressor.training_losses
+report(mach).transformed_target_model_deterministic.model.training_losses
 
 # Next, let's visually compare a few learning rates:
 
@@ -118,9 +115,10 @@ rates = [5e-5, 1e-4, 0.005, 0.001, 0.05]
 # our plot.
 
 foreach(rates) do η
-    pipe.neural_network_regressor.optimiser.eta = η
-    fit!(mach, force=true)
-    losses = report(mach).neural_network_regressor.training_losses[3:end]
+    pipe.transformed_target_model_deterministic.model.optimiser.eta = η
+    fit!(mach, force=true, verbosity=0)
+    losses =
+        report(mach).transformed_target_model_deterministic.model.training_losses[3:end]
     plot!(1:length(losses), losses, label=η)
 end
 plt #!md
@@ -131,9 +129,9 @@ savefig(joinpath("assets", "learning_rate.png"))
 
 # ![](assets/learing_rate.png) #md
 
-# We'll go with the second most conservative rate:
+# We'll go with the second most conservative rate for now:
 
-pipe.neural_network_regressor.optimiser.eta = 0.0001
+pipe.transformed_target_model_deterministic.model.optimiser.eta = 0.0001
 
 
 # ## Wrapping in iteration control
@@ -156,7 +154,8 @@ end
 
 update_loss(loss) = push!(losses, loss)
 update_training_loss(report) =
-    push!(training_losses, report.neural_network_regressor.training_losses[end])
+    push!(training_losses,
+          report.transformed_target_model_deterministic.model.training_losses[end])
 update_epochs(epoch) = push!(epochs, epoch)
 
 # The controls to apply (see
@@ -178,7 +177,6 @@ iterated_pipe =
     IteratedModel(model=pipe,
                   controls=controls,
                   resampling=Holdout(fraction_train=0.8),
-                  iteration_parameter=:(neural_network_regressor.epochs),
                   measure = l2)
 
 # Training the wrapped model on all the train/validation data:
@@ -215,22 +213,22 @@ savefig(joinpath("assets", "loss.png"))
 # hyper-parameter to *learned* parameter.
 
 
-# ## An evaluation the self-iterating model
+# ## An evaluation of the self-iterating model
 
 # Here's an estimate of performance of our "self-iterating"
 # model:
 
 e = evaluate!(mach,
               resampling=CV(nfolds=8),
-              measures=[l2, l1])
+              measures=[l1, l2])
+
+#-
 
 using Measurements
-err = e.measurement[1] ± std(e.per_fold[1])/sqrt(7)
-@show err
+l1_loss = e.measurement[1] ± std(e.per_fold[1])/sqrt(7)
+@show l1_loss
 
-# which we can see has substantial uncertainty (not that CV estimates
-# of the uncertainty are trustworthy; see e.g., [this
-# survey](https://direct.mit.edu/neco/article-abstract/10/7/1895/6224/Approximate-Statistical-Tests-for-Comparing))
+# We take this estimate of the uncertainty of the generalization error with a [grain of salt](https://direct.mit.edu/neco/article-abstract/10/7/1895/6224/Approximate-Statistical-Tests-for-Comparing)).
 
 
 # ## Comparison with other models on the test set
@@ -243,7 +241,7 @@ err = e.measurement[1] ± std(e.per_fold[1])/sqrt(7)
 function performance(model)
     mach = machine(model, X, y) |> fit!
     yhat = predict(mach, Xtest)
-    l2(yhat, ytest) |> mean
+    l1(yhat, ytest) |> mean
 end
 performance(iterated_pipe)
 
@@ -253,4 +251,4 @@ three_models = [(@load EvoTreeRegressor)(), # tree boosting model
 
 errs = performance.(three_models)
 
-(models=typeof.(three_models), mean_square_errors=errs) |> pretty
+(models=MLJ.name.(three_models), mean_square_errors=errs) |> pretty

@@ -4,22 +4,21 @@ function runcommand(cmd)
     run(cmd)
 end
 
-# `env` is the environment directory
-function generate(env; execute=true, pluto=true)
+function generate(dir; execute=true, pluto=true)
     quote
         using Pkg
         Pkg.activate(temp=true)
         Pkg.add(name="Literate", rev="fe/pluto")
         using Literate
 
-        const ENVDIR = $env
-        const OUTDIR = joinpath(ENVDIR, "..")
+        const OUTDIR = $dir
         const INFILE = joinpath(OUTDIR, "notebook.jl")
 
         # generate pluto notebook:
         if $pluto
-            Literate.notebook(INFILE, ENVDIR, flavor=Literate.PlutoFlavor())
-            runcommand(`mv $ENVDIR/notebook.jl $OUTDIR/notebook.pluto.jl`)
+            TEMPDIR = tempdir()
+            Literate.notebook(INFILE, TEMPDIR, flavor=Literate.PlutoFlavor())
+            runcommand(`mv $TEMPDIR/notebook.jl $OUTDIR/notebook.pluto.jl`)
         end
 
         Literate.notebook(INFILE, OUTDIR, execute=false)

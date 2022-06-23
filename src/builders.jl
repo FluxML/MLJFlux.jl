@@ -163,6 +163,9 @@ clf = ImageClassifier(
 )
 ```
 
+The keyord arguments `imsize`, `inchannels` and `nclasses` are
+dissallowed in `kwargs` (see above).
+
 """
 metal(metalhead_constructor) = MetalheadPreBuilder(metalhead_constructor)
 

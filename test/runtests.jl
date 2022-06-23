@@ -57,6 +57,10 @@ end
     include("builders.jl")
 end
 
+@testset "metalhead" begin
+    include("metalhead.jl")
+end
+
 @testset "mlj_model_interface" begin
     include("mlj_model_interface.jl")
 end

@@ -1,3 +1,11 @@
+# # Helpers
+
+function an_image(rng, n_in, n_channels)
+    n_channels == 3 &&
+        return coerce(rand(rng, Float32, n_in..., 3), ColorImage)
+    return coerce(rand(rng, Float32, n_in...), GreyImage)
+end
+
 # to control chain initialization:
 myinit(n, m) = reshape(convert(Vector{Float32}, (1:n*m)), n , m)
 
@@ -52,9 +60,11 @@ end
 end
 
 @testset_accelerated "@builder" accel begin
-    builder = MLJFlux.@builder(Flux.Chain(Flux.Dense(n_in, 4,
-                                                     init = (out, in) -> randn(rng, out, in)),
-                                     Flux.Dense(4, n_out)))
+    builder = MLJFlux.@builder(Flux.Chain(Flux.Dense(
+        n_in,
+        4,
+        init = (out, in) -> randn(rng, out, in)
+    ), Flux.Dense(4, n_out)))
     rng = StableRNGs.StableRNG(123)
     chain = MLJFlux.build(builder, rng, 5, 3)
     ps = Flux.params(chain)

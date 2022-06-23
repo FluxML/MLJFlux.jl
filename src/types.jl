@@ -50,6 +50,8 @@ doc_classifier(model_name) = doc_regressor(model_name)*"""
 
 for Model in [:NeuralNetworkClassifier, :ImageClassifier]
 
+    default_builder_ex = Model == :ImageClassifier ? :(image_builder(VGGHack)()) : Short()
+
     ex = quote
         mutable struct $Model{B,F,O,L} <: MLJFluxProbabilistic
             builder::B
@@ -65,7 +67,7 @@ for Model in [:NeuralNetworkClassifier, :ImageClassifier]
             acceleration::AbstractResource  # eg, `CPU1()` or `CUDALibs()`
         end
 
-        function $Model(; builder::B   = Short()
+        function $Model(; builder::B   = $default_builder_ex
                         , finaliser::F = Flux.softmax
                         , optimiser::O = Flux.Optimise.ADAM()
                         , loss::L      = Flux.crossentropy

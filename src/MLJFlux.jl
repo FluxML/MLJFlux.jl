@@ -1,4 +1,4 @@
-module MLJFlux 
+module MLJFlux
 
 export CUDALibs, CPU1
 
@@ -13,6 +13,7 @@ using Statistics
 using ColorTypes
 using ComputationalResources
 using Random
+import Metalhead
 
 include("penalizers.jl")
 include("core.jl")

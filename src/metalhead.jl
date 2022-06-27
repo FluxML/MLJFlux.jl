@@ -14,9 +14,9 @@ TODO: After https://github.com/FluxML/Metalhead.jl/issues/176:
 =#
 
 
-# # Wrapper types and `metal` wrapping function
+# # WRAPPING
 
-struct MetalheadPreBuilder{F} <: MLJFlux.Builder
+struct MetalheadWrapper{F} <: MLJFlux.Builder
     metalhead_constructor::F
 end
 
@@ -25,6 +25,29 @@ struct MetalheadBuilder{F} <: MLJFlux.Builder
     args
     kwargs
 end
+
+Base.show(io::IO, w::MetalheadWrapper) =
+    print(io, "metal($(repr(w.metalhead_constructor)))")
+
+function Base.show(io::IO, ::MIME"text/plain", w::MetalheadBuilder)
+    println(io, "builder wrapping $(w.metalhead_constructor)")
+    if !isempty(w.args)
+        println(io, "  args:")
+        for (i, arg) in enumerate(w.args)
+            println(io, "    1: $arg")
+        end
+    end
+    if !isempty(w.kwargs)
+        println(io, "  kwargs:")
+        for kwarg in w.kwargs
+            println(io, "    $(first(kwarg)) = $(last(kwarg))")
+        end
+    end
+end
+
+Base.show(io::IO, w::MetalheadBuilder) =
+    print(io, "metal($(repr(w.metalhead_constructor)))(…)")
+
 
 """
     metal(constructor)(args...; kwargs...)
@@ -67,9 +90,9 @@ The keyord arguments `imsize`, `inchannels` and `nclasses` are
 dissallowed in `kwargs` (see above).
 
 """
-metal(metalhead_constructor) = MetalheadPreBuilder(metalhead_constructor)
+metal(metalhead_constructor) = MetalheadWrapper(metalhead_constructor)
 
-(pre_builder::MetalheadPreBuilder)(args...; kwargs...) = MetalheadBuilder(
+(pre_builder::MetalheadWrapper)(args...; kwargs...) = MetalheadBuilder(
     pre_builder.metalhead_constructor, args, kwargs)
 
 MLJFlux.build(

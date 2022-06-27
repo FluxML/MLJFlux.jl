@@ -7,7 +7,7 @@ TODO: After https://github.com/FluxML/Metalhead.jl/issues/176:
 - Delete definition of `ResNetHack` below
 
 - Change default builder in ImageClassifier (see /src/types.jl) from
-  `metal(ResNetHack(...))` to `metal(Metalhead.ResNet(...))`,
+  `image_builder(ResNetHack(...))` to `image_builder(Metalhead.ResNet(...))`,
 
 - Add nicer `show` methods for `MetalheadBuilder` instances
 
@@ -33,7 +33,7 @@ struct MetalheadBuilder{F} <: MLJFlux.Builder
 end
 
 Base.show(io::IO, w::MetalheadWrapper) =
-    print(io, "metal($(repr(w.metalhead_constructor)))")
+    print(io, "image_builder($(repr(w.metalhead_constructor)))")
 
 function Base.show(io::IO, ::MIME"text/plain", w::MetalheadBuilder)
     println(io, "builder wrapping $(w.metalhead_constructor)")
@@ -52,11 +52,11 @@ function Base.show(io::IO, ::MIME"text/plain", w::MetalheadBuilder)
 end
 
 Base.show(io::IO, w::MetalheadBuilder) =
-    print(io, "metal($(repr(w.metalhead_constructor)))(…)")
+    print(io, "image_builder($(repr(w.metalhead_constructor)))(…)")
 
 
 """
-    metal(constructor)(args...; kwargs...)
+    image_builder(constructor)(args...; kwargs...)
 
 Return an MLJFlux builder object based on the Metalhead.jl constructor/type
 `constructor` (eg, `Metalhead.ResNet`). Here `args` and `kwargs` are
@@ -77,7 +77,7 @@ then in MLJFlux, it suffices to do
 
 ```julia
 using MLJFlux, Metalhead
-builder = metal(ResNet)(50, pretrain=true)
+builder = image_builder(ResNet)(50, pretrain=true)
 ```
 
 which can be used in `ImageClassifier` as in
@@ -96,7 +96,7 @@ The keyord arguments `imsize`, `inchannels` and `nclasses` are
 dissallowed in `kwargs` (see above).
 
 """
-metal(metalhead_constructor) = MetalheadWrapper(metalhead_constructor)
+image_builder(metalhead_constructor) = MetalheadWrapper(metalhead_constructor)
 
 function (pre_builder::MetalheadWrapper)(args...; kwargs...)
     kw_names = keys(kwargs)

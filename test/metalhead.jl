@@ -5,10 +5,12 @@ const Metalhead = MLJFlux.Metalhead
 @testset "display" begin
     io = IOBuffer()
     builder = MLJFlux.metal(MLJFlux.Metalhead.ResNet)(50, pretrain=false)
-    show(io, builder)
+    show(io, MIME("text/plain"), builder)
     @test String(take!(io)) ==
         "builder wrapping Metalhead.ResNet\n  args:\n"*
         "    1: 50\n  kwargs:\n    pretrain = false\n"
+    show(io, builder)
+    @test String(take!(io)) == "metal(Metalhead.ResNet)(…)"
     close(io)
 end
 

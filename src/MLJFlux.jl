@@ -94,7 +94,8 @@ Where
 - `acceleration::AbstractResource=CPU1()`: Defines on what hardware training is done.
   For training on GPU, use `CudaLibs()`, otherwise defaults to `CPU`()`.
 - `finaliser=Flux.softmax`: The final activation function of the neural network.
-  Defaults to `Flux.softmax`. For a regression task, reasonable alternatives include `Flux.sigmoid` and the identity function (otherwise known as "linear activation").
+  Defaults to `Flux.softmax`. For a regression task, reasonable alternatives include
+  `Flux.sigmoid` and the identity function (otherwise known as "linear activation").
 
 
 # Operations
@@ -108,7 +109,8 @@ Where
 
 The fields of `fitted_params(mach)` are:
 
-- `chain`: The trained "chain", or series of layers, functions, and activations which make up the neural network.
+- `chain`: The trained "chain", or series of layers, functions, and activations which
+  make up the neural network.
 
 
 # Report
@@ -116,7 +118,9 @@ The fields of `fitted_params(mach)` are:
 The fields of `report(mach)` are:
 
 - `training_losses`: The history of training losses, a vector containing the history of all the losses during training. The first element of the vector is the initial penalized loss. After the first element, the nth element corresponds to the loss of epoch n-1.
-
+  all the losses during training. The first element of the vector is the initial penalized loss. After the first element, the nth element corresponds to the loss of epoch n-1.
+  penalized loss. After the first element, the nth element corresponds to the loss of epoch n-1.
+  epoch n-1.
 # Examples
 
 In this example we build a regression model using the Boston house price dataset
@@ -135,7 +139,7 @@ y, X = unpack(data, ==(:MEDV), !=(:CHAS); rng=123);
 scitype(y)
 schema(X)
 ```
-Since MLJFlux models do not handle ordered factos, we can treat `:RAD` as `Continuous`:
+Since MLJFlux models do not handle ordered factors, we can treat `:RAD` as `Continuous`:
 ```julia
 X = coerce(X, :RAD=>Continuous)
 ```
@@ -144,6 +148,8 @@ Lets also make a test set:
 (X, Xtest), (y, ytest) = partition((X, y), 0.7, multi=true);
 ```
 Next, we can define a `builder`. In the following macro call, `n_in` is the number of expected input features, and rng is a RNG. `init` is the function used to generate the random initial weights of the network.
+expected input features, and rng is a RNG. `init` is the function used to generate the random initial weights of the network.
+random initial weights of the network.
 ```julia
 builder = MLJFlux.@builder begin
   init=Flux.glorot_uniform(rng)
@@ -160,11 +166,14 @@ NeuralNetworkRegressor = @load NeuralNetworkRegressor
                                  epochs=20)
 ```
 For our neural network, since different features likely have different scales, if we do not standardize the network may be implicitly biased towards features with higher magnitudes, or may have [saturated neurons](https://www.informit.com/articles/article.aspx%3fp=3131594&seqNum=2)  and not train well. Therefore, standardization is key!
+not standardize the network may be implicitly biased towards features with higher magnitudes, or may have [saturated neurons](https://www.informit.com/articles/article.aspx%3fp=3131594&seqNum=2)  and not train well. Therefore, standardization is key!
+magnitudes, or may have [saturated neurons](https://www.informit.com/articles/article.aspx%3fp=3131594&seqNum=2)  and not train well. Therefore, standardization is key!
+neurons](https://www.informit.com/articles/article.aspx%3fp=3131594&seqNum=2)  and not train well. Therefore, standardization is key!
 ```julia
 pipe = Standardizer |> TransformedTargetModel(model, target=Standardizer)
 ```
 If we fit with a high verbosity (>1), we will see the losses during training. We can also see the losses in the output of `report(mach)`
-
+also see the losses in the output of `report(mach)`
 ```julia
 mach = machine(pipe, X, y)
 fit!(mach, verbosity=2)
@@ -199,6 +208,8 @@ pipe.transformed_target_model_deterministic.model.optimiser.eta = 0.0001
 ## Using Iteration Controls
 
 We can also wrap the model with MLJ Iteration controls. Suppose we want a model that trains until the out of sample loss does not improve for 6 epochs. We can use the `NumberSinceBest(6)` stopping criterion. We can also add some extra stopping criterion, `InvalidValue` and `Timelimit(1/60)`, as well as some controls to print traces of the losses. First we can define some methods to initialize or clear the traces as well as updte the traces.
+trains until the out of sample loss does not improve for 6 epochs. We can use the `NumberSinceBest(6)` stopping criterion. We can also add some extra stopping criterion, `InvalidValue` and `Timelimit(1/60)`, as well as some controls to print traces of the losses. First we can define some methods to initialize or clear the traces as well as update the traces.
+`NumberSinceBest(6)` stopping criterion. We can also add some extra stopping criterion, `InvalidValue` and `Timelimit(1/60)`, as well as some controls to print traces of the losses. First we can define some methods to initialize or clear the traces as well as update the traces.
 ```julia
 # For initializing or clearing the traces:
 
@@ -252,7 +263,12 @@ savefig(joinpath("assets", "loss.png"))
 
 ### Brief note on iterated models
 
-Training an `IteratedModel` means holding out some data (80% in this case) so an out-of-sample loss can be tracked and used in the specified stopping criterion, `NumberSinceBest(4)`. However, once the stop is triggered, the model wrapped by `IteratedModel` (our pipeline model) is retrained on all data for the same number of iterations. Calling `predict(mach, Xnew)` on new data uses the updated learned parameters.
+Training an `IteratedModel` means holding out some data (80% in this case) so an
+out-of-sample loss can be tracked and used in the specified stopping criterion,
+`NumberSinceBest(4)`. However, once the stop is triggered, the model wrapped by
+`IteratedModel` (our pipeline model) is retrained on all data for the same number of
+iterations. Calling `predict(mach, Xnew)` on new data uses the updated learned
+parameters.
 
 ## Evaluating Iterated Models
 
@@ -266,11 +282,14 @@ using Measurements
 l1_loss = e.measurement[1] ± std(e.per_fold[1])/sqrt(7)
 @show l1_loss
 ```
-We take this estimate of the uncertainty of the generalization error with a [grain of salt](https://direct.mit.edu/neco/article-abstract/10/7/1895/6224/Approximate-Statistical-Tests-for-Comparing)).
+We take this estimate of the uncertainty of the generalization error with a [grain of
+salt](https://direct.mit.edu/neco/article-abstract/10/7/1895/6224/Approximate-Statistical-Tests-for-Comparing)).
 
 ## Comparison with other models on the test set
 
-Although we cannot assign them statistical significance, here are comparisons, on the untouched test set, of the eror of our self-iterating neural network regressor with a couple of other models trained on the same data (using default hyperparameters):
+Although we cannot assign them statistical significance, here are comparisons, on the
+untouched test set, of the eror of our self-iterating neural network regressor with a
+couple of other models trained on the same data (using default hyperparameters):
 ```julia
 function performance(model)
    mach = machine(model, X, y) |> fit!
@@ -297,7 +316,8 @@ NeuralNetworkRegressor
 $(MMI.doc_header(MultitargetNeuralNetworkRegressor))
 
 `MultitargetNeuralNetworkRegressor`: A neural network model for making deterministic
-predictions of a `Continuous` multi-target, presented as a table, given a table of `Continuous` features.
+predictions of a `Continuous` multi-target, presented as a table, given a table of
+`Continuous` features.
 
 # Training data
 
@@ -314,22 +334,47 @@ Where
 
 # Hyper-parameters
 
-- `builder=MLJFlux.Linear(σ=Flux.relu)`: An MLJFlux builder that constructs a neural network. Possible `builders` include: `Linear`, `Short`, and `MLP`. You can construct your own builder using the `@builder` macro, see examples for further information.
-- `optimiser::Flux.ADAM()`: A `Flux.Optimise` optimiser. The optimiser performs the updating of the weights of the network. For further reference, see either the examples or [the Flux optimiser documentation](https://fluxml.ai/Flux.jl/stable/training/optimisers/). To choose a learning rate (the update rate of the optimizer), a good rule of thumb is to start out at `10e-3`, and tune using powers of 10 between `1` and `1e-7`.
-- `loss=Flux.mse`: The loss function which the network will optimize. Should be a function which can be called in the form `loss(yhat, y)`. Possible loss functions are listed in [the Flux loss function documentation](https://fluxml.ai/Flux.jl/stable/models/losses/). For a regression task, the most natural loss functions are:
+- `builder=MLJFlux.Linear(σ=Flux.relu)`: An MLJFlux builder that constructs a neural
+  network. Possible `builders` include: `Linear`, `Short`, and `MLP`. You can construct
+  your own builder using the `@builder` macro, see examples for further information.
+- `optimiser::Flux.ADAM()`: A `Flux.Optimise` optimiser. The optimiser performs the
+  updating of the weights of the network. For further reference, see either the examples
+  or [the Flux optimiser
+  documentation](https://fluxml.ai/Flux.jl/stable/training/optimisers/). To choose a
+  learning rate (the update rate of the optimizer), a good rule of thumb is to start out
+  at `10e-3`, and tune using powers of 10 between `1` and `1e-7`.
+- `loss=Flux.mse`: The loss function which the network will optimize. Should be a
+  function which can be called in the form `loss(yhat, y)`. Possible loss functions are
+  listed in [the Flux loss function
+  documentation](https://fluxml.ai/Flux.jl/stable/models/losses/). For a regression task,
+  the most natural loss functions are:
     - `Flux.mse`
     - `Flux.mae`
     - `Flux.msle`
     - `Flux.huber_loss`
-- `epochs::Int=10`: The number of epochs to train for. Typically, one epoch represents one pass through the entirety of the training dataset.
-- `batch_size::Int=1`: The batch size to be used for training. The batch size represents the number of samples per update of the networks weights. Typcally, batch size should be somewhere between 8 and 512. Smaller batch sizes lead to noisier training loss curves, while larger batch sizes lead towards smoother training loss curves. In general, it is a good idea to pick one fairly large batch size (e.g. 32, 64, 128), and stick with it, and only tune the learning rate. In most literature, batch size is set in powers of twos, but this is fairly arbitrary.
-- `lambda::Float64=0`: The stregth of the regularization used during training. Can be any value  in the range `[0, ∞)`.
-- `alpha::Float64=0`: The L2/L1 mix of regularization, in the range `[0, 1]`. A value of 0 represents L2 regularization, and a value of 1 represents L1 regularization.
-- `rng::Union{AbstractRNG, Int64}`: The random number generator/seed used during training.
-- `optimizer_changes_trigger_retraining::Bool=false`: Defines what happens when fitting a machine if the associated optimiser has changed. If true, the associated machine will retrain from scratch on `fit`, otherwise it will not.
-- `acceleration::AbstractResource=CPU1()`: Defines on what hardware training is done. For Training on GPU, use `CudaLibs()`, otherwise defaults to `CPU`()`.
-- `finaliser=Flux.softmax`: The final activation function of the neural network. Defaults to `Flux.softmax`. For a regression task, reasonable alternatives include `Flux.sigmoid` and the identity function (otherwise known as "linear activation").
-
+- `epochs::Int=10`: The number of epochs to train for. Typically, one epoch represents
+  one pass through the entirety of the training dataset.
+- `batch_size::Int=1`: The batch size to be used for training. The batch size represents
+  the number of samples per update of the networks weights. Typcally, batch size should be
+  somewhere between 8 and 512. Smaller batch sizes lead to noisier training loss curves,
+  while larger batch sizes lead towards smoother training loss curves. In general, it is a
+  good idea to pick one fairly large batch size (e.g. 32, 64, 128), and stick with it, and
+  only tune the learning rate. In most literature, batch size is set in powers of twos,
+  but this is fairly arbitrary.
+- `lambda::Float64=0`: The stregth of the regularization used during training. Can be
+  any value  in the range `[0, ∞)`.
+- `alpha::Float64=0`: The L2/L1 mix of regularization, in the range `[0, 1]`. A value of
+  0 represents L2 regularization, and a value of 1 represents L1 regularization.
+- `rng::Union{AbstractRNG, Int64}`: The random number generator/seed used during
+  training.
+- `optimizer_changes_trigger_retraining::Bool=false`: Defines what happens when fitting
+  a machine if the associated optimiser has changed. If true, the associated machine will
+  retrain from scratch on `fit`, otherwise it will not.
+- `acceleration::AbstractResource=CPU1()`: Defines on what hardware training is done.
+  For Training on GPU, use `CudaLibs()`, otherwise defaults to `CPU`()`.
+- `finaliser=Flux.softmax`: The final activation function of the neural network.
+Defaults to `Flux.softmax`. For a regression task, reasonable alternatives include
+`Flux.sigmoid` and the identity function (otherwise known as "linear activation").
 
 # Operations
 
@@ -342,18 +387,22 @@ Where
 
 The fields of `fitted_params(mach)` are:
 
-- `chain`: The trained "chain", or series of layers, functions, and activations which make up the neural network.
+- `chain`: The trained "chain", or series of layers, functions, and activations which
+  make up the neural network.
 
 
 # Report
 
 The fields of `report(mach)` are:
 
-- `training_losses`: The history of training losses, a vector containing the history of all the losses during training. The first element of the vector is the initial penalized loss. After the first element, the nth element corresponds to the loss of epoch n-1.
+- `training_losses`: The history of training losses, a vector containing the history of
+  all the losses during training. The first element of the vector is the initial
+  penalized loss. After the first element, the nth element corresponds to the loss of
+  epoch n-1.
 
 # Examples
 
-In this example we build a regression model using the Boston house price dataset.
+In this example we build a regression model using a toy dataset.
 ```julia
 using MLJ
 using MLJFlux

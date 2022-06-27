@@ -13,6 +13,12 @@ TODO: After https://github.com/FluxML/Metalhead.jl/issues/176:
 
 =#
 
+const DISALLOWED_KWARGS = [:imsize, :inchannels, :nclasses]
+const human_disallowed_kwargs = join(map(s->"`$s`", DISALLOWED_KWARGS), ", ", " and ")
+const ERR_METALHEAD_DISALLOWED_KWARGS = ArgumentError(
+    "Keyword arguments $human_disallowed_kwargs are disallowed "*
+    "as their values are inferred from data. "
+)
 
 # # WRAPPING
 
@@ -92,8 +98,12 @@ dissallowed in `kwargs` (see above).
 """
 metal(metalhead_constructor) = MetalheadWrapper(metalhead_constructor)
 
-(pre_builder::MetalheadWrapper)(args...; kwargs...) = MetalheadBuilder(
-    pre_builder.metalhead_constructor, args, kwargs)
+function (pre_builder::MetalheadWrapper)(args...; kwargs...)
+    kw_names = keys(kwargs)
+    isempty(intersect(kw_names, DISALLOWED_KWARGS)) ||
+        throw(ERR_METALHEAD_DISALLOWED_KWARGS)
+    return MetalheadBuilder(pre_builder.metalhead_constructor, args, kwargs)
+end
 
 MLJFlux.build(
     b::MetalheadBuilder,

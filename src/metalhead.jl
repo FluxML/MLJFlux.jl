@@ -2,14 +2,12 @@
 
 TODO: After https://github.com/FluxML/Metalhead.jl/issues/176:
 
-- Export and externally document `metal` method
+- Export and externally document `image_builder` method
 
 - Delete definition of `ResNetHack` below
 
 - Change default builder in ImageClassifier (see /src/types.jl) from
-  `image_builder(ResNetHack(...))` to `image_builder(Metalhead.ResNet(...))`,
-
-- Add nicer `show` methods for `MetalheadBuilder` instances
+  `image_builder(ResNetHack)` to `image_builder(Metalhead.ResNet)`.
 
 =#
 
@@ -22,18 +20,11 @@ const ERR_METALHEAD_DISALLOWED_KWARGS = ArgumentError(
 
 # # WRAPPING
 
-struct MetalheadWrapper{F} <: MLJFlux.Builder
-    metalhead_constructor::F
-end
-
 struct MetalheadBuilder{F} <: MLJFlux.Builder
     metalhead_constructor::F
     args
     kwargs
 end
-
-Base.show(io::IO, w::MetalheadWrapper) =
-    print(io, "image_builder($(repr(w.metalhead_constructor)))")
 
 function Base.show(io::IO, ::MIME"text/plain", w::MetalheadBuilder)
     println(io, "builder wrapping $(w.metalhead_constructor)")
@@ -52,14 +43,14 @@ function Base.show(io::IO, ::MIME"text/plain", w::MetalheadBuilder)
 end
 
 Base.show(io::IO, w::MetalheadBuilder) =
-    print(io, "image_builder($(repr(w.metalhead_constructor)))(…)")
+    print(io, "image_builder($(repr(w.metalhead_constructor)), …)")
 
 
 """
-    image_builder(constructor)(args...; kwargs...)
+    image_builder(metalhead_constructor, args...; kwargs...)
 
 Return an MLJFlux builder object based on the Metalhead.jl constructor/type
-`constructor` (eg, `Metalhead.ResNet`). Here `args` and `kwargs` are
+`metalhead_constructor` (eg, `Metalhead.ResNet`). Here `args` and `kwargs` are
 passed to the `MetalheadType` constructor at "build time", along with
 the extra keyword specifiers `imsize=...`, `inchannels=...` and
 `nclasses=...`, with values inferred from the data.
@@ -77,7 +68,7 @@ then in MLJFlux, it suffices to do
 
 ```julia
 using MLJFlux, Metalhead
-builder = image_builder(ResNet)(50, pretrain=true)
+builder = image_builder(ResNet, 50, pretrain=true)
 ```
 
 which can be used in `ImageClassifier` as in
@@ -96,13 +87,15 @@ The keyord arguments `imsize`, `inchannels` and `nclasses` are
 dissallowed in `kwargs` (see above).
 
 """
-image_builder(metalhead_constructor) = MetalheadWrapper(metalhead_constructor)
-
-function (pre_builder::MetalheadWrapper)(args...; kwargs...)
+function image_builder(
+    metalhead_constructor,
+    args...;
+    kwargs...
+)
     kw_names = keys(kwargs)
     isempty(intersect(kw_names, DISALLOWED_KWARGS)) ||
         throw(ERR_METALHEAD_DISALLOWED_KWARGS)
-    return MetalheadBuilder(pre_builder.metalhead_constructor, args, kwargs)
+    return MetalheadBuilder(metalhead_constructor, args, kwargs)
 end
 
 MLJFlux.build(

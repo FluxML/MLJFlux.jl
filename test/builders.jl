@@ -1,11 +1,3 @@
-# # Helpers
-
-function an_image(rng, n_in, n_channels)
-    n_channels == 3 &&
-        return coerce(rand(rng, Float32, n_in..., 3), ColorImage)
-    return coerce(rand(rng, Float32, n_in...), GreyImage)
-end
-
 # to control chain initialization:
 myinit(n, m) = reshape(convert(Vector{Float32}, (1:n*m)), n , m)
 

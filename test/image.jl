@@ -85,65 +85,6 @@ reference = losses[1]
 @test all(x->abs(x - reference)/reference < 5e-4, losses[2:end])
 
 
-## MNIST IMAGES TEST
-
-mutable struct MyConvBuilder <: MLJFlux.Builder end
-
-using MLDatasets
-
-ENV["DATADEPS_ALWAYS_ACCEPT"] = true
-images, labels = MNIST.traindata()
-images = coerce(images, GrayImage);
-labels = categorical(labels);
-
-function flatten(x::AbstractArray)
-    return reshape(x, :, size(x)[end])
-end
-
-function MLJFlux.build(builder::MyConvBuilder, rng, n_in, n_out, n_channels)
-    cnn_output_size = [3,3,32]
-    init = Flux.glorot_uniform(rng)
-    return Chain(
-        Conv((3, 3), n_channels=>16, pad=(1,1), relu, init=init),
-        MaxPool((2,2)),
-        Conv((3, 3), 16=>32, pad=(1,1), relu, init=init),
-        MaxPool((2,2)),
-        Conv((3, 3), 32=>32, pad=(1,1), relu, init=init),
-        MaxPool((2,2)),
-        flatten,
-        Dense(prod(cnn_output_size), n_out, init=init))
-end
-
-losses = []
-
-@testset_accelerated "Image MNIST" accel begin
-
-    Random.seed!(123)
-    stable_rng = StableRNGs.StableRNG(123)
-
-    model = MLJFlux.ImageClassifier(builder=MyConvBuilder(),
-                                    acceleration=accel,
-                                    batch_size=50,
-                                    rng=stable_rng)
-
-    @time fitresult, cache, _report =
-        MLJBase.fit(model, 0, images[1:500], labels[1:500]);
-    first_last_training_loss = _report[1][[1, end]]
-    push!(losses, first_last_training_loss[2])
-#    @show first_last_training_loss
-
-    pred = mode.(MLJBase.predict(model, fitresult, images[501:600]));
-    error = misclassification_rate(pred, labels[501:600])
-    @test error < 0.2
-
-end
-
-# check different resources (CPU1, CUDALibs, etc)) give about the same loss:
-reference = losses[1]
-@info "Losses for each computational resource: $losses"
-@test all(x->abs(x - reference)/reference < 0.05, losses[2:end])
-
-
 ## BASIC IMAGE TESTS COLOR
 
 builder = MyNeuralNetwork((2,2), (2,2))

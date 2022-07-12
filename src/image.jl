@@ -29,7 +29,4 @@ end
 MLJModelInterface.metadata_model(ImageClassifier,
                input=AbstractVector{<:MLJModelInterface.Image},
                target=AbstractVector{<:Multiclass},
-               path="MLJFlux.ImageClassifier",
-               descr="A neural network model for making probabilistic "*
-                     "predictions of a `GrayImage` target, "*
-                     "given a table of `Continuous` features. ")
+               path="MLJFlux.ImageClassifier")

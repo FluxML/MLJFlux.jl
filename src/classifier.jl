@@ -31,8 +31,4 @@ end
 MLJModelInterface.metadata_model(NeuralNetworkClassifier,
                                  input=Table(Continuous),
                                  target=AbstractVector{<:Finite},
-                                 path="MLJFlux.NeuralNetworkClassifier",
-                                 descr="A neural network model for making "*
-                                 "probabilistic predictions of a "*
-                                 "`Multiclass` or `OrderedFactor` target, "*
-                                 "given a table of `Continuous` features. ")
+                                 path="MLJFlux.NeuralNetworkClassifier")

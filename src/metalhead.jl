@@ -77,7 +77,7 @@ which can be used in `ImageClassifier` as in
 clf = ImageClassifier(
     builder=builder,
     epochs=500,
-    optimiser=Flux.ADAM(0.001),
+    optimiser=Flux.Adam(0.001),
     loss=Flux.crossentropy,
     batch_size=5,
 )

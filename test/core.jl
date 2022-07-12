@@ -4,7 +4,7 @@ stable_rng = StableRNGs.StableRNG(123)
 rowvec(y) = y
 rowvec(y::Vector) = reshape(y, 1, length(y))
 
-@test MLJFlux.MLJModelInterface.istransparent(Flux.ADAM(0.1))
+@test MLJFlux.MLJModelInterface.istransparent(Flux.Adam(0.1))
 
 @testset "nrows" begin
     Xmatrix = rand(stable_rng, 10, 3)
@@ -112,7 +112,7 @@ epochs = 10
     _chain_yes_drop, history = MLJFlux.fit!(model.loss,
                                             penalty,
                                             chain_yes_drop,
-                                            Flux.Optimise.ADAM(0.001),
+                                            Flux.Optimise.Adam(0.001),
                                             epochs,
                                             0,
                                             data[1],
@@ -124,7 +124,7 @@ epochs = 10
     _chain_no_drop, history = MLJFlux.fit!(model.loss,
                                            penalty,
                                            chain_no_drop,
-                                           Flux.Optimise.ADAM(0.001),
+                                           Flux.Optimise.Adam(0.001),
                                            epochs,
                                            0,
                                            data[1],

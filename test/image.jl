@@ -1,4 +1,22 @@
-## BASIC IMAGE TESTS GREY
+# # HELPERS
+
+function make_images(rng; n_classes=33, n_images=50, color=false, noise=0.05)
+    n_channels = color ? 3 : 1
+    image_bag = map(1:n_classes) do _
+        rand(stable_rng, Float32, 6, 6, n_channels)
+    end
+    labels = rand(stable_rng, 1:3, n_images)
+    images = map(labels) do j
+        image_bag[j] + noise*rand(stable_rng, Float32, 6, 6, n_channels)
+    end
+    T = color ? ColorImage : GrayImage
+    X = coerce(cat(images...; dims=4), T)
+    y = coerce(labels, Multiclass)
+    return X, y
+end 
+    
+
+# # BASIC IMAGE TESTS GREY
 
 Random.seed!(123)
 stable_rng = StableRNGs.StableRNG(123)
@@ -18,16 +36,9 @@ function MLJFlux.build(model::MyNeuralNetwork, rng, ip, op, n_channels)
 end
 
 builder = MyNeuralNetwork((2,2), (2,2))
-
-# collection of gray images as a 4D array in WHCN format:
-raw_images = rand(stable_rng, Float32, 6, 6, 1, 50);
-
-# as a vector of Matrix{<:AbstractRGB}
-images = coerce(raw_images, GrayImage);
-@test scitype(images) == AbstractVector{GrayImage{6,6}}
-labels = categorical(rand(stable_rng, 1:5, 50));
-
+images, labels = make_images(stable_rng)
 losses = []
+
 @testset_accelerated "ImageClassifier basic tests" accel begin
 
     Random.seed!(123)
@@ -136,14 +147,7 @@ reference = losses[1]
 ## BASIC IMAGE TESTS COLOR
 
 builder = MyNeuralNetwork((2,2), (2,2))
-
-# collection of color images as a 4D array in WHCN format:
-raw_images = rand(stable_rng, Float32, 6, 6, 3, 50);
-
-images = coerce(raw_images, ColorImage);
-@test scitype(images) == AbstractVector{ColorImage{6,6}}
-labels = categorical(rand(1:5, 50));
-
+images, labels = make_images(stable_rng, color=true)
 losses = []
 
 @testset_accelerated "ColorImages" accel begin

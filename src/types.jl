@@ -13,7 +13,7 @@ Instantiate an MLJFlux model. Available hyperparameters:
    `MLJFlux.Short(n_hidden=0, dropout=0.5, σ=Flux.σ)` (classifiers)
 
 -  `optimiser`: The optimiser to use for training. Default =
-   `Flux.ADAM()`
+   `Flux.Adam()`
 
 -  `loss`: The loss function used for training. Default = `Flux.mse`
    (regressors) and `Flux.crossentropy` (classifiers)
@@ -69,7 +69,7 @@ for Model in [:NeuralNetworkClassifier, :ImageClassifier]
 
         function $Model(; builder::B   = $default_builder_ex
                         , finaliser::F = Flux.softmax
-                        , optimiser::O = Flux.Optimise.ADAM()
+                        , optimiser::O = Flux.Optimise.Adam()
                         , loss::L      = Flux.crossentropy
                         , epochs       = 10
                         , batch_size   = 1
@@ -123,7 +123,7 @@ for Model in [:NeuralNetworkRegressor, :MultitargetNeuralNetworkRegressor]
         end
 
         function $Model(; builder::B   = Linear()
-                        , optimiser::O = Flux.Optimise.ADAM()
+                        , optimiser::O = Flux.Optimise.Adam()
                         , loss::L      = Flux.mse
                         , epochs       = 10
                         , batch_size   = 1

@@ -115,21 +115,22 @@ MLJFlux.build(
 # See above "TODO" list.
 function VGGHack(
     depth::Integer=16;
-    imsize=nothing,
+    imsize=(242,242),
     inchannels=3,
     nclasses=1000,
     batchnorm=false,
     pretrain=false,
 )
 
-    # Note `imsize` is ignored, as here:
+    # Adapted from 
     # https://github.com/FluxML/Metalhead.jl/blob/9edff63222720ff84671b8087dd71eb370a6c35a/src/convnets/vgg.jl#L165
+    # But we do not ignore `imsize`.
 
     @assert(
         depth in keys(Metalhead.vgg_config),
         "depth must be from one in $(sort(collect(keys(Metalhead.vgg_config))))"
     )
-    model = Metalhead.VGG((224, 224);
+    model = Metalhead.VGG(imsize;
                 config = Metalhead.vgg_conv_config[Metalhead.vgg_config[depth]],
                 inchannels,
                 batchnorm,

@@ -50,7 +50,8 @@ doc_classifier(model_name) = doc_regressor(model_name)*"""
 
 for Model in [:NeuralNetworkClassifier, :ImageClassifier]
 
-    default_builder_ex = Model == :ImageClassifier ? :(image_builder(VGGHack)) : Short()
+    default_builder_ex =
+        Model == :ImageClassifier ? :(image_builder(VGGHack)) : Short()
 
     ex = quote
         mutable struct $Model{B,F,O,L} <: MLJFluxProbabilistic

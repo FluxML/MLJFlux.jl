@@ -1,7 +1,5 @@
 module MLJFlux
 
-export CUDALibs, CPU1
-
 import Flux
 using MLJModelInterface
 using MLJModelInterface.ScientificTypesBase
@@ -15,6 +13,7 @@ using ComputationalResources
 using Random
 import Metalhead
 
+include("utilities.jl")
 include("penalizers.jl")
 include("core.jl")
 include("builders.jl")
@@ -38,5 +37,6 @@ MLJModelInterface.metadata_pkg.((NeuralNetworkRegressor,
 
 export NeuralNetworkRegressor, MultitargetNeuralNetworkRegressor
 export NeuralNetworkClassifier, ImageClassifier
+export CUDALibs, CPU1
 
 end #module

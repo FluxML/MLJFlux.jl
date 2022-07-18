@@ -22,7 +22,7 @@ for Model in [:NeuralNetworkClassifier, :ImageClassifier]
 
         function $Model(; builder::B   = Short()
                         , finaliser::F = Flux.softmax
-                        , optimiser::O = Flux.Optimise.ADAM()
+                        , optimiser::O = Flux.Optimise.Adam()
                         , loss::L      = Flux.crossentropy
                         , epochs       = 10
                         , batch_size   = 1
@@ -60,19 +60,22 @@ end
 """
 $(MMI.doc_header(NeuralNetworkClassifier))
 
-`NeuralNetworkClassifier`: a neural network model for making probabilistic predictions
-of a Multiclass or OrderedFactor target, given a table of Continuous features. )
- TODO:
+`NeuralNetworkClassifier` is for training a data-dependent Flux.jl neural network
+for making probabilistic predictions of a `Multiclass` or `OrderedFactor` target,
+given a table of `Continuous` features. Users provide a recipe for constructing
+ the network, based on properties of the data that is encountered, by specifying
+ an appropriate `builder`. See MLJFlux documentation for more on builders.
 
 # Training data
 
 In MLJ or MLJBase, bind an instance `model` to data with
+
     mach = machine(model, X, y)
 
 Where
 
 - `X`: is any table of input features (eg, a `DataFrame`) whose columns
-  are of scitype `Continuous`; check the scitype with `schema(X)`
+  are of scitype `Continuous`; check the column scitypes with `schema(X)`.
 - `y`: is the target, which can be any `AbstractVector` whose element
   scitype is `Multiclass` or `OrderedFactor` with `n_out` classes;
   check the scitype with `scitype(y)`
@@ -80,8 +83,11 @@ Where
 
 # Hyper-parameters
 
-- `builder=MLJFlux.Short()`: An MLJFlux builder that constructs a neural network. Possible `builders` include: `Linear`, `Short`, and `MLP`. You can construct your own builder using the `@builder` macro, see examples for further information.
-- `optimiser::Flux.ADAM()`: A `Flux.Optimise` optimiser. The optimiser performs the updating of the weights of the network. For further reference, see either the examples or [the Flux optimiser documentation](https://fluxml.ai/Flux.jl/stable/training/optimisers/). To choose a learning rate (the update rate of the optimizer), a good rule of thumb is to start out at `10e-3`, and tune using powers of 10 between `1` and `1e-7`.
+- `builder=MLJFlux.Short()`: An MLJFlux builder that constructs a neural
+   network. Possible `builders` include: `MLJFlux.Linear`, `MLJFlux.Short`,
+   and `MLJFlux.MLP`. See MLJFlux documentation for examples of
+   user-defined builders.
+- `optimiser::Flux.Adam()`: A `Flux.Optimise` optimiser. The optimiser performs the updating of the weights of the network. For further reference, see either the examples or [the Flux optimiser documentation](https://fluxml.ai/Flux.jl/stable/training/optimisers/). To choose a learning rate (the update rate of the optimizer), a good rule of thumb is to start out at `10e-3`, and tune using powers of 10 between `1` and `1e-7`.
 - `loss=Flux.crossentropy`: The loss function which the network will optimize. Should be a function which can be called in the form `loss(yhat, y)`. Possible loss functions are listed in [the Flux loss function documentation](https://fluxml.ai/Flux.jl/stable/models/losses/). For a classification task, the most natural loss functions are:
     - `Flux.crossentropy`: Typically used as loss in multiclass classification, with labels in a 1-hot encoded format.
     - `Flux.logitcrossentopy`: Mathematically equal to crossentropy, but computationally more numerically stable than finalising the outputs with `softmax` and then calculating crossentropy.
@@ -90,21 +96,28 @@ Where
     - `Flux.tversky_loss`: Used with imbalanced data to give more weight to false negatives.
     - `Flux.focal_loss`: Used with highly imbalanced data. Weights harder examples more than easier examples.
     - `Flux.binary_focal_loss`: Binary version of the above
+    Currently MLJ measures are not supported as loss functions here.
 - `epochs::Int=10`: The number of epochs to train for. Typically, one epoch represents one pass through the entirety of the training dataset.
-- `batch_size::Int=1`: The batch size to be used for training. The batch size represents the number of samples per update of the networks weights. Typcally, batch size should be somewhere between 8 and 512. Smaller batch sizes lead to noisier training loss curves, while larger batch sizes lead towards smoother training loss curves. In general, it is a good idea to pick one fairly large batch size (e.g. 32, 64, 128), and stick with it, and only tune the learning rate. In most literature, batch size is set in powers of twos, but this is fairly arbitrary.
+- `batch_size::int=1`: the batch size to be used for training. the batch size represents
+  the number of samples per update of the networks weights. typcally, batch size should be
+  somewhere between 8 and 512. smaller batch sizes lead to noisier training loss curves,
+  while larger batch sizes lead towards smoother training loss curves.
+  In general, it is a good idea to pick one fairly large batch size (e.g. 32, 64, 128),
+  and stick with it, and only tune the learning rate. In most examples, batch size is set
+  in powers of twos, but this is fairly arbitrary.
 - `lambda::Float64=0`: The stregth of the regularization used during training. Can be any value  in the range `[0, ∞)`.
 - `alpha::Float64=0`: The L2/L1 mix of regularization, in the range `[0, 1]`. A value of 0 represents L2 regularization, and a value of 1 represents L1 regularization.
 - `rng::Union{AbstractRNG, Int64}`: The random number generator/seed used during training.
-- `optimizer_changes_trigger_retraining::Bool=false`: Defines what happens when fitting a machine if the associated optimiser has changed. If true, the associated machine will retrain from scratch on `fit`, otherwise it will not.
-- `acceleration::AbstractResource=CPU1()`: Defines on what hardware training is done. For Training on GPU, use `CudaLibs()`, otherwise defaults to `CPU`()`.
+- `optimizer_changes_trigger_retraining::Bool=false`: Defines what happens when fitting a machine if the associated optimiser has changed. If true, the associated machine will retrain from scratch on `fit!`, otherwise it will not.
+- `acceleration::AbstractResource=CPU1()`: Defines on what hardware training is done. For Training on GPU, use `CudaLibs()`. For training on GPU, use `CUDALibs()`.
 - `finaliser=Flux.softmax`: The final activation function of the neural network. Defaults to `Flux.softmax`. For a classification task, `softmax` is used for multiclass, single label regression, `sigmoid` is used for either binary classification or multi label classification (when there are multiple possible labels for a given sample).
 
 
 # Operations
 
 - `predict(mach, Xnew)`: return predictions of the target given new
-  features `Xnew` having the same Scitype as `X` above. Predictions are
-  probabilistic.
+  features `Xnew` having the same scitype as `X` above. Predictions are
+  probabilistic but uncalibrated.
 - `predict_mode(mach, Xnew)`: Return the modes of the probabilistic predictions
   returned above.
 
@@ -113,14 +126,17 @@ Where
 
 The fields of `fitted_params(mach)` are:
 
-- `chain`: The trained "chain", or series of layers, functions, and activations which make up the neural network.
+- `chain`: The trained "chain" (Flux.jl model), namely the series of layers,
+   functions, and activations  which make up the neural network. This includes
+   the final layer specified by `finaliser` (eg, `softmax`).
 
 
 # Report
 
 The fields of `report(mach)` are:
 
-- `training_losses`: The history of training losses, a vector containing the history of all the losses during training. The first element of the vector is the initial penalized loss. After the first element, the nth element corresponds to the loss of epoch n-1.
+- `training_losses`: A vector of training losses (penalised if `lambda != 0`) in
+   historical order, of length `epochs + 1`.  The first element is the pre-training loss.
 
 # Examples
 
@@ -133,16 +149,12 @@ import RDatasets
 using Random
 Random.seed!(123)
 
-MLJ.color_off()
-
-using Plots
-pyplot(size=(600, 300*(sqrt(5)-1)));
 ```
 This is a very basic example, using a default builder and no standardization.
-For a more advance illustration, see [`NeuralNetworkRegressor`](@ref) or [`ImageClassifier`](@ref). First, we can load the data:
+For a more advanced illustration, see [`NeuralNetworkRegressor`](@ref) or [`ImageClassifier`](@ref). First, we can load the data:
 ```julia
 iris = RDatasets.dataset("datasets", "iris");
-y, X = unpack(iris, ==(:Species), colname -> true, rng=123);
+y, X = unpack(iris, ==(:Species), rng=123);
 NeuralNetworkClassifier = @load NeuralNetworkClassifier
 clf = NeuralNetworkClassifier()
 ```
@@ -157,7 +169,7 @@ We can train the model in an incremental fashion with the `optimizer_changes_tri
 clf.optimiser.eta = clf.optimiser.eta * 2
 clf.epochs = clf.epochs + 5
 
-# note that if the optimizer_changes_trigger_retraining flag was set to true
+# note that if the `optimizer_changes_trigger_retraining` flag was set to true
 # the model would be completely retrained from scratch because the optimizer was
 # updated
 fit!(mach, verbosity=2);
@@ -186,7 +198,6 @@ plot(curve.parameter_values,
      xscale=curve.parameter_scale,
      ylab = "Cross Entropy")
 
-savefig("iris_history.png")
 ```
 See also
 [`ImageClassifier`](@ref)
@@ -196,25 +207,34 @@ NeuralNetworkClassifier
 """
 $(MMI.doc_header(ImageClassifier))
 
-`ImageClassifier`: A neural network model for making probabilistic
-"predictions of a `GrayImage` target, given a table of `Continuous` features.
+`ImageClassifier` classifies images using a neural network adapted to the type
+ of images provided (color or greyscale). Predictions are probabistic. Users
+ provide a recipe for constructing the network, based on properties of the image
+ encountered, by specifying an appropriate `builder`. See MLJFlux documentation
+ for more on builders.
 
 # Training data
 
 In MLJ or MLJBase, bind an instance `model` to data with
-mach = machine(model, X, y)
+
+    mach = machine(model, X, y)
+
 Where
-- `X`: is any `AbstractVector` of input features (eg, a `DataFrame`) whose items
-  are of scitype `GrayImage`; check the scitype with `scitype(X)`
+- `X`: is any `AbstractVector` of images with `ColorImage` or `GrayImage`
+   scitype; check the scitype with `scitype(X)` and refer to ScientificTypes.jl
+   documentation on coercing typical image formats into an appropriate type.
 - `y`: is the target, which can be any `AbstractVector` whose element
-  scitype is `Multiclass` or `OrderedFactor` with `n_out` classes;
-  check the scitype with `scitype(y)`
+   scitype is `Multiclass`; check the scitype with `scitype(y)`.
 
 
 # Hyper-parameters
 
-- `builder=MLJFlux.Short()`: An MLJFlux builder that constructs a neural network. Possible `builders` include: `Linear`, `Short`, and `MLP`. You can construct your own builder using the `@builder` macro, see examples for further information.
-- `optimiser::Flux.ADAM()`: A `Flux.Optimise` optimiser. The optimiser performs the updating of the weights of the network. For further reference, see either the examples or [the Flux optimiser documentation](https://fluxml.ai/Flux.jl/stable/training/optimisers/). To choose a learning rate (the update rate of the optimizer), a good rule of thumb is to start out at `10e-3`, and tune using powers of 10 between `1` and `1e-7`.
+- `builder`: An MLJFlux builder that constructs the neural network.
+   The fallback builds a depth-16 VGG architecture adapted to the image
+   size and number of target classes, with no batch normalisation; see the
+   Metalhead.jl documentation for details. See the example below for a
+   user-specified builder.
+- `optimiser::Flux.Adam()`: A `Flux.Optimise` optimiser. The optimiser performs the updating of the weights of the network. For further reference, see either the examples or [the Flux optimiser documentation](https://fluxml.ai/Flux.jl/stable/training/optimisers/). To choose a learning rate (the update rate of the optimizer), a good rule of thumb is to start out at `10e-3`, and tune using powers of 10 between `1` and `1e-7`.
 - `loss=Flux.crossentropy`: The loss function which the network will optimize. Should be a function which can be called in the form `loss(yhat, y)`. Possible loss functions are listed in [the Flux loss function documentation](https://fluxml.ai/Flux.jl/stable/models/losses/). For a classification task, the most natural loss functions are:
     - `Flux.crossentropy`: Typically used as loss in multiclass classification, with labels in a 1-hot encoded format.
     - `Flux.logitcrossentopy`: Mathematically equal to crossentropy, but computationally more numerically stable than finalising the outputs with `softmax` and then calculating crossentropy.
@@ -223,21 +243,26 @@ Where
     - `Flux.tversky_loss`: Used with imbalanced data to give more weight to false negatives.
     - `Flux.focal_loss`: Used with highly imbalanced data. Weights harder examples more than easier examples.
     - `Flux.binary_focal_loss`: Binary version of the above
+    Currently MLJ measures are not supported as loss functions here.
 - `epochs::Int=10`: The number of epochs to train for. Typically, one epoch represents one pass through the entirety of the training dataset.
-- `batch_size::Int=1`: The batch size to be used for training. The batch size represents the number of samples per update of the networks weights. Typcally, batch size should be somewhere between 8 and 512. Smaller batch sizes lead to noisier training loss curves, while larger batch sizes lead towards smoother training loss curves. In general, it is a good idea to pick one fairly large batch size (e.g. 32, 64, 128), and stick with it, and only tune the learning rate. In most literature, batch size is set in powers of twos, but this is fairly arbitrary.
+- `batch_size::Int=1`: The batch size to be used for training. The batch size
+  represents the number of samples per update of the networks weights. Batch
+  sizes between 8 and 512 are typical. Increasing batch size can speed up
+  training, especially on a GPU (`acceleration=CUDALibs()`).
 - `lambda::Float64=0`: The stregth of the regularization used during training. Can be any value  in the range `[0, ∞)`.
 - `alpha::Float64=0`: The L2/L1 mix of regularization, in the range `[0, 1]`. A value of 0 represents L2 regularization, and a value of 1 represents L1 regularization.
 - `rng::Union{AbstractRNG, Int64}`: The random number generator/seed used during training.
-- `optimizer_changes_trigger_retraining::Bool=false`: Defines what happens when fitting a machine if the associated optimiser has changed. If true, the associated machine will retrain from scratch on `fit`, otherwise it will not.
-- `acceleration::AbstractResource=CPU1()`: Defines on what hardware training is done. For Training on GPU, use `CudaLibs()`, otherwise defaults to `CPU`()`.
-- `finaliser=Flux.softmax`: The final activation function of the neural network. Defaults to `Flux.softmax`. For a regression task, reasonable alternatives include `Flux.sigmoid` and the identity function (otherwise known as "linear activation").
+- `optimizer_changes_trigger_retraining::Bool=false`: Defines what happens when fitting a machine if the associated optimiser has changed. If true, the associated machine will retrain from scratch on `fit!`, otherwise it will not.
+- `acceleration::AbstractResource=CPU1()`: Defines on what hardware training is done. For Training on GPU, use `CudaLibs()`. For training on GPU, use `CUDALibs()`.
+- `finaliser=Flux.softmax`: The final activation function of the neural network,
+    needed to convert outputs to probabilities (builders do not provide this).
 
 
 # Operations
 
 - `predict(mach, Xnew)`: return predictions of the target given new
-  features `Xnew` having the same Scitype as `X` above. Predictions are
-  probabilistic.
+  features `Xnew` having the same scitype as `X` above. Predictions are
+  probabilistic but uncalibrated.
 - `predict_mode(mach, Xnew)`: Return the modes of the probabilistic predictions
   returned above.
 
@@ -245,13 +270,17 @@ Where
 # Fitted parameters
 
 The fields of `fitted_params(mach)` are:
-- `chain`: The trained "chain", or series of layers, functions, and activations which make up the neural network.
+
+- `chain`: The trained "chain" (Flux.jl model), namely the series of layers,
+   functions, and activations  which make up the neural network. This includes
+   the final layer specified by `finaliser` (eg, `softmax`).
 
 
 # Report
 
 The fields of `report(mach)` are:
-- `training_losses`: The history of training losses, a vector containing the history of all the losses during training. The first element of the vector is the initial penalized loss. After the first element, the nth element corresponds to the loss of epoch n-1.
+- `training_losses`: A vector of training losses (penalised if `lambda != 0`) in
+   historical order, of length `epochs + 1`.  The first element is the pre-training loss.
 
 # Examples
 
@@ -262,31 +291,20 @@ using Flux
 import MLJFlux
 import MLJIteration # for `skip`
 
-MLJ.color_off()
-
-using Plots
-pyplot(size=(600, 300*(sqrt(5)-1)));
 ```
 First we want to download the MNIST dataset, and unpack into images and labels
 ```julia
 import MLDatasets: MNIST
 
-ENV["DATADEPS_ALWAYS_ACCEPT"] = true
 images, labels = MNIST.traindata();
 ```
-In MLJ, integers cannot be used for encoding categorical data, so we must coerce them into the `Multiclass` [scientific type](https://juliaai.github.io/ScientificTypes.jl/dev/). For more in this, see [Working with Categorical Data](https://alan-turing-institute.github.io/MLJ.jl/dev/working_with_categorical_data/):
+In MLJ, integers cannot be used for encoding categorical data, so we must coerce them into the `Multiclass` scitype:
 ```julia
 labels = coerce(labels, Multiclass);
 images = coerce(images, GrayImage);
 
-# Checking scientific types:
-
-@assert scitype(images) <: AbstractVector{<:Image}
-@assert scitype(labels) <: AbstractVector{<:Finite}
-
 images[1]
 ```
-For general instructions on coercing image data, see [type coercion for image data](https://alan-turing-institute.github.io/ScientificTypes.jl/dev/%23Type-coercion-for-image-data-1)
 We start by defining a suitable `builder` object. This is a recipe
 for building the neural network. Our builder will work for images of
 any (constant) size, whether they be color or black and white (ie,
@@ -323,7 +341,7 @@ function MLJFlux.build(b::MyConvBuilder, rng, n_in, n_out, n_channels)
     return Chain(front, Dense(d, n_out, init=init))
 end
 ```
-It is important to note that in our `build` function, there is no final softmax. This is applie by default in all MLJFlux classifiers, using the `finaliser` hyperparameter of the classifier. Now that we have our builder defined, we can define the actual moel. If you have a GPU, you can substitute in `acceleration=CudaLibs()` below. Note that in the case of convolutions, this will **greatly** increase the speed of training.
+It is important to note that in our `build` function, there is no final `softmax`. This is applied by default in all MLJFlux classifiers (override this using the `finaliser` hyperparameter). Now that we have our builder defined, we can define the actual model. If you have a GPU, you can substitute in `acceleration=CUDALibs()` below to  greatly speed up training.
 ```julia
 ImageClassifier = @load ImageClassifier
 clf = ImageClassifier(builder=MyConvBuilder(3, 16, 32, 32),
@@ -349,113 +367,19 @@ We can tack on 20 more epochs by modifying the `epochs` field, and iteratively f
 clf.epochs = clf.epochs + 20
 fit!(mach, rows=1:500);
 ```
-We can also make predictions and calculate an out-of-sample loss estimate, in two ways!
+We can also make predictions and calculate an out-of-sample loss estimate:
 ```julia
 predicted_labels = predict(mach, rows=501:1000);
 cross_entropy(predicted_labels, labels[501:1000]) |> mean
-# alternative one liner!
+```
+The preceding `fit!`/`predict`/evaluate workflow can be alternatively executed as folllows:
+
+```julia
 evaluate!(mach,
           resampling=Holdout(fraction_train=0.5),
           measure=cross_entropy,
           rows=1:1000,
           verbosity=0)
-```
-
-## Wrapping in iteration controls
-
-Any iterative MLJFlux model can be wrapped in **iteration controls**, as we demonstrate next. For more on MLJ's `IteratedModel` wrapper, see the [MLJ documentation](https://alan-turing-institute.github.io/MLJ.jl/dev/controlling_iterative_models/).
-The "self-iterating" classifier (`iterated_clf` below) is for iterating the image classifier defined above until a stopping criterion is hit. We use the following stopping criterion:
-- `Patience(3)`: 3 consecutive increases in the loss
-- `InvalidValue()`: an out-of-sample loss or a training loss that is `NaN` or `±Inf`
-- `TimeLimit(t=5/60)`: training time has exceeded 5 minutes.
-We can specify how often these checks (and other controls) are applied using the `Step` control. Additionally, we can define controls to
-- save a snapshot of the machine every N control cycles (`save_control`)
-- record traces of the out-of-sample loss and training losses for plotting (`WithLossDo`)
-- record mean value traces of each Flux parameter for plotting (`Callback`)
-And other controls. For a full list, see [the documentation](https://alan-turing-institute.github.io/MLJ.jl/dev/controlling_iterative_models/%23Controls-provided).
-First, we define some helper functions and some empty vectors to store traces:
-```julia
-make2d(x::AbstractArray) = reshape(x, :, size(x)[end])
-make1d(x::AbstractArray) = reshape(x, length(x));
-
-# to extract the flux parameters from a machine
-parameters(mach) = make1d.(Flux.params(fitted_params(mach)));
-
-# trace storage
-losses = []
-training_losses = []
-parameter_means = Float32[];
-epochs = []
-
-# to update traces
-update_loss(loss) = push!(losses, loss)
-update_training_loss(losses) = push!(training_losses, losses[end])
-update_means(mach) = append!(parameter_means, mean.(parameters(mach)));
-update_epochs(epoch) = push!(epochs, epoch)
-```
-Next, we can define our controls! We store them in a simple vector:
-```julia
-save_control =
-    MLJIteration.skip(Save(joinpath(DIR, "mnist.jlso")), predicate=3)
-
-controls=[Step(2),
-          Patience(3),
-          InvalidValue(),
-          TimeLimit(5/60),
-          save_control,
-          WithLossDo(),
-          WithLossDo(update_loss),
-          WithTrainingLossesDo(update_training_loss),
-          Callback(update_means),
-          WithIterationsDo(update_epochs)
-```
-Once the controls are defined, we can instantiate and fit  our "self-iterating" classifier:
-```julia
-iterated_clf = IteratedModel(model=clf,
-                       controls=controls,
-                       resampling=Holdout(fraction_train=0.7),
-  measure=log_loss)
-
-mach = machine(iterated_clf, images, labels);
-fit!(mach, rows=1:500);
-```
-Next we can compare the training and out-of-sample losses, as well as view the evolution of the weights:
-```julia
-plot(epochs, losses,
-     xlab = "epoch",
-     ylab = "root squared error",
-     label="out-of-sample")
-plot!(epochs, training_losses, label="training")
-
-savefig(joinpath(DIR, "loss.png"))
-
-n_epochs =  length(losses)
-n_parameters = div(length(parameter_means), n_epochs)
-parameter_means2 = reshape(copy(parameter_means), n_parameters, n_epochs)'
-plot(epochs, parameter_means2,
-     title="Flux parameter mean weights",
-     xlab = "epoch")
-# **Note.** The the higher the number, the deeper the chain parameter.
-savefig(joinpath(DIR, "weights.png"))
-```
-Since we saved our model every few epochs, we can retrieve the snapshots so we can make predictions!
-```julia
-mach2 = machine(joinpath(DIR, "mnist3.jlso"))
-predict_mode(mach2, images[501:503])
-```
-
-## Resuming training
-
-If we change `iterated_clf.controls` or `clf.epochs`, we can resume training from where it left off. This is very useful for long-running training sessions, where you may be interrupted by for example a bad connection or computer hibernation.
-```julia
-iterated_clf.controls[2] = Patience(4)
-fit!(mach, rows=1:500)
-
-plot(epochs, losses,
-     xlab = "epoch",
-     ylab = "root squared error",
-     label="out-of-sample")
-plot!(epochs, training_losses, label="training")
 ```
 See also
 [`NeuralNetworkClassifier`](@ref)
@@ -479,7 +403,7 @@ for Model in [:NeuralNetworkRegressor, :MultitargetNeuralNetworkRegressor]
         end
 
         function $Model(; builder::B   = Linear()
-                        , optimiser::O = Flux.Optimise.ADAM()
+                        , optimiser::O = Flux.Optimise.Adam()
                         , loss::L      = Flux.mse
                         , epochs       = 10
                         , batch_size   = 1
@@ -516,28 +440,32 @@ end
 """
 $(MMI.doc_header(NeuralNetworkRegressor))
 
-`NeuralNetworkRegressor`: A neural network model for making deterministic
-predictions of a `Continuous` target, given a table of `Continuous` features.
+`NeuralNetworkRegressor` is for training a data-dependent Flux.jl neural
+network to predict a `Continuous` target, given a table of
+`Continuous` features. Users provide a recipe for constructing the
+network, based on properties of the data that is encountered, by specifying
+an appropriate `builder`. See MLJFlux documentation for more on builders.
 
 # Training data
 
 In MLJ or MLJBase, bind an instance `model` to data with
+
     mach = machine(model, X, y)
 
 Where
 
 - `X`: is any table of input features (eg, a `DataFrame`) whose columns
-  are of scitype `Continuous`; check the scitype with `schema(X)`
+  are of scitype `Continuous`; check the column scitypes with `schema(X)`.
 - `y`: is the target, which can be any `AbstractVector` whose element
   scitype is `Continuous`; check the scitype with `scitype(y)`
 
 
 # Hyper-parameters
 
-- `builder=MLJFlux.Linear(σ=Flux.relu)`: An MLJFlux builder that constructs a neural network.
-  Possible `builders` include: `Linear`, `Short`, and `MLP`. You can construct your own builder
-  using the `@builder` macro, see examples for further information.
-- `optimiser::Flux.ADAM()`: A `Flux.Optimise` optimiser. The optimiser performs the updating
+- `builder=MLJFlux.Linear(σ=Flux.relu)`: An MLJFlux builder that constructs
+   a neural network. Possible `builders` include: `MLJFlux.Linear`, `MLJFlux.Short`,
+   and `MLJFlux.MLP`. See below for an example of a user-specified builder.
+- `optimiser::Flux.Adam()`: A `Flux.Optimise` optimiser. The optimiser performs the updating
   of the weights of the network. For further reference, see either the examples or
   [the Flux optimiser documentation](https://fluxml.ai/Flux.jl/stable/training/optimisers/).
   To choose a learning rate (the update rate of the optimizer), a good rule of thumb is to
@@ -550,34 +478,27 @@ Where
     - `Flux.mae`
     - `Flux.msle`
     - `Flux.huber_loss`
+    Currently MLJ measures are not supported as loss functions here.
 - `epochs::Int=10`: The number of epochs to train for. Typically, one epoch represents
   one pass through the entirety of the training dataset.
-- `batch_size::Int=1`: The batch size to be used for training. The batch size represents
-  the number of samples per update of the networks weights. Typcally, batch size should be
-  somewhere between 8 and 512. Smaller batch sizes lead to noisier training loss curves,
-  while larger batch sizes lead towards smoother training loss curves.
-  In general, it is a good idea to pick one fairly large batch size (e.g. 32, 64, 128),
-  and stick with it, and only tune the learning rate. In most examples, batch size is set
-  in powers of twos, but this is fairly arbitrary.
+- `batch_size::Int=1`: The batch size to be used for training. The batch size
+  represents the number of samples per update of the networks weights. Batch
+  sizes between 8 and 512 are typical. Increasing batch size can speed up
+  training, especially on a GPU (`acceleration=CUDALibs()`).
 - `lambda::Float64=0`: The stregth of the regularization used during training. Can be any value
   in the range `[0, ∞)`.
 - `alpha::Float64=0`: The L2/L1 mix of regularization, in the range `[0, 1]`.
   A value of 0 represents L2 regularization, and a value of 1 represents L1 regularization.
 - `rng::Union{AbstractRNG, Int64}`: The random number generator/seed used during training.
-- `optimizer_changes_trigger_retraining::Bool=false`: Defines what happens when fitting a
-  machine if the associated optimiser has changed. If true, the associated machine will
-  retrain from scratch on `fit`, otherwise it will not.
+- `optimizer_changes_trigger_retraining::Bool=false`: Defines what happens when fitting a machine if the associated optimiser has changed. If true, the associated machine will retrain from scratch on `fit!`, otherwise it will not.
 - `acceleration::AbstractResource=CPU1()`: Defines on what hardware training is done.
-  For training on GPU, use `CudaLibs()`, otherwise defaults to `CPU`()`.
-- `finaliser=Flux.softmax`: The final activation function of the neural network.
-  Defaults to `Flux.softmax`. For a regression task, reasonable alternatives include
-  `Flux.sigmoid` and the identity function (otherwise known as "linear activation").
+For training on GPU, use `CudaLibs()`. For training on GPU, use `CUDALibs()`.
 
 
 # Operations
 
 - `predict(mach, Xnew)`: return predictions of the target given new
-  features `Xnew` having the same Scitype as `X` above. Predictions are
+  features `Xnew` having the same scitype as `X` above. Predictions are
   deterministic.
 
 
@@ -585,18 +506,18 @@ Where
 
 The fields of `fitted_params(mach)` are:
 
-- `chain`: The trained "chain", or series of layers, functions, and activations which
-  make up the neural network.
+- `chain`: The trained "chain" (Flux.jl model), namely the series of layers,
+   functions, and activations  which make up the neural network. This includes
+   the final layer specified by `finaliser` (eg, `softmax`).
 
 
 # Report
 
 The fields of `report(mach)` are:
 
-- `training_losses`: The history of training losses, a vector containing the history of all the losses during training. The first element of the vector is the initial penalized loss. After the first element, the nth element corresponds to the loss of epoch n-1.
-  all the losses during training. The first element of the vector is the initial penalized loss. After the first element, the nth element corresponds to the loss of epoch n-1.
-  penalized loss. After the first element, the nth element corresponds to the loss of epoch n-1.
-  epoch n-1.
+- `training_losses`: A vector of training losses (penalised if `lambda != 0`) in
+   historical order, of length `epochs + 1`.  The first element is the pre-training loss.
+
 # Examples
 
 In this example we build a regression model using the Boston house price dataset
@@ -604,7 +525,6 @@ In this example we build a regression model using the Boston house price dataset
   using MLJ
   using MLJFlux
   using Flux
-  using Plots
 ```
 First, we load in the data, with target `:MEDV`. We load in all features except `:CHAS`:
 ```julia
@@ -641,10 +561,9 @@ NeuralNetworkRegressor = @load NeuralNetworkRegressor
                                  rng=123,
                                  epochs=20)
 ```
-For our neural network, since different features likely have different scales, if we do not standardize the network may be implicitly biased towards features with higher magnitudes, or may have [saturated neurons](https://www.informit.com/articles/article.aspx%3fp=3131594&seqNum=2)  and not train well. Therefore, standardization is key!
-not standardize the network may be implicitly biased towards features with higher magnitudes, or may have [saturated neurons](https://www.informit.com/articles/article.aspx%3fp=3131594&seqNum=2)  and not train well. Therefore, standardization is key!
-magnitudes, or may have [saturated neurons](https://www.informit.com/articles/article.aspx%3fp=3131594&seqNum=2)  and not train well. Therefore, standardization is key!
-neurons](https://www.informit.com/articles/article.aspx%3fp=3131594&seqNum=2)  and not train well. Therefore, standardization is key!
+We will arrange for standardizaion of the the target by wrapping our model
+ in `TransformedTargetModel`, and standardization of the features by
+inserting the wrapped model in a pipeline:
 ```julia
 pipe = Standardizer |> TransformedTargetModel(model, target=Standardizer)
 ```
@@ -663,7 +582,7 @@ report(mach).transformed_target_model_deterministic.training_losses
 
 We can visually compare how the learning rate affects the predictions:
 ```julia
-plt = plot()
+using Plots
 
 rates = 10. .^ (-5:0)
 
@@ -674,114 +593,21 @@ foreach(rates) do η
       report(mach).transformed_target_model_deterministic.model.training_losses[3:end]
   plot!(1:length(losses), losses, label=η)
 end
-plt #!md
 
-savefig(joinpath("assets", "learning_rate.png"))
 
 pipe.transformed_target_model_deterministic.model.optimiser.eta = 0.0001
+
+# CV estimate, based on `(X, y)`:
+evaluate!(mach, resampling=CV(nfolds=5), measure=l2)
+
+# loss for `(Xtest, test)`:
+fit!(mach) # train on `(X, y)`
+yhat = predict(mach, Xtest)
+l2(yhat, ytest)  |> mean
 ```
 
-## Using Iteration Controls
-
-We can also wrap the model with MLJ Iteration controls. Suppose we want a model that trains until the out of sample loss does not improve for 6 epochs. We can use the `NumberSinceBest(6)` stopping criterion. We can also add some extra stopping criterion, `InvalidValue` and `Timelimit(1/60)`, as well as some controls to print traces of the losses. First we can define some methods to initialize or clear the traces as well as updte the traces.
-trains until the out of sample loss does not improve for 6 epochs. We can use the `NumberSinceBest(6)` stopping criterion. We can also add some extra stopping criterion, `InvalidValue` and `Timelimit(1/60)`, as well as some controls to print traces of the losses. First we can define some methods to initialize or clear the traces as well as update the traces.
-`NumberSinceBest(6)` stopping criterion. We can also add some extra stopping criterion, `InvalidValue` and `Timelimit(1/60)`, as well as some controls to print traces of the losses. First we can define some methods to initialize or clear the traces as well as update the traces.
-```julia
-# For initializing or clearing the traces:
-
-clear() = begin
-  global losses = []
-  global training_losses = []
-  global epochs = []
-  return nothing
-end
-
-  # And to update the traces:
-
-update_loss(loss) = push!(losses, loss)
-update_training_loss(report) =
-  push!(training_losses,
-        report.transformed_target_model_deterministic.model.training_losses[end])
-update_epochs(epoch) = push!(epochs, epoch)
-```
-For further reference of controls, see [the documentation](https://alan-turing-institute.github.io/MLJ.jl/dev/controlling_iterative_models/%23Controls-provided). To apply the controls, we simply stack them in a vector and then make an `IteratedModel`:
-```julia
-controls=[Step(1),
-        NumberSinceBest(6),
-        InvalidValue(),
-        TimeLimit(1/60),
-        WithLossDo(update_loss),
-        WithReportDo(update_training_loss),
-WithIterationsDo(update_epochs)]
-
-
-iterated_pipe =
-  IteratedModel(model=pipe,
-                controls=controls,
-                resampling=Holdout(fraction_train=0.8),
-                measure = l2)
-```
-Next, we can clear the traces, fit the model, and plot the traces:
-```julia
-clear()
-mach = machine(iterated_pipe, X, y)
-fit!(mach)
-
-plot(epochs, losses,
-   xlab = "epoch",
-   ylab = "mean sum of squares error",
-   label="out-of-sample",
-   legend = :topleft);
-scatter!(twinx(), epochs, training_losses, label="training", color=:red) #!md
-
-savefig(joinpath("assets", "loss.png"))
-```
-
-### Brief note on iterated models
-
-Training an `IteratedModel` means holding out some data (80% in this case) so an
-out-of-sample loss can be tracked and used in the specified stopping criterion,
-`NumberSinceBest(4)`. However, once the stop is triggered, the model wrapped by
-`IteratedModel` (our pipeline model) is retrained on all data for the same number of
-iterations. Calling `predict(mach, Xnew)` on new data uses the updated learned
-parameters.
-
-## Evaluating Iterated Models
-
-We can evaluate our model with the `evaluate!` function:
-```julia
-e = evaluate!(mach,
-             resampling=CV(nfolds=8),
-             measures=[l1, l2])
-
-using Measurements
-l1_loss = e.measurement[1] ± std(e.per_fold[1])/sqrt(7)
-@show l1_loss
-```
-We take this estimate of the uncertainty of the generalization error with a [grain of
-salt](https://direct.mit.edu/neco/article-abstract/10/7/1895/6224/Approximate-Statistical-Tests-for-Comparing)).
-
-## Comparison with other models on the test set
-
-Although we cannot assign them statistical significance, here are comparisons, on the
-untouched test set, of the eror of our self-iterating neural network regressor with a
-couple of other models trained on the same data (using default hyperparameters):
-```julia
-function performance(model)
-   mach = machine(model, X, y) |> fit!
-   yhat = predict(mach, Xtest)
-   l1(yhat, ytest) |> mean
-end
-performance(iterated_pipe)
-
-three_models = [(@load EvoTreeRegressor)(), # tree boosting model
-               (@load LinearRegressor pkg=MLJLinearModels)(),
-               iterated_pipe]
-
-errs = performance.(three_models)
-
-(models=MLJ.name.(three_models), mean_square_errors=errs) |> pretty
-```
+For impementing stopping criterion and other iteration controls, refer to examples linked
+from the MLJFlux documentation
 
 See also
 [`MultitargetNeuralNetworkRegressor`](@ref)
@@ -791,19 +617,22 @@ NeuralNetworkRegressor
 """
 $(MMI.doc_header(MultitargetNeuralNetworkRegressor))
 
-`MultitargetNeuralNetworkRegressor`: A neural network model for making deterministic
-predictions of a `Continuous` multi-target, presented as a table, given a table of
-`Continuous` features.
+`MultitargetNeuralNetworkRegressor` is for training a data-dependent Flux.jl
+ neural network to predict a multivalued `Continuous` target, represented as a table,
+ given a table of `Continuous` features. Users provide a recipe for constructing the
+ network, based on properties of the data that is encountered, by specifying an
+appropriate `builder`. See MLJFlux documentation for more on builders.
 
 # Training data
 
 In MLJ or MLJBase, bind an instance `model` to data with
+
     mach = machine(model, X, y)
 
 Where
 
 - `X`: is any table of input features (eg, a `DataFrame`) whose columns
-  are of scitype `Continuous`; check the scitype with `schema(X)`
+  are of scitype `Continuous`; check the column scitypes with `schema(X)`.
 - `y`: is the target, which can be any table of output targets whose element
   scitype is `Continuous`; check the scitype with `schema(y)`
 
@@ -813,7 +642,7 @@ Where
 - `builder=MLJFlux.Linear(σ=Flux.relu)`: An MLJFlux builder that constructs a neural
   network. Possible `builders` include: `Linear`, `Short`, and `MLP`. You can construct
   your own builder using the `@builder` macro, see examples for further information.
-- `optimiser::Flux.ADAM()`: A `Flux.Optimise` optimiser. The optimiser performs the
+- `optimiser::Flux.Adam()`: A `Flux.Optimise` optimiser. The optimiser performs the
   updating of the weights of the network. For further reference, see either the examples
   or [the Flux optimiser
   documentation](https://fluxml.ai/Flux.jl/stable/training/optimisers/). To choose a
@@ -828,34 +657,27 @@ Where
     - `Flux.mae`
     - `Flux.msle`
     - `Flux.huber_loss`
+    Currently MLJ measures are not supported as loss functions here.
 - `epochs::Int=10`: The number of epochs to train for. Typically, one epoch represents
   one pass through the entirety of the training dataset.
-- `batch_size::Int=1`: The batch size to be used for training. The batch size represents
-  the number of samples per update of the networks weights. Typcally, batch size should be
-  somewhere between 8 and 512. Smaller batch sizes lead to noisier training loss curves,
-  while larger batch sizes lead towards smoother training loss curves. In general, it is a
-  good idea to pick one fairly large batch size (e.g. 32, 64, 128), and stick with it, and
-  only tune the learning rate. In most literature, batch size is set in powers of twos,
-  but this is fairly arbitrary.
+- `batch_size::Int=1`: The batch size to be used for training. The batch size
+  represents the number of samples per update of the networks weights. Batch
+  sizes between 8 and 512 are typical. Increasing batch size can speed up
+  training, especially on a GPU (`acceleration=CUDALibs()`).
 - `lambda::Float64=0`: The stregth of the regularization used during training. Can be
   any value  in the range `[0, ∞)`.
 - `alpha::Float64=0`: The L2/L1 mix of regularization, in the range `[0, 1]`. A value of
   0 represents L2 regularization, and a value of 1 represents L1 regularization.
 - `rng::Union{AbstractRNG, Int64}`: The random number generator/seed used during
   training.
-- `optimizer_changes_trigger_retraining::Bool=false`: Defines what happens when fitting
-  a machine if the associated optimiser has changed. If true, the associated machine will
-  retrain from scratch on `fit`, otherwise it will not.
+- `optimizer_changes_trigger_retraining::Bool=false`: Defines what happens when fitting a machine if the associated optimiser has changed. If true, the associated machine will retrain from scratch on `fit!`, otherwise it will not.
 - `acceleration::AbstractResource=CPU1()`: Defines on what hardware training is done.
-  For Training on GPU, use `CudaLibs()`, otherwise defaults to `CPU`()`.
-- `finaliser=Flux.softmax`: The final activation function of the neural network.
-Defaults to `Flux.softmax`. For a regression task, reasonable alternatives include
-`Flux.sigmoid` and the identity function (otherwise known as "linear activation").
+For Training on GPU, use `CudaLibs()`. For training on GPU, use `CUDALibs()`.
 
 # Operations
 
 - `predict(mach, Xnew)`: return predictions of the target given new
-  features `Xnew` having the same Scitype as `X` above. Predictions are
+  features `Xnew` having the same scitype as `X` above. Predictions are
   deterministic.
 
 
@@ -863,18 +685,17 @@ Defaults to `Flux.softmax`. For a regression task, reasonable alternatives inclu
 
 The fields of `fitted_params(mach)` are:
 
-- `chain`: The trained "chain", or series of layers, functions, and activations which
-  make up the neural network.
+- `chain`: The trained "chain" (Flux.jl model), namely the series of layers,
+   functions, and activations  which make up the neural network. This includes
+   the final layer specified by `finaliser` (eg, `softmax`).
 
 
 # Report
 
 The fields of `report(mach)` are:
 
-- `training_losses`: The history of training losses, a vector containing the history of
-  all the losses during training. The first element of the vector is the initial
-  penalized loss. After the first element, the nth element corresponds to the loss of
-  epoch n-1.
+- `training_losses`: A vector of training losses (penalised if `lambda != 0`) in
+   historical order, of length `epochs + 1`.  The first element is the pre-training loss.
 
 # Examples
 
@@ -883,7 +704,6 @@ In this example we build a regression model using a toy dataset.
 using MLJ
 using MLJFlux
 using Flux
-using Plots
 using MLJBase: augment_X
 ```
 First, we generate some data:
@@ -913,11 +733,11 @@ end
 Finally, we can define the model!
 ```julia
 MultitargetNeuralNetworkRegressor = @load MultitargetNeuralNetworkRegressor
-  model = MultitargetNeuralNetworkRegressor(builder=builder,
-                                 rng=123,
-                                 epochs=20)
+model = MultitargetNeuralNetworkRegressor(builder=builder, rng=123, epochs=20)
 ```
-For our neural network, since different features likely have different scales, if we do not standardize the network may be implicitly biased towards features with higher magnitudes, or may have [saturated neurons](https://www.informit.com/articles/article.aspx%3fp=3131594&seqNum=2)  and not train well. Therefore, standardization is key!
+We will arrange for standardizaion of the the target by wrapping our model
+ in `TransformedTargetModel`, and standardization of the features by
+inserting the wrapped model in a pipeline:
 ```julia
 pipe = Standardizer |> TransformedTargetModel(model, target=Standardizer)
 ```
@@ -936,7 +756,7 @@ report(mach).transformed_target_model_deterministic.training_losses
 
 We can visually compare how the learning rate affects the predictions:
 ```julia
-plt = plot()
+using Plots
 
 rates = 10. .^ (-5:0)
 
@@ -947,108 +767,28 @@ foreach(rates) do η
       report(mach).transformed_target_model_deterministic.model.training_losses[3:end]
   plot!(1:length(losses), losses, label=η)
 end
-plt #!md
 
-savefig(joinpath("assets", "learning_rate.png"))
 
 
 pipe.transformed_target_model_deterministic.model.optimiser.eta = 0.0001
 
 ```
 
-## Using Iteration Controls
-
-We can also wrap the model with MLJ Iteration controls. Suppose we want a model that trains until the out of sample loss does not improve for 6 epochs. We can use the `NumberSinceBest(6)` stopping criterion. We can also add some extra stopping criterion, `InvalidValue` and `Timelimit(1/60)`, as well as some controls to print traces of the losses. First we can define some methods to initialize or clear the traces as well as updte the traces.
+With the learning rate fixed, we can now compute a CV estimate of the performance (using
+all data bound to `mach`) and compare this with performance on the test set:
 ```julia
-# For initializing or clearing the traces:
+# custom MLJ loss:
+multi_loss(yhat, y) = l2(MLJ.matrix(yhat), MLJ.matrix(y)) |> mean
 
-clear() = begin
-  global losses = []
-  global training_losses = []
-  global epochs = []
-  return nothing
-end
+# CV estimate, based on `(X, y)`:
+evaluate!(mach, resampling=CV(nfolds=5), measure=multi_loss)
 
-# And to update the traces:
-
-update_loss(loss) = push!(losses, loss)
-update_training_loss(report) =
-  push!(training_losses,
-        report.transformed_target_model_deterministic.model.training_losses[end])
-update_epochs(epoch) = push!(epochs, epoch)
-```
-For further reference of controls, see [the documentation](https://alan-turing-institute.github.io/MLJ.jl/dev/controlling_iterative_models/%23Controls-provided). To apply the controls, we simply stack them in a vector and then make an `IteratedModel`:
-```julia
-controls=[Step(1),
-        NumberSinceBest(6),
-        InvalidValue(),
-        TimeLimit(1/60),
-        WithLossDo(update_loss),
-        WithReportDo(update_training_loss),
-WithIterationsDo(update_epochs)]
-
-iterated_pipe =
-  IteratedModel(model=pipe,
-                controls=controls,
-                resampling=Holdout(fraction_train=0.8),
-                measure = l2)
-```
-Next, we can clear the traces, fit the model, and plot the traces:
-```julia
-clear()
-mach = machine(iterated_pipe, X, y)
+# loss for `(Xtest, test)`:
 fit!(mach)
-
-plot(epochs, losses,
-   xlab = "epoch",
-   ylab = "mean sum of squares error",
-   label="out-of-sample",
-   legend = :topleft);
-scatter!(twinx(), epochs, training_losses, label="training", color=:red) #!md
-
-savefig(joinpath("assets", "loss.png"))
+yhat = predict(mach, Xtest)
+multi_loss(yhat, y)
 ```
 
-### Brief note on iterated models
-
-Training an `IteratedModel` means holding out some data (80% in this case) so an out-of-sample loss can be tracked and used in the specified stopping criterion, `NumberSinceBest(4)`. However, once the stop is triggered, the model wrapped by `IteratedModel` (our pipeline model) is retrained on all data for the same number of iterations. Calling `predict(mach, Xnew)` on new data uses the updated learned parameters.
-
-## Evaluating Iterated Models
-
-We can evaluate our model with the `evaluate!` function:
-```julia
-e = evaluate!(mach,
-             resampling=CV(nfolds=8),
-             measures=[l1, l2])
-
-using Measurements
-l1_loss = e.measurement[1] ± std(e.per_fold[1])/sqrt(7)
-@show l1_loss
-```
-We take this estimate of the uncertainty of the generalization error with a [grain of salt](https://direct.mit.edu/neco/article-abstract/10/7/1895/6224/Approximate-Statistical-Tests-for-Comparing)).
-
-## Comparison with other models on the test set
-
-Although we cannot assign them statistical significance, here are comparisons, on the untouched test set, of the eror of our self-iterating neural network regressor with a couple of other models trained on the same data (using default hyperparameters):
-```julia
-
-function performance(model)
-   mach = machine(model, X, y) |> fit!
-   yhat = predict(mach, Xtest)
-   l1(yhat, ytest) |> mean
-end
-performance(iterated_pipe)
-
-three_models = [(@load EvoTreeRegressor)(), # tree boosting model
-               (@load LinearRegressor pkg=MLJLinearModels)(),
-               iterated_pipe]
-
-errs = performance.(three_models)
-
-(models=MLJ.name.(three_models), mean_square_errors=errs) |> pretty
-
-
-```
 See also
 [`NeuralNetworkRegressor`](@ref)
 """

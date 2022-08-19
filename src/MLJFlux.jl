@@ -1,4 +1,4 @@
-module MLJFlux 
+module MLJFlux
 
 export CUDALibs, CPU1
 
@@ -14,6 +14,8 @@ using ColorTypes
 using ComputationalResources
 using Random
 
+const MMI=MLJModelInterface
+
 include("penalizers.jl")
 include("core.jl")
 include("builders.jl")
@@ -24,7 +26,7 @@ include("image.jl")
 include("mlj_model_interface.jl")
 
 ### Package specific model traits:
-MLJModelInterface.metadata_pkg.((NeuralNetworkRegressor,
+MMI.metadata_pkg.((NeuralNetworkRegressor,
                                  MultitargetNeuralNetworkRegressor,
                                  NeuralNetworkClassifier,
                                  ImageClassifier),
@@ -36,5 +38,7 @@ MLJModelInterface.metadata_pkg.((NeuralNetworkRegressor,
 
 export NeuralNetworkRegressor, MultitargetNeuralNetworkRegressor
 export NeuralNetworkClassifier, ImageClassifier
+
+
 
 end #module

@@ -1,7 +1,7 @@
 name = "MLJFlux"
 uuid = "094fc8d1-fd35-5302-93ea-dabda2abf845"
 authors = ["Anthony D. Blaom <anthony.blaom@gmail.com>", "Ayush Shridhar <ayush.shridhar1999@gmail.com>"]
-version = "0.2.7"
+version = "0.2.8"
 
 [deps]
 CategoricalArrays = "324d7699-5711-5eae-9e2f-1d82baa6b597"

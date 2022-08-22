@@ -57,6 +57,80 @@ for Model in [:NeuralNetworkClassifier, :ImageClassifier]
 
 end
 
+
+for Model in [:NeuralNetworkRegressor, :MultitargetNeuralNetworkRegressor]
+
+    ex = quote
+        mutable struct $Model{B,O,L} <: MLJFluxDeterministic
+            builder::B
+            optimiser::O  # mutable struct from Flux/src/optimise/optimisers.jl
+            loss::L       # can be called as in `loss(yhat, y)`
+            epochs::Int   # number of epochs
+            batch_size::Int # size of a batch
+            lambda::Float64 # regularization strength
+            alpha::Float64  # regularizaton mix (0 for all l2, 1 for all l1)
+            rng::Union{AbstractRNG,Integer}
+            optimiser_changes_trigger_retraining::Bool
+            acceleration::AbstractResource  # eg, `CPU1()` or `CUDALibs()`
+        end
+
+        function $Model(; builder::B   = Linear()
+                        , optimiser::O = Flux.Optimise.Adam()
+                        , loss::L      = Flux.mse
+                        , epochs       = 10
+                        , batch_size   = 1
+                        , lambda       = 0
+                        , alpha        = 0
+                        , rng          = Random.GLOBAL_RNG
+                        , optimiser_changes_trigger_retraining=false
+                        , acceleration  = CPU1()
+                        ) where {B,O,L}
+
+            model = $Model{B,O,L}(builder
+                                  , optimiser
+                                  , loss
+                                  , epochs
+                                  , batch_size
+                                  , lambda
+                                  , alpha
+                                  , rng
+                                  , optimiser_changes_trigger_retraining
+                                  , acceleration)
+
+            message = clean!(model)
+            isempty(message) || @warn message
+
+            return model
+        end
+
+    end
+    eval(ex)
+
+end
+
+
+
+const Regressor =
+    Union{NeuralNetworkRegressor, MultitargetNeuralNetworkRegressor}
+
+
+MMI.metadata_pkg.(
+    (
+        NeuralNetworkRegressor,
+        MultitargetNeuralNetworkRegressor,
+        NeuralNetworkClassifier,
+        ImageClassifier,
+    ),
+    name="MLJFlux",
+    uuid="094fc8d1-fd35-5302-93ea-dabda2abf845",
+    url="https://github.com/alan-turing-institute/MLJFlux.jl",
+    julia=true,
+    license="MIT",
+)
+
+
+# # DOCSTRINGS
+
 """
 $(MMI.doc_header(NeuralNetworkClassifier))
 
@@ -87,7 +161,8 @@ Train the machine with `fit!(mach, rows=...)`.
 
 - `builder=MLJFlux.Short()`: An MLJFlux builder that constructs a neural network. Possible
    `builders` include: `MLJFlux.Linear`, `MLJFlux.Short`, and `MLJFlux.MLP`. See
-   MLJFlux.jl documentation for examples of user-defined builders.
+   MLJFlux.jl documentation for examples of user-defined builders. See also `finaliser`
+   below.
 
 - `optimiser::Flux.Adam()`: A `Flux.Optimise` optimiser. The optimiser performs the
   updating of the weights of the network. For further reference, see [the Flux optimiser
@@ -141,8 +216,8 @@ Train the machine with `fit!(mach, rows=...)`.
 - `acceleration::AbstractResource=CPU1()`: Defines on what hardware training is done. For
   Training on GPU, use `CudaLibs()`.
 
-- `finaliser=Flux.softmax`: The final activation function of the neural network. Defaults
-  to `Flux.softmax`.
+- `finaliser=Flux.softmax`: The final activation function of the neural network (applied
+  after the network defined by `builder`). Defaults to `Flux.softmax`.
 
 
 # Operations
@@ -276,7 +351,8 @@ Train the machine with `fit!(mach, rows=...)`.
 - `builder`: An MLJFlux builder that constructs the neural network.  The fallback builds a
    depth-16 VGG architecture adapted to the image size and number of target classes, with
    no batch normalization; see the Metalhead.jl documentation for details. See the example
-   below for a user-specified builder. A convenience macro `@builder` is also available.
+   below for a user-specified builder. A convenience macro `@builder` is also
+   available. See also `finaliser` below.
 
 - `optimiser::Flux.Adam()`: A `Flux.Optimise` optimiser. The optimiser performs the
   updating of the weights of the network. For further reference, see [the Flux optimiser
@@ -330,8 +406,8 @@ Train the machine with `fit!(mach, rows=...)`.
 - `acceleration::AbstractResource=CPU1()`: Defines on what hardware training is done. For
   Training on GPU, use `CudaLibs()`.
 
-- `finaliser=Flux.softmax`: The final activation function of the neural network. Defaults
-  to `Flux.softmax`.
+- `finaliser=Flux.softmax`: The final activation function of the neural network (applied
+  after the network defined by `builder`). Defaults to `Flux.softmax`.
 
 
 # Operations
@@ -390,7 +466,7 @@ Above `images` is a single array but MLJFlux requires the images to be a vector 
 individual image arrays:
 
 ```
- images = coerce(images, GrayImage);
+images = coerce(images, GrayImage);
 images[1]
 ```
 
@@ -490,57 +566,6 @@ See also [`NeuralNetworkClassifier`](@ref).
 """
 ImageClassifier
 
-for Model in [:NeuralNetworkRegressor, :MultitargetNeuralNetworkRegressor]
-
-    ex = quote
-        mutable struct $Model{B,O,L} <: MLJFluxDeterministic
-            builder::B
-            optimiser::O  # mutable struct from Flux/src/optimise/optimisers.jl
-            loss::L       # can be called as in `loss(yhat, y)`
-            epochs::Int   # number of epochs
-            batch_size::Int # size of a batch
-            lambda::Float64 # regularization strength
-            alpha::Float64  # regularizaton mix (0 for all l2, 1 for all l1)
-            rng::Union{AbstractRNG,Integer}
-            optimiser_changes_trigger_retraining::Bool
-            acceleration::AbstractResource  # eg, `CPU1()` or `CUDALibs()`
-        end
-
-        function $Model(; builder::B   = Linear()
-                        , optimiser::O = Flux.Optimise.Adam()
-                        , loss::L      = Flux.mse
-                        , epochs       = 10
-                        , batch_size   = 1
-                        , lambda       = 0
-                        , alpha        = 0
-                        , rng          = Random.GLOBAL_RNG
-                        , optimiser_changes_trigger_retraining=false
-                        , acceleration  = CPU1()
-                        ) where {B,O,L}
-
-            model = $Model{B,O,L}(builder
-                                  , optimiser
-                                  , loss
-                                  , epochs
-                                  , batch_size
-                                  , lambda
-                                  , alpha
-                                  , rng
-                                  , optimiser_changes_trigger_retraining
-                                  , acceleration)
-
-            message = clean!(model)
-            isempty(message) || @warn message
-
-            return model
-        end
-
-    end
-    eval(ex)
-
-end
-
-
 """
 $(MMI.doc_header(NeuralNetworkRegressor))
 
@@ -618,9 +643,6 @@ Train the machine with `fit!(mach, rows=...)`.
 - `acceleration::AbstractResource=CPU1()`: Defines on what hardware training is done. For
   Training on GPU, use `CudaLibs()`.
 
-- `finaliser=Flux.softmax`: The final activation function of the neural network. Defaults
-  to `Flux.softmax`.
-
 
 # Operations
 
@@ -633,8 +655,7 @@ Train the machine with `fit!(mach, rows=...)`.
 The fields of `fitted_params(mach)` are:
 
 - `chain`: The trained "chain" (Flux.jl model), namely the series of layers, functions,
-   and activations which make up the neural network. This includes the final layer
-   specified by `finaliser` (eg, `softmax`).
+   and activations which make up the neural network. 
 
 
 # Report
@@ -671,7 +692,7 @@ Since MLJFlux models do not handle ordered factors, we'll treat `:RAD` as `Conti
 X = coerce(X, :RAD=>Continuous)
 ```
 
-Lets also split off  a test set:
+Splitting off a test set:
 
 ```julia
 (X, Xtest), (y, ytest) = partition((X, y), 0.7, multi=true);
@@ -848,9 +869,6 @@ Here:
 - `acceleration::AbstractResource=CPU1()`: Defines on what hardware training is done. For
   Training on GPU, use `CudaLibs()`.
 
-- `finaliser=Flux.softmax`: The final activation function of the neural network. Defaults
-  to `Flux.softmax`.
-
 
 # Operations
 
@@ -864,8 +882,7 @@ Here:
 The fields of `fitted_params(mach)` are:
 
 - `chain`: The trained "chain" (Flux.jl model), namely the series of layers,
-   functions, and activations  which make up the neural network. This includes
-   the final layer specified by `finaliser` (eg, `softmax`).
+   functions, and activations  which make up the neural network. 
 
 
 # Report
@@ -967,6 +984,3 @@ See also
 [`NeuralNetworkRegressor`](@ref)
 """
 MultitargetNeuralNetworkRegressor
-
-const Regressor =
-    Union{NeuralNetworkRegressor, MultitargetNeuralNetworkRegressor}

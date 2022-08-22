@@ -225,7 +225,7 @@ e = evaluate!(mach,
 #-
 
 using Measurements
-l1_loss = e.measurement[1] ± std(e.per_fold[1])/sqrt(7)
+l1_loss = e.measurement[1] ± 1.96*std(e.per_fold[1])/sqrt(7)
 @show l1_loss
 
 # We take this estimate of the uncertainty of the generalization error with a [grain of salt](https://direct.mit.edu/neco/article-abstract/10/7/1895/6224/Approximate-Statistical-Tests-for-Comparing)).

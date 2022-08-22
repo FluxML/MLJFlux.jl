@@ -1,4 +1,4 @@
-## BUILDING CHAINS A FROM HYPERPARAMETERS + INPUT/OUTPUT SHAPE
+# # BUILDING CHAINS A FROM HYPERPARAMETERS + INPUT/OUTPUT SHAPE
 
 # We introduce chain builders as a way of exposing neural network
 # hyperparameters (describing, architecture, dropout rates, etc) to
@@ -9,7 +9,7 @@
 # input/output dimensions/shape.
 
 # Below n or (n1, n2) etc refers to network inputs, while m or (m1,
-# m2) etc refers to outputs. 
+# m2) etc refers to outputs.
 
 abstract type Builder <: MLJModelInterface.MLJType end
 
@@ -38,7 +38,7 @@ using `n_hidden` nodes in the hidden layer and the specified `dropout`
 (defaulting to 0.5). An activation function `σ` is applied between the
 hidden and final layers. If `n_hidden=0` (the default) then `n_hidden`
 is the geometric mean of the number of input and output nodes.  The
-number of input and output nodes is determined from the data. 
+number of input and output nodes is determined from the data.
 
 The each layer is initialized using `Flux.glorot_uniform(rng)`. If
 `rng` is an integer, it is instead used as the seed for a
@@ -95,6 +95,8 @@ function MLJFlux.build(mlp::MLP, rng, n_in, n_out)
     return Flux.Chain(hidden... )
 end
 
+
+# # BUILER MACRO
 
 struct GenericBuilder{F} <: Builder
     apply::F

@@ -1,30 +1,8 @@
 ## EXPOSE OPTIMISERS TO MLJ (for eg, tuning)
 
-# Here we make the optimiser structs "transparent" so that their
-# field values are exposed by calls to MLJ.params
-
-for opt in (:Descent,
-            :Momentum,
-            :Nesterov,
-            :RMSProp,
-            :ADAM,
-            :RADAM,
-            :AdaMax,
-            :OADAM,
-            :ADAGrad,
-            :ADADelta,
-            :AMSGrad,
-            :NADAM,
-            :AdaBelief,
-            :Optimiser,
-            :InvDecay, :ExpDecay, :WeightDecay,
-            :ClipValue,
-            :ClipNorm) # last updated: Flux.jl 0.12.3
-
-    @eval begin
-        MLJModelInterface.istransparent(m::Flux.$opt) = true
-    end
-end
+# make the optimiser structs "transparent" so that their field values
+# are exposed by calls to MLJ.params:
+MLJModelInterface.istransparent(m::Flux.Optimise.AbstractOptimiser) = true
 
 
 ## GENERAL METHOD TO OPTIMIZE A CHAIN

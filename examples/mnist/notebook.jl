@@ -6,17 +6,15 @@ const DIR = @__DIR__
 Pkg.activate(DIR)
 Pkg.instantiate()
 
-# **Julia version** is assumed to be ^1.6
+# **Julia version** is assumed to be ^1.7
 
 using MLJ
 using Flux
 import MLJFlux
 import MLJIteration # for `skip`
 
-MLJ.color_off()
-
 using Plots
-pyplot(size=(600, 300*(sqrt(5)-1)));
+gr(size=(600, 300*(sqrt(5)-1)));
 
 # ## Basic training
 
@@ -45,7 +43,7 @@ images = coerce(images, GrayImage);
 
 # For general instructions on coercing image data, see [Type coercion
 # for image
-# data](https://alan-turing-institute.github.io/ScientificTypes.jl/dev/#Type-coercion-for-image-data-1)
+# data](https://juliaai.github.io/ScientificTypes.jl/dev/#Type-coercion-for-image-data)
 
 images[1]
 
@@ -196,7 +194,7 @@ update_epochs(epoch) = push!(epochs, epoch)
 # The controls to apply:
 
 save_control =
-    MLJIteration.skip(Save(joinpath(DIR, "mnist.jlso")), predicate=3)
+    MLJIteration.skip(Save(joinpath(DIR, "mnist.jls")), predicate=3)
 
 controls=[Step(2),
           Patience(3),
@@ -230,7 +228,7 @@ fit!(mach, rows=1:500);
 
 plot(epochs, losses,
      xlab = "epoch",
-     ylab = "root squared error",
+     ylab = "cross entropy",
      label="out-of-sample")
 plot!(epochs, training_losses, label="training")
 
@@ -266,10 +264,7 @@ fit!(mach, rows=1:500)
 
 plot(epochs, losses,
      xlab = "epoch",
-     ylab = "root squared error",
+     ylab = "cross entropy",
      label="out-of-sample")
 plot!(epochs, training_losses, label="training")
 
-using Literate #src
-Literate.markdown(@__FILE__, @__DIR__, execute=false) #src
-Literate.notebook(@__FILE__, @__DIR__, execute=false) #src

@@ -52,9 +52,11 @@ end
 end
 
 @testset_accelerated "@builder" accel begin
-    builder = MLJFlux.@builder(Flux.Chain(Flux.Dense(n_in, 4,
-                                                     init = (out, in) -> randn(rng, out, in)),
-                                     Flux.Dense(4, n_out)))
+    builder = MLJFlux.@builder(Flux.Chain(Flux.Dense(
+        n_in,
+        4,
+        init = (out, in) -> randn(rng, out, in)
+    ), Flux.Dense(4, n_out)))
     rng = StableRNGs.StableRNG(123)
     chain = MLJFlux.build(builder, rng, 5, 3)
     ps = Flux.params(chain)

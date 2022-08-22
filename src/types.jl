@@ -214,7 +214,7 @@ Train the machine with `fit!(mach, rows=...)`.
   will retrain from scratch on `fit!` call, otherwise it will not.
 
 - `acceleration::AbstractResource=CPU1()`: Defines on what hardware training is done. For
-  Training on GPU, use `CudaLibs()`.
+  Training on GPU, use `CUDALibs()`.
 
 - `finaliser=Flux.softmax`: The final activation function of the neural network (applied
   after the network defined by `builder`). Defaults to `Flux.softmax`.
@@ -404,7 +404,7 @@ Train the machine with `fit!(mach, rows=...)`.
   will retrain from scratch on `fit!` call, otherwise it will not.
 
 - `acceleration::AbstractResource=CPU1()`: Defines on what hardware training is done. For
-  Training on GPU, use `CudaLibs()`.
+  Training on GPU, use `CUDALibs()`.
 
 - `finaliser=Flux.softmax`: The final activation function of the neural network (applied
   after the network defined by `builder`). Defaults to `Flux.softmax`.
@@ -641,7 +641,7 @@ Train the machine with `fit!(mach, rows=...)`.
   will retrain from scratch on `fit!` call, otherwise it will not.
 
 - `acceleration::AbstractResource=CPU1()`: Defines on what hardware training is done. For
-  Training on GPU, use `CudaLibs()`.
+  Training on GPU, use `CUDALibs()`.
 
 
 # Operations
@@ -655,7 +655,7 @@ Train the machine with `fit!(mach, rows=...)`.
 The fields of `fitted_params(mach)` are:
 
 - `chain`: The trained "chain" (Flux.jl model), namely the series of layers, functions,
-   and activations which make up the neural network. 
+   and activations which make up the neural network.
 
 
 # Report
@@ -867,7 +867,7 @@ Here:
   will retrain from scratch on `fit!` call, otherwise it will not.
 
 - `acceleration::AbstractResource=CPU1()`: Defines on what hardware training is done. For
-  Training on GPU, use `CudaLibs()`.
+  Training on GPU, use `CUDALibs()`.
 
 
 # Operations
@@ -882,7 +882,7 @@ Here:
 The fields of `fitted_params(mach)` are:
 
 - `chain`: The trained "chain" (Flux.jl model), namely the series of layers,
-   functions, and activations  which make up the neural network. 
+   functions, and activations  which make up the neural network.
 
 
 # Report

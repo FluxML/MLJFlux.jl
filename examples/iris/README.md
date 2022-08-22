@@ -1,7 +1,7 @@
 # Contents
 
-- `notebook.ipynb`: Juptyer notebook
-- `notebook.jl`: executable Julia script annotated with comments
+- `iris.ipynb`: Juptyer notebook
+- `iris.jl`: executable Julia script annotated with comments
 
 # Important 
 

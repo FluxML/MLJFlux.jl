@@ -14,8 +14,7 @@ MLJFlux.build(model::NeuralNetworkClassifier, rng, shape) =
 
 # returns the model `fitresult` (see "Adding Models for General Use"
 # section of the MLJ manual) which must always have the form `(chain,
-# metadata)`, where `metadata` is anything extra neede by `predict` may
-# require:
+# metadata)`, where `metadata` is anything extra needed by `predict`:
 MLJFlux.fitresult(model::NeuralNetworkClassifier, chain, y) =
     (chain, MLJModelInterface.classes(y[1]))
 
@@ -31,8 +30,4 @@ end
 MLJModelInterface.metadata_model(NeuralNetworkClassifier,
                                  input=Table(Continuous),
                                  target=AbstractVector{<:Finite},
-                                 path="MLJFlux.NeuralNetworkClassifier",
-                                 descr="A neural network model for making "*
-                                 "probabilistic predictions of a "*
-                                 "`Multiclass` or `OrderedFactor` target, "*
-                                 "given a table of `Continuous` features. ")
+                                 path="MLJFlux.NeuralNetworkClassifier")

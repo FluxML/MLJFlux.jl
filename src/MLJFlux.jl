@@ -1,5 +1,7 @@
 module MLJFlux
 
+export CUDALibs, CPU1
+
 import Flux
 using MLJModelInterface
 using MLJModelInterface.ScientificTypesBase
@@ -14,6 +16,8 @@ using Random
 import Metalhead
 
 include("utilities.jl")
+const MMI=MLJModelInterface
+
 include("penalizers.jl")
 include("core.jl")
 include("builders.jl")
@@ -24,19 +28,10 @@ include("classifier.jl")
 include("image.jl")
 include("mlj_model_interface.jl")
 
-### Package specific model traits:
-MLJModelInterface.metadata_pkg.((NeuralNetworkRegressor,
-                                 MultitargetNeuralNetworkRegressor,
-                                 NeuralNetworkClassifier,
-                                 ImageClassifier),
-              name="MLJFlux",
-              uuid="094fc8d1-fd35-5302-93ea-dabda2abf845",
-              url="https://github.com/alan-turing-institute/MLJFlux.jl",
-              julia=true,
-              license="MIT")
-
 export NeuralNetworkRegressor, MultitargetNeuralNetworkRegressor
 export NeuralNetworkClassifier, ImageClassifier
 export CUDALibs, CPU1
+
+
 
 end #module

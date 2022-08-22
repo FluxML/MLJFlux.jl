@@ -40,5 +40,4 @@ function make_images(rng; image_size=(6, 6), n_classes=33, n_images=50, color=fa
     X = coerce(cat(images...; dims=4), T)
     y = categorical(labels)
     return X, y
-end 
-    
+end

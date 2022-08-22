@@ -14,8 +14,7 @@ MLJFlux.build(model::NeuralNetworkClassifier, rng, shape) =
 
 # returns the model `fitresult` (see "Adding Models for General Use"
 # section of the MLJ manual) which must always have the form `(chain,
-# metadata)`, where `metadata` is anything extra neede by `predict` may
-# require:
+# metadata)`, where `metadata` is anything extra needed by `predict`:
 MLJFlux.fitresult(model::NeuralNetworkClassifier, chain, y) =
     (chain, MLJModelInterface.classes(y[1]))
 

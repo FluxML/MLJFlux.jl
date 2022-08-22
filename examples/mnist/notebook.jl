@@ -43,7 +43,7 @@ images = coerce(images, GrayImage);
 
 # For general instructions on coercing image data, see [Type coercion
 # for image
-# data](https://alan-turing-institute.github.io/ScientificTypes.jl/dev/#Type-coercion-for-image-data-1)
+# data](https://juliaai.github.io/ScientificTypes.jl/dev/#Type-coercion-for-image-data)
 
 images[1]
 
@@ -194,7 +194,7 @@ update_epochs(epoch) = push!(epochs, epoch)
 # The controls to apply:
 
 save_control =
-    MLJIteration.skip(Save(joinpath(DIR, "mnist.jlso")), predicate=3)
+    MLJIteration.skip(Save(joinpath(DIR, "mnist.jls")), predicate=3)
 
 controls=[Step(2),
           Patience(3),

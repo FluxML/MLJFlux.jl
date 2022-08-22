@@ -6,7 +6,7 @@ X = MLJBase.table(randn(Float32, N, 5));
 # TODO: replace Short2 -> Short when
 # https://github.com/FluxML/Flux.jl/pull/1618 is resolved:
 builder = Short2(σ=identity)
-optimiser = Flux.Optimise.ADAM()
+optimiser = Flux.Optimise.Adam()
 
 losses = []
 

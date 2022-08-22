@@ -45,34 +45,49 @@ seed!(123)
 
 include("test_utils.jl")
 
-@testset "penalizers" begin
+# enable conditional testing of modules by providing test_args
+# e.g. `Pkg.test("MLJBase", test_args=["misc"])`
+RUN_ALL_TESTS = isempty(ARGS)
+macro conditional_testset(name, expr)
+    name = string(name)
+    esc(quote
+        if RUN_ALL_TESTS || $name in ARGS
+            @testset $name $expr
+        end
+    end)
+end
+@conditional_testset "penalizers" begin
     include("penalizers.jl")
 end
 
-@testset "core" begin
+@conditional_testset "core" begin
     include("core.jl")
 end
 
-@testset "builders" begin
+@conditional_testset "builders" begin
     include("builders.jl")
 end
 
-@testset "mlj_model_interface" begin
+@conditional_testset "metalhead" begin
+    include("metalhead.jl")
+end
+
+@conditional_testset "mlj_model_interface" begin
     include("mlj_model_interface.jl")
 end
 
-@testset "regressor" begin
+@conditional_testset "regressor" begin
     include("regressor.jl")
 end
 
-@testset "classifier" begin
+@conditional_testset "classifier" begin
     include("classifier.jl")
 end
 
-@testset "image" begin
+@conditional_testset "image" begin
     include("image.jl")
 end
 
-@testset "integration" begin
+@conditional_testset "integration" begin
     include("integration.jl")
 end

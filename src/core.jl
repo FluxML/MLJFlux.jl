@@ -146,7 +146,7 @@ reformat(X) = reformat(X, scitype(X))
 
 # ---------------------------------
 # Reformatting matrices
-reformat(X, ::Type{<:AbstractMatrix}) = X
+reformat(X, ::Type{<:AbstractMatrix}) = permutedims(X)
 
 # ---------------------------------
 # Reformatting tables

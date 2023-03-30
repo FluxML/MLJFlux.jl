@@ -145,6 +145,10 @@ nrows(y::AbstractVector) = length(y)
 reformat(X) = reformat(X, scitype(X))
 
 # ---------------------------------
+# Reformatting matrices
+reformat(X, ::Type{<:AbstractMatrix}) = X
+
+# ---------------------------------
 # Reformatting tables
 
 reformat(X, ::Type{<:Table}) = MLJModelInterface.matrix(X)'

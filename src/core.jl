@@ -146,11 +146,10 @@ reformat(X) = reformat(X, scitype(X))
 
 # ---------------------------------
 # Reformatting matrices
-reformat(X, ::Type{<:AbstractMatrix}) = permutedims(X)
+reformat(X, ::Type{<:AbstractMatrix}) = X'
 
 # ---------------------------------
 # Reformatting tables
-
 reformat(X, ::Type{<:Table}) = MLJModelInterface.matrix(X)'
 
 # ---------------------------------

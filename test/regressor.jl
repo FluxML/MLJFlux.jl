@@ -18,8 +18,17 @@ train, test = MLJBase.partition(1:N, 0.7)
 
     Random.seed!(123)
 
+    # Table input:
     basictest(MLJFlux.NeuralNetworkRegressor,
               X,
+              y,
+              builder,
+              optimiser,
+              0.7,
+              accel)
+    # Matrix input:
+    basictest(MLJFlux.NeuralNetworkRegressor,
+              matrix(X),
               y,
               builder,
               optimiser,
@@ -64,8 +73,17 @@ losses = []
 
     Random.seed!(123)
 
+    # Table input:
     basictest(MLJFlux.MultitargetNeuralNetworkRegressor,
               X,
+              y,
+              builder,
+              optimiser,
+              1.0,
+              accel)
+    # Matrix input:
+    basictest(MLJFlux.MultitargetNeuralNetworkRegressor,
+              matrix(X),
               y,
               builder,
               optimiser,

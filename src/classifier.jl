@@ -28,6 +28,6 @@ function MLJModelInterface.predict(model::NeuralNetworkClassifier,
 end
 
 MLJModelInterface.metadata_model(NeuralNetworkClassifier,
-                                 input=Table(Continuous),
+                                 input=Union{AbstractMatrix{Continuous}, Table(Continuous)},
                                  target=AbstractVector{<:Finite},
                                  path="MLJFlux.NeuralNetworkClassifier")

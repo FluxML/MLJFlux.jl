@@ -19,21 +19,26 @@ train, test = MLJBase.partition(1:N, 0.7)
     Random.seed!(123)
 
     # Table input:
-    basictest(MLJFlux.NeuralNetworkRegressor,
-              X,
-              y,
-              builder,
-              optimiser,
-              0.7,
-              accel)
+    @testset "Table input" begin
+        basictest(MLJFlux.NeuralNetworkRegressor,
+                  X,
+                  y,
+                  builder,
+                  optimiser,
+                  0.7,
+                  accel)
+    end
+   
     # Matrix input:
-    basictest(MLJFlux.NeuralNetworkRegressor,
-              matrix(X),
-              y,
-              builder,
-              optimiser,
-              0.7,
-              accel)
+    @testset "Matrix input" begin
+        basictest(MLJFlux.NeuralNetworkRegressor,
+                  matrix(X),
+                  y,
+                  builder,
+                  optimiser,
+                  0.7,
+                  accel)
+    end
 
     # test model is a bit better than constant predictor:
     stable_rng = StableRNGs.StableRNG(123)
@@ -74,21 +79,25 @@ losses = []
     Random.seed!(123)
 
     # Table input:
-    basictest(MLJFlux.MultitargetNeuralNetworkRegressor,
-              X,
-              y,
-              builder,
-              optimiser,
-              1.0,
-              accel)
+    @testset "Table input" begin
+        basictest(MLJFlux.MultitargetNeuralNetworkRegressor,
+                X,
+                y,
+                builder,
+                optimiser,
+                1.0,
+                accel)
+    end
     # Matrix input:
-    basictest(MLJFlux.MultitargetNeuralNetworkRegressor,
-              matrix(X),
-              y,
-              builder,
-              optimiser,
-              1.0,
-              accel)
+    @testset "Matrix input" begin
+        basictest(MLJFlux.MultitargetNeuralNetworkRegressor,
+                matrix(X),
+                y,
+                builder,
+                optimiser,
+                1.0,
+                accel)
+    end
 
     # test model is a bit better than constant predictor
     model = MLJFlux.MultitargetNeuralNetworkRegressor(acceleration=accel,

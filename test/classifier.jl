@@ -26,21 +26,25 @@ losses = []
 @testset_accelerated "NeuralNetworkClassifier" accel begin
     Random.seed!(123)
     # Table input:
-    basictest(MLJFlux.NeuralNetworkClassifier,
-              X,
-              y,
-              builder,
-              optimiser,
-              0.85,
-              accel)
+    @testset "Table input" begin
+        basictest(MLJFlux.NeuralNetworkClassifier,
+                  X,
+                  y,
+                  builder,
+                  optimiser,
+                  0.85,
+                  accel)
+    end
     # Matrix input:
-    basictest(MLJFlux.NeuralNetworkClassifier,
-              matrix(X),
-              y,
-              builder,
-              optimiser,
-              0.85,
-              accel)
+    @testset "Matrix input" begin
+        basictest(MLJFlux.NeuralNetworkClassifier,
+                  matrix(X),
+                  y,
+                  builder,
+                  optimiser,
+                  0.85,
+                  accel)
+    end
 
     train, test = MLJBase.partition(1:N, 0.7)
 

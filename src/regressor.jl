@@ -1,6 +1,7 @@
 # # NEURAL NETWORK REGRESSOR
 
 function shape(model::NeuralNetworkRegressor, X, y)
+    X = X isa Matrix ? Tables.table(X) : X
     n_input = Tables.schema(X).names |> length
     n_ouput = 1
     return (n_input, 1)
@@ -29,6 +30,7 @@ MLJModelInterface.metadata_model(NeuralNetworkRegressor,
 # # MULTITARGET NEURAL NETWORK REGRESSOR
 
 function shape(model::MultitargetNeuralNetworkRegressor, X, y)
+    X = X isa Matrix ? Tables.table(X) : X
     n_input = Tables.schema(X).names |> length
     n_output = Tables.schema(y).names |> length
     return (n_input, n_output)

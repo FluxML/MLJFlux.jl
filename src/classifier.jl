@@ -1,6 +1,7 @@
 # if `b` is a builder, then `b(model, rng, shape...)` is called to make a
 # new chain, where `shape` is the return value of this method:
 function MLJFlux.shape(model::NeuralNetworkClassifier, X, y)
+    X = X isa Matrix ? Tables.table(X) : X
     levels = MLJModelInterface.classes(y[1])
     n_output = length(levels)
     n_input = Tables.schema(X).names |> length

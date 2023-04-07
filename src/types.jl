@@ -5,127 +5,89 @@ const MLJFluxModel = Union{MLJFluxProbabilistic,MLJFluxDeterministic}
 
 for Model in [:NeuralNetworkClassifier, :ImageClassifier]
 
-    default_builder_ex =
-        Model == :ImageClassifier ? :(image_builder(VGGHack)) : Short()
+  default_builder_ex =
+    Model == :ImageClassifier ? :(image_builder(VGGHack)) : Short()
 
-    ex = quote
-        mutable struct $Model{B,F,O,L} <: MLJFluxProbabilistic
-            builder::B
-            finaliser::F
-            optimiser::O   # mutable struct from Flux/src/optimise/optimisers.jl
-            loss::L        # can be called as in `loss(yhat, y)`
-            epochs::Int    # number of epochs
-            batch_size::Int  # size of a batch
-            lambda::Float64  # regularization strength
-            alpha::Float64   # regularizaton mix (0 for all l2, 1 for all l1)
-            rng::Union{AbstractRNG,Int64}
-            optimiser_changes_trigger_retraining::Bool
-            acceleration::AbstractResource  # eg, `CPU1()` or `CUDALibs()`
-        end
-
-        function $Model(; builder::B   = $default_builder_ex
-                        , finaliser::F = Flux.softmax
-                        , optimiser::O = Flux.Optimise.Adam()
-                        , loss::L      = Flux.crossentropy
-                        , epochs       = 10
-                        , batch_size   = 1
-                        , lambda       = 0
-                        , alpha        = 0
-                        , rng          = Random.GLOBAL_RNG
-                        , optimiser_changes_trigger_retraining = false
-                        , acceleration = CPU1()
-                        ) where {B,F,O,L}
-
-            model = $Model{B,F,O,L}(builder
-                                    , finaliser
-                                    , optimiser
-                                    , loss
-                                    , epochs
-                                    , batch_size
-                                    , lambda
-                                    , alpha
-                                    , rng
-                                    , optimiser_changes_trigger_retraining
-                                    , acceleration
-                                    )
-
-            message = clean!(model)
-            isempty(message) || @warn message
-
-            return model
-        end
-
+  ex = quote
+    mutable struct $Model{B,F,O,L} <: MLJFluxProbabilistic
+      builder::B
+      finaliser::F
+      optimiser::O   # mutable struct from Flux/src/optimise/optimisers.jl
+      loss::L        # can be called as in `loss(yhat, y)`
+      epochs::Int    # number of epochs
+      batch_size::Int  # size of a batch
+      lambda::Float64  # regularization strength
+      alpha::Float64   # regularizaton mix (0 for all l2, 1 for all l1)
+      rng::Union{AbstractRNG,Int64}
+      optimiser_changes_trigger_retraining::Bool
+      acceleration::AbstractResource  # eg, `CPU1()` or `CUDALibs()`
     end
-    eval(ex)
+
+    function $Model(; builder::B=$default_builder_ex, finaliser::F=Flux.softmax, optimiser::O=Flux.Optimise.Adam(), loss::L=Flux.crossentropy, epochs=10, batch_size=1, lambda=0, alpha=0, rng=Random.GLOBAL_RNG, optimiser_changes_trigger_retraining=false, acceleration=CPU1()
+    ) where {B,F,O,L}
+
+      model = $Model{B,F,O,L}(builder, finaliser, optimiser, loss, epochs, batch_size, lambda, alpha, rng, optimiser_changes_trigger_retraining, acceleration
+      )
+
+      message = clean!(model)
+      isempty(message) || @warn message
+
+      return model
+    end
+
+  end
+  eval(ex)
 
 end
 
 
 for Model in [:NeuralNetworkRegressor, :MultitargetNeuralNetworkRegressor]
 
-    ex = quote
-        mutable struct $Model{B,O,L} <: MLJFluxDeterministic
-            builder::B
-            optimiser::O  # mutable struct from Flux/src/optimise/optimisers.jl
-            loss::L       # can be called as in `loss(yhat, y)`
-            epochs::Int   # number of epochs
-            batch_size::Int # size of a batch
-            lambda::Float64 # regularization strength
-            alpha::Float64  # regularizaton mix (0 for all l2, 1 for all l1)
-            rng::Union{AbstractRNG,Integer}
-            optimiser_changes_trigger_retraining::Bool
-            acceleration::AbstractResource  # eg, `CPU1()` or `CUDALibs()`
-        end
-
-        function $Model(; builder::B   = Linear()
-                        , optimiser::O = Flux.Optimise.Adam()
-                        , loss::L      = Flux.mse
-                        , epochs       = 10
-                        , batch_size   = 1
-                        , lambda       = 0
-                        , alpha        = 0
-                        , rng          = Random.GLOBAL_RNG
-                        , optimiser_changes_trigger_retraining=false
-                        , acceleration  = CPU1()
-                        ) where {B,O,L}
-
-            model = $Model{B,O,L}(builder
-                                  , optimiser
-                                  , loss
-                                  , epochs
-                                  , batch_size
-                                  , lambda
-                                  , alpha
-                                  , rng
-                                  , optimiser_changes_trigger_retraining
-                                  , acceleration)
-
-            message = clean!(model)
-            isempty(message) || @warn message
-
-            return model
-        end
-
+  ex = quote
+    mutable struct $Model{B,O,L} <: MLJFluxDeterministic
+      builder::B
+      optimiser::O  # mutable struct from Flux/src/optimise/optimisers.jl
+      loss::L       # can be called as in `loss(yhat, y)`
+      epochs::Int   # number of epochs
+      batch_size::Int # size of a batch
+      lambda::Float64 # regularization strength
+      alpha::Float64  # regularizaton mix (0 for all l2, 1 for all l1)
+      rng::Union{AbstractRNG,Integer}
+      optimiser_changes_trigger_retraining::Bool
+      acceleration::AbstractResource  # eg, `CPU1()` or `CUDALibs()`
     end
-    eval(ex)
+
+    function $Model(; builder::B=Linear(), optimiser::O=Flux.Optimise.Adam(), loss::L=Flux.mse, epochs=10, batch_size=1, lambda=0, alpha=0, rng=Random.GLOBAL_RNG, optimiser_changes_trigger_retraining=false, acceleration=CPU1()
+    ) where {B,O,L}
+
+      model = $Model{B,O,L}(builder, optimiser, loss, epochs, batch_size, lambda, alpha, rng, optimiser_changes_trigger_retraining, acceleration)
+
+      message = clean!(model)
+      isempty(message) || @warn message
+
+      return model
+    end
+
+  end
+  eval(ex)
 
 end
 
 const Regressor =
-    Union{NeuralNetworkRegressor, MultitargetNeuralNetworkRegressor}
+  Union{NeuralNetworkRegressor,MultitargetNeuralNetworkRegressor}
 
 MMI.metadata_pkg.(
-    (
-        NeuralNetworkRegressor,
-        MultitargetNeuralNetworkRegressor,
-        NeuralNetworkClassifier,
-        ImageClassifier,
-    ),
-    name="MLJFlux",
-    uuid="094fc8d1-fd35-5302-93ea-dabda2abf845",
-    url="https://github.com/alan-turing-institute/MLJFlux.jl",
-    julia=true,
-    license="MIT",
+  (
+    NeuralNetworkRegressor,
+    MultitargetNeuralNetworkRegressor,
+    NeuralNetworkClassifier,
+    ImageClassifier,
+  ),
+  name="MLJFlux",
+  uuid="094fc8d1-fd35-5302-93ea-dabda2abf845",
+  url="https://github.com/alan-turing-institute/MLJFlux.jl",
+  julia=true,
+  license="MIT",
 )
 
 
@@ -148,8 +110,8 @@ In MLJ or MLJBase, bind an instance `model` to data with
 
 Here:
 
-- `X` is any table of input features (eg, a `DataFrame`) whose columns are of scitype
-  `Continuous`; check column scitypes with `schema(X)`.
+- `X` is either a `Matrix` or any table of input features (eg, a `DataFrame`) whose columns are of scitype
+  `Continuous`; check column scitypes with `schema(X)`. If `X` is a `Matrix`, it is assumed to have columns corresponding to features and rows corresponding to observations.
 
 - `y` is the target, which can be any `AbstractVector` whose element scitype is `Multiclass`
   or `OrderedFactor`; check the scitype with `scitype(y)`
@@ -583,8 +545,8 @@ In MLJ or MLJBase, bind an instance `model` to data with
 
 Here:
 
-- `X` is any table of input features (eg, a `DataFrame`) whose columns
-  are of scitype `Continuous`; check the column scitypes with `schema(X)`.
+- `X` is either a `Matrix` or any table of input features (eg, a `DataFrame`) whose columns are of scitype
+  `Continuous`; check column scitypes with `schema(X)`. If `X` is a `Matrix`, it is assumed to have columns corresponding to features and rows corresponding to observations.
 - `y` is the target, which can be any `AbstractVector` whose element
   scitype is `Continuous`; check the scitype with `scitype(y)`
 
@@ -810,8 +772,8 @@ In MLJ or MLJBase, bind an instance `model` to data with
 
 Here:
 
-- `X` is any table of input features (eg, a `DataFrame`) whose columns are of scitype
-  `Continuous`; check column scitypes with `schema(X)`.
+- `X` is either a `Matrix` or any table of input features (eg, a `DataFrame`) whose columns are of scitype
+  `Continuous`; check column scitypes with `schema(X)`. If `X` is a `Matrix`, it is assumed to have columns corresponding to features and rows corresponding to observations.
 
 - `y` is the target, which can be any table of output targets whose element scitype is
   `Continuous`; check column scitypes with `schema(y)`.

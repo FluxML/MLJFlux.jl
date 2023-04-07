@@ -1,5 +1,10 @@
 # # NEURAL NETWORK REGRESSOR
 
+"""
+    shape(model::NeuralNetworkRegressor, X, y)
+
+A private method that returns the shape of the input and output of the model for given data `X` and `y`.
+"""
 function shape(model::NeuralNetworkRegressor, X, y)
     X = X isa Matrix ? Tables.table(X) : X
     n_input = Tables.schema(X).names |> length
@@ -13,12 +18,12 @@ build(model::NeuralNetworkRegressor, rng, shape) =
 fitresult(model::NeuralNetworkRegressor, chain, y) = (chain, nothing)
 
 function MLJModelInterface.predict(model::NeuralNetworkRegressor,
-                                   fitresult,
-                                   Xnew)
-    chain  = fitresult[1]
+    fitresult,
+    Xnew)
+    chain = fitresult[1]
     Xnew_ = reformat(Xnew)
-    return [chain(values.(tomat(Xnew_[:,i])))[1]
-                for i in 1:size(Xnew_, 2)]
+    return [chain(values.(tomat(Xnew_[:, i])))[1]
+            for i in 1:size(Xnew_, 2)]
 end
 
 MLJModelInterface.metadata_model(NeuralNetworkRegressor,
@@ -29,6 +34,11 @@ MLJModelInterface.metadata_model(NeuralNetworkRegressor,
 
 # # MULTITARGET NEURAL NETWORK REGRESSOR
 
+"""
+    shape(model::MultitargetNeuralNetworkRegressor, X, y)
+
+A private method that returns the shape of the input and output of the model for given data `X` and `y`.
+"""
 function shape(model::MultitargetNeuralNetworkRegressor, X, y)
     X = X isa Matrix ? Tables.table(X) : X
     n_input = Tables.schema(X).names |> length
@@ -45,13 +55,13 @@ function fitresult(model::MultitargetNeuralNetworkRegressor, chain, y)
 end
 
 function MLJModelInterface.predict(model::MultitargetNeuralNetworkRegressor,
-                                   fitresult, Xnew)
-    chain,  target_column_names = fitresult
+    fitresult, Xnew)
+    chain, target_column_names = fitresult
     X = reformat(Xnew)
-    ypred = [chain(values.(tomat(X[:,i])))
+    ypred = [chain(values.(tomat(X[:, i])))
              for i in 1:size(X, 2)]
     return MLJModelInterface.table(reduce(hcat, y for y in ypred)',
-                                       names=target_column_names)
+        names=target_column_names)
 end
 
 MLJModelInterface.metadata_model(MultitargetNeuralNetworkRegressor,

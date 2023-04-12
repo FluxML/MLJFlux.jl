@@ -28,7 +28,7 @@ end
 
 MLJModelInterface.metadata_model(NeuralNetworkRegressor,
     input=Union{AbstractMatrix{Continuous},Table(Continuous)},
-    target=AbstractVector{<:Finite},
+    target=AbstractVector{<:Continuous},
     path="MLJFlux.NeuralNetworkRegressor")
 
 

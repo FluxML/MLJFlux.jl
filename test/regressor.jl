@@ -92,7 +92,7 @@ losses = []
     @testset "Matrix input" begin
         basictest(MLJFlux.MultitargetNeuralNetworkRegressor,
                 matrix(X),
-                y,
+                ymatrix,
                 builder,
                 optimiser,
                 1.0,

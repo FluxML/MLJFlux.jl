@@ -775,8 +775,8 @@ Here:
 - `X` is either a `Matrix` or any table of input features (eg, a `DataFrame`) whose columns are of scitype
   `Continuous`; check column scitypes with `schema(X)`. If `X` is a `Matrix`, it is assumed to have columns corresponding to features and rows corresponding to observations.
 
-- `y` is the target, which can be any table of output targets whose element scitype is
-  `Continuous`; check column scitypes with `schema(y)`.
+- `y` is the target, which can be any table or matrix of output targets whose element scitype is
+  `Continuous`; check column scitypes with `schema(y)`. If `y` is a `Matrix`, it is assumed to have columns corresponding to variables and rows corresponding to observations.
 
 
 # Hyper-parameters

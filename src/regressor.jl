@@ -41,6 +41,7 @@ A private method that returns the shape of the input and output of the model for
 """
 function shape(model::MultitargetNeuralNetworkRegressor, X, y)
     X = X isa Matrix ? Tables.table(X) : X
+    y = y isa Matrix ? Tables.table(y) : y
     n_input = Tables.schema(X).names |> length
     n_output = Tables.schema(y).names |> length
     return (n_input, n_output)
@@ -50,7 +51,11 @@ build(model::MultitargetNeuralNetworkRegressor, rng, shape) =
     build(model.builder, rng, shape...)
 
 function fitresult(model::MultitargetNeuralNetworkRegressor, chain, y)
-    target_column_names = Tables.schema(y).names
+    if y isa Matrix
+        target_column_names = nothing
+    else 
+        target_column_names = Tables.schema(y).names
+    end
     return (chain, target_column_names)
 end
 
@@ -60,8 +65,9 @@ function MLJModelInterface.predict(model::MultitargetNeuralNetworkRegressor,
     X = reformat(Xnew)
     ypred = [chain(values.(tomat(X[:, i])))
              for i in 1:size(X, 2)]
-    return MLJModelInterface.table(reduce(hcat, y for y in ypred)',
-        names=target_column_names)
+    output = isnothing(target_column_names) ? permutedims(reduce(hcat, ypred)) :
+        MLJModelInterface.table(reduce(hcat, ypred)', names=target_column_names)
+    return output
 end
 
 MLJModelInterface.metadata_model(MultitargetNeuralNetworkRegressor,

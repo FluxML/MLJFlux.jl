@@ -224,6 +224,7 @@ by `model.batch_size`.)
 
 """
 function collate(model, X, y)
+    y = y isa Matrix ? Tables.table(y) : y
     row_batches = Base.Iterators.partition(1:nrows(y), model.batch_size)
     Xmatrix = reformat(X)
     ymatrix = reformat(y)

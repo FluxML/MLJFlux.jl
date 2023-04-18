@@ -15,7 +15,7 @@ end
 (::Mover{<:CUDALibs})(data) = Flux.gpu(data)
 
 """
-    train!(loss, penalty, chain, optimiser, X, y)
+    train!(model::MLJFlux.MLJFluxModel, penalty, chain, optimiser, X, y)
 
 A private method.
 
@@ -29,25 +29,26 @@ Update the parameters of a Flux `chain`, where:
   in the [`MLJFlux.fit!`](@ref) document string.
 
 """
-function train!(loss, penalty, chain, optimiser, X, y)
+function train!(model::MLJFlux.MLJFluxModel, penalty, chain, optimiser, X, y)
+    loss = model.loss
     n_batches = length(y)
     training_loss = zero(Float32)
     for i in 1:n_batches
         parameters = Flux.params(chain)
         gs = Flux.gradient(parameters) do
             yhat = chain(X[i])
-            batch_loss = loss(yhat, y[i]) + penalty(parameters)/n_batches
+            batch_loss = loss(yhat, y[i]) + penalty(parameters) / n_batches
             training_loss += batch_loss
             return batch_loss
         end
         Flux.update!(optimiser, parameters, gs)
     end
-    return training_loss/n_batches
+    return training_loss / n_batches
 end
 
 
 """
-    fit!(loss, penalty, chain, optimiser, epochs, verbosity, X, y)
+    fit!(model::MLJFlux.MLJFluxModel, penalty, chain, optimiser, epochs, verbosity, X, y)
 
 A private method.
 
@@ -84,11 +85,13 @@ of `chain` and `history` is a vector of penalized losses - one initial
 loss, and one loss per epoch.
 
 """
-function  fit!(loss, penalty, chain, optimiser, epochs, verbosity, X, y)
+function fit!(model::MLJFlux.MLJFluxModel, penalty, chain, optimiser, epochs, verbosity, X, y)
+
+    loss = model.loss
 
     # intitialize and start progress meter:
-    meter = Progress(epochs+1, dt=0, desc="Optimising neural net:",
-                     barglyphs=BarGlyphs("[=> ]"), barlen=25, color=:yellow)
+    meter = Progress(epochs + 1, dt=0, desc="Optimising neural net:",
+        barglyphs=BarGlyphs("[=> ]"), barlen=25, color=:yellow)
     verbosity != 1 || next!(meter)
 
     # initiate history:
@@ -96,11 +99,11 @@ function  fit!(loss, penalty, chain, optimiser, epochs, verbosity, X, y)
 
     parameters = Flux.params(chain)
     losses = (loss(chain(X[i]), y[i]) +
-              penalty(parameters)/n_batches for i in 1:n_batches)
+              penalty(parameters) / n_batches for i in 1:n_batches)
     history = [mean(losses),]
 
     for i in 1:epochs
-        current_loss = train!(loss, penalty, chain, optimiser, X, y)
+        current_loss = train!(model::MLJFlux.MLJFluxModel, penalty, chain, optimiser, X, y)
         verbosity < 2 ||
             @info "Loss is $(round(current_loss; sigdigits=4))"
         verbosity != 1 || next!(meter)
@@ -124,7 +127,7 @@ Returns `true` if `acceleration=CUDALibs()` option is unavailable, and
 false otherwise.
 
 """
-gpu_isdead() = Flux.gpu([1.0, ]) isa Array
+gpu_isdead() = Flux.gpu([1.0,]) isa Array
 
 """
     nrows(X)
@@ -157,14 +160,14 @@ reformat(X, ::Type{<:GrayImage}) =
 
 function reformat(X, ::Type{<:AbstractVector{<:GrayImage}})
     ret = zeros(Float32, size(first(X))..., 1, length(X))
-    for idx=1:size(ret, 4)
+    for idx = 1:size(ret, 4)
         ret[:, :, :, idx] .= reformat(X[idx])
     end
     return ret
 end
 
 function reformat(X, ::Type{<:ColorImage})
-    ret = zeros(Float32, size(X)... , 3)
+    ret = zeros(Float32, size(X)..., 3)
     for w = 1:size(X)[1]
         for h = 1:size(X)[2]
             ret[w, h, :] .= Float32.([X[w, h].r, X[w, h].g, X[w, h].b])
@@ -175,7 +178,7 @@ end
 
 function reformat(X, ::Type{<:AbstractVector{<:ColorImage}})
     ret = zeros(Float32, size(first(X))..., 3, length(X))
-    for idx=1:size(ret, 4)
+    for idx = 1:size(ret, 4)
         ret[:, :, :, idx] .= reformat(X[idx])
     end
     return ret
@@ -207,7 +210,7 @@ _get(Xmatrix::AbstractMatrix, b) = Xmatrix[:, b]
 _get(y::AbstractVector, b) = y[b]
 
 # each element in X is a single image of size (w, h, c)
-_get(X::AbstractArray{<:Any, 4}, b) = X[:, :, :, b]
+_get(X::AbstractArray{<:Any,4}, b) = X[:, :, :, b]
 
 
 """

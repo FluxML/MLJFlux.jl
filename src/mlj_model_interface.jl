@@ -74,7 +74,7 @@ function MLJModelInterface.fit(model::MLJFluxModel,
 
     optimiser = deepcopy(model.optimiser)
 
-    chain, history = fit!(model.loss,
+    chain, history = fit!(model,
                           penalty,
                           chain,
                           optimiser,
@@ -137,7 +137,7 @@ function MLJModelInterface.update(model::MLJFluxModel,
         optimiser = deepcopy(model.optimiser)
     end
 
-    chain, history = fit!(model.loss,
+    chain, history = fit!(model,
                           penalty,
                           chain,
                           optimiser,

@@ -133,7 +133,7 @@ Find the number of rows of `X`, where `X` is an `AbstractVector or
 Tables.jl table.
 """
 function nrows(X)
-    Tables.istable(X) || X isa AbstractMatrix || throw(ArgumentError)
+    Tables.istable(X) || throw(ArgumentError)
     Tables.columnaccess(X) || return length(collect(X))
     # if has columnaccess
     cols = Tables.columntable(X)
@@ -141,6 +141,7 @@ function nrows(X)
     return length(cols[1])
 end
 nrows(y::AbstractVector) = length(y)
+nrows(X::AbstractMatrix) = size(X, 1)
 
 reformat(X) = reformat(X, scitype(X))
 
@@ -224,9 +225,11 @@ by `model.batch_size`.)
 
 """
 function collate(model, X, y)
-    # y = y isa Matrix ? Tables.table(y) : y
     row_batches = Base.Iterators.partition(1:nrows(y), model.batch_size)
     Xmatrix = reformat(X)
     ymatrix = reformat(y)
+    println("Xmatrix: ", size(Xmatrix))
+    println("ymatrix: ", size(ymatrix))
+    println("rows", nrows(y))
     return [_get(Xmatrix, b) for b in row_batches], [_get(ymatrix, b) for b in row_batches]
 end

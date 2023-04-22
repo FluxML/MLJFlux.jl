@@ -17,11 +17,12 @@ end
 """
     train!(model::MLJFlux.MLJFluxModel, penalty, chain, optimiser, X, y)
 
-A private method.
+A private method that can be overloaded for custom models.
 
 Update the parameters of a Flux `chain`, where:
 
-- `(yhat, y) -> loss(yhat, y)` is the loss function
+- the loss function `(yhat, y) -> loss(yhat, y)` is inferred from the
+  `model`
 
 - `params -> penalty(params)` is a regularization penalty function
 
@@ -50,10 +51,10 @@ end
 """
     fit!(model::MLJFlux.MLJFluxModel, penalty, chain, optimiser, epochs, verbosity, X, y)
 
-A private method.
+A private method that can be overloaded for custom models.
 
 Optimize a Flux model `chain`, where `(yhat, y) -> loss(yhat, y)` is
-the loss, and `parameters -> penalty(parameters)` is the
+the loss function inferred from the `model`, and `parameters -> penalty(parameters)` is the
 regularization penalty function.
 
 Here `chain` is a `Flux.Chain` object, or other Flux model such that

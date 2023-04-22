@@ -39,12 +39,9 @@ MLJModelInterface.metadata_model(NeuralNetworkRegressor,
 
 A private method that returns the shape of the input and output of the model for given data `X` and `y`.
 """
-function shape(model::MultitargetNeuralNetworkRegressor, X, y)
-    X = X isa Matrix ? Tables.table(X) : X
-    y = y isa Matrix ? Tables.table(y) : y
-    n_input = Tables.schema(X).names |> length
-    n_output = Tables.schema(y).names |> length
-    return (n_input, n_output)
+ncols(X::AbstractMatrix) = size(X, 2)
+ncols(X) = Tables.columns(X)) |> Tables.columnnames |> length
+shape(model::MultitargetNeuralNetworkRegressor, X, y) = (ncols(X), ncols(y))
 end
 
 build(model::MultitargetNeuralNetworkRegressor, rng, shape) =

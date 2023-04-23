@@ -228,8 +228,5 @@ function collate(model, X, y)
     row_batches = Base.Iterators.partition(1:nrows(y), model.batch_size)
     Xmatrix = reformat(X)
     ymatrix = reformat(y)
-    println("Xmatrix: ", size(Xmatrix))
-    println("ymatrix: ", size(ymatrix))
-    println("rows", nrows(y))
     return [_get(Xmatrix, b) for b in row_batches], [_get(ymatrix, b) for b in row_batches]
 end

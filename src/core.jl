@@ -145,12 +145,16 @@ function nrows(X)
     return length(cols[1])
 end
 nrows(y::AbstractVector) = length(y)
+nrows(X::AbstractMatrix) = size(X, 1)
 
 reformat(X) = reformat(X, scitype(X))
 
 # ---------------------------------
-# Reformatting tables
+# Reformatting matrices
+reformat(X, ::Type{<:AbstractMatrix}) = X'
 
+# ---------------------------------
+# Reformatting tables
 reformat(X, ::Type{<:Table}) = MLJModelInterface.matrix(X)'
 
 # ---------------------------------

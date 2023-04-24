@@ -68,5 +68,5 @@ end
 
 MLJModelInterface.metadata_model(MultitargetNeuralNetworkRegressor,
     input=Union{AbstractMatrix{Continuous},Table(Continuous)},
-    target=Table(Continuous),
+    target=Union{AbstractMatrix{Continuous}, Table(Continuous)},
     path="MLJFlux.MultitargetNeuralNetworkRegressor")

@@ -109,7 +109,7 @@ epochs = 10
 
     Random.seed!(123)
     penalty = MLJFlux.Penalty(model)
-    _chain_yes_drop, history = MLJFlux.fit!(model.loss,
+    _chain_yes_drop, history = MLJFlux.fit!(model,
                                             penalty,
                                             chain_yes_drop,
                                             Flux.Optimise.Adam(0.001),
@@ -121,7 +121,7 @@ epochs = 10
 
     Random.seed!(123)
     penalty = MLJFlux.Penalty(model)
-    _chain_no_drop, history = MLJFlux.fit!(model.loss,
+    _chain_no_drop, history = MLJFlux.fit!(model,
                                            penalty,
                                            chain_no_drop,
                                            Flux.Optimise.Adam(0.001),

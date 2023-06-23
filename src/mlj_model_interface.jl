@@ -22,8 +22,8 @@ function MLJModelInterface.clean!(model::MLJFluxModel)
         warning *= "Need `epochs ≥ 0`. Resetting `epochs = 10`. "
         model.epochs = 10
     end
-    if model.batch_size < 0
-        warning *= "Need `batch_size ≥ 0`. Resetting `batch_size = 1`. "
+    if model.batch_size <= 0
+        warning *= "Need `batch_size > 0`. Resetting `batch_size = 1`. "
         model.batch_size = 1
     end
     if model.acceleration isa CUDALibs && gpu_isdead()

@@ -25,7 +25,7 @@ end
     @test model.epochs == 10
 
     model = @test_logs (:warn, r"`batch_size") begin
-        ModelType(batch_size = -1)
+        ModelType(batch_size = 0)
     end
     @test model.batch_size == 1
 

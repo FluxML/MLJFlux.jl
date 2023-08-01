@@ -31,18 +31,18 @@ Update the parameters of a Flux `chain`, where:
 
 """
 function train!(model::MLJFlux.MLJFluxModel, penalty, chain, optimiser, X, y)
+    opt_state = Flux.setup(optimiser, chain)
     loss = model.loss
     n_batches = length(y)
     training_loss = zero(Float32)
+    parameters = Flux.params(chain)
     for i in 1:n_batches
-        parameters = Flux.params(chain)
-        gs = Flux.gradient(parameters) do
-            yhat = chain(X[i])
-            batch_loss = loss(yhat, y[i]) + penalty(parameters) / n_batches
-            training_loss += batch_loss
-            return batch_loss
+        batch_loss, gs = Flux.withgradient(chain) do m
+            yhat = m(X[i])
+            loss(yhat, y[i]) + penalty(parameters) / n_batches
         end
-        Flux.update!(optimiser, parameters, gs)
+        training_loss += batch_loss
+        Flux.update!(opt_state, chain, gs[1])
     end
     return training_loss / n_batches
 end

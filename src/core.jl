@@ -39,7 +39,8 @@ function train!(model::MLJFlux.MLJFluxModel, penalty, chain, optimiser, X, y)
     for i in 1:n_batches
         batch_loss, gs = Flux.withgradient(chain) do m
             yhat = m(X[i])
-            loss(yhat, y[i]) + penalty(parameters) / n_batches
+            pen = penalty(parameters) / n_batches
+            loss(yhat, y[i]) + pen
         end
         training_loss += batch_loss
         Flux.update!(opt_state, chain, gs[1])

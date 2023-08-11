@@ -1,5 +1,8 @@
 ## EXPOSE OPTIMISERS TO MLJ (for eg, tuning)
 
+using Functors
+using Optimisers
+
 # make the optimiser structs "transparent" so that their field values
 # are exposed by calls to MLJ.params:
 MLJModelInterface.istransparent(m::Flux.Optimise.AbstractOptimiser) = true
@@ -38,8 +41,9 @@ function train!(model::MLJFlux.MLJFluxModel, penalty, chain, optimiser, X, y)
     for i in 1:n_batches
         batch_loss, gs = Flux.withgradient(chain) do m
             yhat = m(X[i])
-            reg = penalty(Flux.params(chain)) / n_batches
-            loss(yhat, y[i]) + reg
+            l = loss(yhat, y[i])
+            reg = Functors.fmap(penalty, m; exclude=Optimisers.isnumeric)
+            l + reg / n_batches
         end
         training_loss += batch_loss
         Flux.update!(opt_state, chain, gs[1])

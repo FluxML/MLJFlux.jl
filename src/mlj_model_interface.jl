@@ -40,7 +40,7 @@ end
 
 # # FIT AND  UPDATE
 
-const ERR_BUILDER = 
+const ERR_BUILDER =
     "Builder does not appear to build an architecture compatible with supplied data. "
 
 true_rng(model) = model.rng isa Integer ? MersenneTwister(model.rng) : model.rng
@@ -60,7 +60,7 @@ function MLJModelInterface.fit(model::MLJFluxModel,
     catch ex
         @error ERR_BUILDER
     end
-    
+
     penalty = Penalty(model)
     data = move.(collate(model, X, y))
 
@@ -70,7 +70,7 @@ function MLJModelInterface.fit(model::MLJFluxModel,
     catch ex
         @error ERR_BUILDER
         throw(ex)
-    end 
+    end
 
     optimiser = deepcopy(model.optimiser)
 

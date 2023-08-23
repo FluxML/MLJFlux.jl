@@ -47,7 +47,7 @@ end
 
     # reproducibility (without dropout):
     chain2 = MLJFlux.build(builder, StableRNGs.StableRNG(123), 5, 3)
-    x = rand(5)
+    x = rand(Float32, 5)
     @test chain(x) ≈ chain2(x)
 end
 

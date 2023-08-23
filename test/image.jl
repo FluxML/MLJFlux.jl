@@ -69,8 +69,6 @@ reference = losses[1]
 
 # # BASIC IMAGE TESTS COLOR
 
-# In this case we use the default ResNet builder
-
 builder = MyNeuralNetwork((2,2), (2,2))
 images, labels = MLJFlux.make_images(stable_rng, color=true)
 losses = []
@@ -112,12 +110,13 @@ reference = losses[1]
 @test all(x->abs(x - reference)/reference < 1e-5, losses[2:end])
 
 
-# # SMOKE TEST FOR DEFAULT BUILDER 
+# # SMOKE TEST FOR DEFAULT BUILDER
 
-images, labels = MLJFlux.make_images(stable_rng, image_size=(32, 32), n_images=12, noise=0.2, color=true);
+images, labels = MLJFlux.make_images(stable_rng, image_size=(32, 32), n_images=12,
+noise=0.2, color=true);
 
 @testset_accelerated "ImageClassifier basic tests" accel begin
-    model = MLJFlux.ImageClassifier(epochs=10,
+    model = MLJFlux.ImageClassifier(epochs=5,
                                     batch_size=4,
                                     acceleration=accel,
                                     rng=stable_rng)

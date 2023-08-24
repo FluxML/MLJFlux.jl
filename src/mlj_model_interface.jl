@@ -64,7 +64,8 @@ function MLJModelInterface.fit(model::MLJFluxModel,
     penalty = Penalty(model)
     data = move.(collate(model, X, y))
 
-    x = data |> first |> first
+    x = data[1][1]
+
     try
         chain(x)
     catch ex

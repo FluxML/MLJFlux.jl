@@ -8,17 +8,29 @@ mutable struct MyNeuralNetwork <: MLJFlux.Builder
     kernel2
 end
 
-function MLJFlux.build(model::MyNeuralNetwork, rng, ip, op, n_channels)
+# to get a matrix whose last dimension mathces that of the array input (the batch size):
+function make2d(x)
+    l = length(x)
+    b = size(x)[end]
+    reshape(x, div(l, b), b)
+end
+
+function MLJFlux.build(builder::MyNeuralNetwork, rng, ip, op, n_channels)
     init = Flux.glorot_uniform(rng)
-    Flux.Chain(
-        Flux.Conv(model.kernel1, n_channels=>2, init=init),
-        Flux.Conv(model.kernel2, 2=>1, init=init),
-        x->reshape(x, :, size(x)[end]),
-        Flux.Dense(16, op, init=init))
+    front = Flux.Chain(
+        Flux.Conv(builder.kernel1, n_channels=>2, init=init),
+        Flux.Conv(builder.kernel2, 2=>1, init=init),
+        make2d,
+    )
+    d = Flux.outputsize(front, (ip..., n_channels, 1))[1]
+    return Flux.Chain(
+        front,
+        Flux.Dense(d, op, init=init)
+    )
 end
 
 builder = MyNeuralNetwork((2,2), (2,2))
-images, labels = MLJFlux.make_images(stable_rng)
+images, labels = MLJFlux.make_images(stable_rng);
 losses = []
 
 @testset_accelerated "ImageClassifier basic tests" accel begin

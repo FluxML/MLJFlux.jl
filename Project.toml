@@ -21,12 +21,13 @@ ColorTypes = "0.10.3, 0.11"
 ComputationalResources = "0.3.2"
 Flux = "0.13, 0.14"
 MLJModelInterface = "1.1.1"
-Metalhead = "0.7"
+Metalhead = "0.8"
 ProgressMeter = "1.7.1"
 Tables = "1.0"
 julia = "1.6"
 
 [extras]
+cuDNN = "02a925ec-e4fe-4b08-9a7e-0d78e3d38ccd"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 MLJBase = "a7f614a8-145f-11e9-1d2a-a57a1082229d"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
@@ -36,4 +37,4 @@ StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["LinearAlgebra", "MLJBase", "Random", "StableRNGs", "Statistics", "StatsBase", "Test"]
+test = ["cuDNN", "LinearAlgebra", "MLJBase", "Random", "StableRNGs", "Statistics", "StatsBase", "Test"]

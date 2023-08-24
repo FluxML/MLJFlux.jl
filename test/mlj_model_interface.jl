@@ -44,6 +44,7 @@ end
 
     # integration test:
     X, y = MLJBase.make_regression(10)
+    X = Float32.(MLJBase.Tables.matrix(X)) |> MLJBase.Tables.table
     mach = MLJBase.machine(model, X, y)
     MLJBase.fit!(mach, verbosity=0)
     losses = MLJBase.training_losses(mach)

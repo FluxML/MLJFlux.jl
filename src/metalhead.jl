@@ -4,10 +4,10 @@ TODO: After https://github.com/FluxML/Metalhead.jl/issues/176:
 
 - Export and externally document `image_builder` method
 
-- Delete definition of `ResNetHack` below
+- Delete definition of `VGGHack` below
 
 - Change default builder in ImageClassifier (see /src/types.jl) from
-  `image_builder(ResNetHack)` to `image_builder(Metalhead.ResNet)`.
+  `image_builder(VGGHack)` to `image_builder(Metalhead.VGG)`.
 
 =#
 
@@ -51,7 +51,7 @@ Base.show(io::IO, w::MetalheadBuilder) =
 
 Return an MLJFlux builder object based on the Metalhead.jl constructor/type
 `metalhead_constructor` (eg, `Metalhead.ResNet`). Here `args` and `kwargs` are
-passed to the `MetalheadType` constructor at "build time", along with
+passed as arguments to `metalhead_constructor` at "build time", along with
 the extra keyword specifiers `imsize=...`, `inchannels=...` and
 `nclasses=...`, with values inferred from the data.
 
@@ -61,14 +61,14 @@ If in Metalhead.jl you would do
 
 ```julia
 using Metalhead
-model = ResNet(50, pretrain=true, inchannels=1, nclasses=10)
+model = ResNet(50, pretrain=false, inchannels=1, nclasses=10)
 ```
 
 then in MLJFlux, it suffices to do
 
 ```julia
 using MLJFlux, Metalhead
-builder = image_builder(ResNet, 50, pretrain=true)
+builder = image_builder(ResNet, 50, pretrain=false)
 ```
 
 which can be used in `ImageClassifier` as in
@@ -122,25 +122,31 @@ function VGGHack(
     pretrain=false,
 )
 
-    # Adapted from 
-    # https://github.com/FluxML/Metalhead.jl/blob/9edff63222720ff84671b8087dd71eb370a6c35a/src/convnets/vgg.jl#L165
+    # Adapted from
+    # https://github.com/FluxML/Metalhead.jl/blob/4e5b8f16964468518eeb6eb8d7e5f85af4ecf959/src/convnets/vgg.jl#L161
     # But we do not ignore `imsize`.
 
     @assert(
-        depth in keys(Metalhead.vgg_config),
-        "depth must be from one in $(sort(collect(keys(Metalhead.vgg_config))))"
+        depth in keys(Metalhead.VGG_CONFIGS),
+        "depth must be from one in $(sort(collect(keys(Metalhead.VGG_CONFIGS))))"
     )
     model = Metalhead.VGG(imsize;
-                config = Metalhead.vgg_conv_config[Metalhead.vgg_config[depth]],
+                config = Metalhead.VGG_CONV_CONFIGS[Metalhead.VGG_CONFIGS[depth]],
                 inchannels,
                 batchnorm,
                 nclasses,
-                fcsize = 4096,
-                dropout = 0.5)
-    if pretrain && !batchnorm
-        Metalhead.loadpretrain!(model, string("VGG", depth))
-    elseif pretrain
-        Metalhead.loadpretrain!(model, "VGG$(depth)-BN)")
+                dropout_prob = 0.5)
+    if pretrain
+        imsize == (224, 224) || @warn "Using `pretrain=true` may not work unless "*
+            "image size is `(224, 224)`, which it is not. "
+        artifact_name = string("vgg", depth)
+        if batchnorm
+            artifact_name *= "_bn"
+        else
+            artifact_name *= "-IMAGENET1K_V1"
+        end
+        loadpretrain!(model, artifact_name)
     end
+
     return model
 end

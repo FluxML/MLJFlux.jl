@@ -42,16 +42,15 @@ end
     @test builder.metalhead_constructor == Metalhead.VGG
     @test builder.args == (depth, )
     @test (; builder.kwargs...) == (; batchnorm=true)
-    ref_chain = Metalhead.VGG(
-        imsize;
-        config = Metalhead.vgg_conv_config[Metalhead.vgg_config[depth]],
-        inchannels,
-        batchnorm=true,
-        nclasses,
-        fcsize = 4096,
-        dropout = 0.5
-    )
-    # needs https://github.com/FluxML/Metalhead.jl/issues/176
+
+    ## needs https://github.com/FluxML/Metalhead.jl/issues/176:
+    # ref_chain = Metalhead.VGG(
+    #     imsize;
+    #     config = Metalhead.VGG_CONV_CONFIGS[Metalhead.VGG_CONFIGS[depth]],
+    #     inchannels,
+    #     batchnorm=true,
+    #     nclasses,
+    # )
     # chain =
     #    MLJFlux.build(builder, StableRNGs.StableRNG(123), imsize, nclasses, inchannels)
     # @test length.(MLJFlux.Flux.params(ref_chain)) ==

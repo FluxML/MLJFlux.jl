@@ -7,7 +7,7 @@ steps:
     agents:
       queue: "juliagpu"
       cuda: "*"
-    timeout_in_minutes: 60
+    timeout_in_minutes: 90
 
 env:
   JULIA_PKG_SERVER: "" # it often struggles with our large artifacts

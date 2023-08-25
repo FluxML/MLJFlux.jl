@@ -22,8 +22,8 @@ function MLJModelInterface.clean!(model::MLJFluxModel)
         warning *= "Need `epochs ≥ 0`. Resetting `epochs = 10`. "
         model.epochs = 10
     end
-    if model.batch_size < 0
-        warning *= "Need `batch_size ≥ 0`. Resetting `batch_size = 1`. "
+    if model.batch_size <= 0
+        warning *= "Need `batch_size > 0`. Resetting `batch_size = 1`. "
         model.batch_size = 1
     end
     if model.acceleration isa CUDALibs && gpu_isdead()
@@ -40,7 +40,7 @@ end
 
 # # FIT AND  UPDATE
 
-const ERR_BUILDER = 
+const ERR_BUILDER =
     "Builder does not appear to build an architecture compatible with supplied data. "
 
 true_rng(model) = model.rng isa Integer ? MersenneTwister(model.rng) : model.rng
@@ -60,17 +60,18 @@ function MLJModelInterface.fit(model::MLJFluxModel,
     catch ex
         @error ERR_BUILDER
     end
-    
+
     penalty = Penalty(model)
     data = move.(collate(model, X, y))
 
-    x = data |> first |> first
+    x = data[1][1]
+
     try
         chain(x)
     catch ex
         @error ERR_BUILDER
         throw(ex)
-    end 
+    end
 
     optimiser = deepcopy(model.optimiser)
 

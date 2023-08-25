@@ -7,7 +7,7 @@ rowvec(y::Vector) = reshape(y, 1, length(y))
 @test MLJFlux.MLJModelInterface.istransparent(Flux.Adam(0.1))
 
 @testset "nrows" begin
-    Xmatrix = rand(stable_rng, 10, 3)
+    Xmatrix = rand(stable_rng, Float32, 10, 3)
     X = MLJBase.table(Xmatrix)
     @test MLJFlux.nrows(X) == 10
     @test MLJFlux.nrows(Tables.columntable(X)) == 10
@@ -19,7 +19,7 @@ end
     # convert to a column table:
     X = MLJBase.table(Xmatrix)
 
-    y = rand(stable_rng, 10)
+    y = rand(stable_rng, Float32, 10)
     model = MLJFlux.NeuralNetworkRegressor()
     model.batch_size= 3
     @test MLJFlux.collate(model, X, y) ==
@@ -38,7 +38,7 @@ end
                             reshape([1; 0], (2,1))]))
 
     # MultitargetNeuralNetworRegressor:
-    ymatrix = rand(stable_rng, 10, 2)
+    ymatrix = rand(stable_rng, Float32, 10, 2)
     y = MLJBase.table(ymatrix) # a rowaccess table
     model = MLJFlux.NeuralNetworkRegressor()
     model.batch_size= 3
@@ -54,7 +54,7 @@ end
                   ymatrix'[:,7:9], ymatrix'[:,10:10]]))
 
     # ImageClassifier
-    Xmatrix = coerce(rand(stable_rng, 6, 6, 1, 10), GrayImage)
+    Xmatrix = coerce(rand(stable_rng, Float32, 6, 6, 1, 10), GrayImage)
     y = categorical(['a', 'b', 'a', 'a', 'b', 'a', 'a', 'a', 'b', 'a'])
     model = MLJFlux.ImageClassifier(batch_size=2)
 
@@ -69,7 +69,7 @@ end
 
 end
 
-Xmatrix = rand(stable_rng, 100, 5)
+Xmatrix = rand(stable_rng, Float32, 100, 5)
 X = MLJBase.table(Xmatrix)
 y = Xmatrix[:, 1] + Xmatrix[:, 2] + Xmatrix[:, 3] +
     Xmatrix[:, 4] + Xmatrix[:, 5]

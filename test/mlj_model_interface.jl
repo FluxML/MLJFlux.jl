@@ -25,7 +25,7 @@ end
     @test model.epochs == 10
 
     model = @test_logs (:warn, r"`batch_size") begin
-        ModelType(batch_size = -1)
+        ModelType(batch_size = 0)
     end
     @test model.batch_size == 1
 
@@ -44,6 +44,7 @@ end
 
     # integration test:
     X, y = MLJBase.make_regression(10)
+    X = Float32.(MLJBase.Tables.matrix(X)) |> MLJBase.Tables.table
     mach = MLJBase.machine(model, X, y)
     MLJBase.fit!(mach, verbosity=0)
     losses = MLJBase.training_losses(mach)

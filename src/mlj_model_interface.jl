@@ -59,7 +59,7 @@ function MLJModelInterface.fit(model::MLJFluxModel,
         build(model, rng, shape) |> move
     catch ex
         @error ERR_BUILDER
-        throw(ex)
+        rethrow()
     end
 
     penalty = Penalty(model)

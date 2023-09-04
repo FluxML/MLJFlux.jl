@@ -52,3 +52,31 @@ end
     @test length(losses) == 10
 end
 
+mutable struct LisasBuilder
+  n1::Int
+end
+
+@testset "builder errors and issue #237" begin
+    # create a builder with an intentional flaw;
+    # `Chains` is undefined - it should be `Chain`
+    function MLJFlux.build(builder::LisasBuilder, rng, nin, nout)
+        return Flux.Chains(
+            Flux.Dense(nin, builder.n1),
+            Flux.Dense(builder.n1, nout)
+        )
+    end
+
+    model = NeuralNetworkRegressor(
+        epochs = 2,
+        batch_size = 32,
+        builder = LisasBuilder(10),
+    )
+
+    X, y = @load_boston
+    @test_logs(
+        (:error, MLJFlux.ERR_BUILDER),
+        @test_throws UndefVarError(:Chains) MLJBase.fit(model, 0, X, y)
+    )
+end
+
+true

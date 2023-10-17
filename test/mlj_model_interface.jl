@@ -30,7 +30,7 @@ end
     @test model.batch_size == 1
 
     if MLJFlux.gpu_isdead()
-        model  = @test_logs (:warn, r"`acceleration") begin
+        model  = @test_logs (:warn, r"`acceleration") match_mode = :any begin
             ModelType(acceleration=CUDALibs())
         end
         @test model.acceleration == CUDALibs()

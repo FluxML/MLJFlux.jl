@@ -56,7 +56,7 @@ losses = []
     end
     dist = MLJBase.UnivariateFinite(prob_given_class)
     loss_baseline =
-        MLJBase.cross_entropy(fill(dist, length(test)), y[test]) |> mean
+        StatisticalMeasures.cross_entropy(fill(dist, length(test)), y[test]) |> mean
 
     # check flux model is an improvement on predicting constant
     # distribution:
@@ -71,7 +71,7 @@ losses = []
     first_last_training_loss = MLJBase.report(mach)[1][[1, end]]
     push!(losses, first_last_training_loss[2])
     yhat = MLJBase.predict(mach, rows=test);
-    @test mean(MLJBase.cross_entropy(yhat, y[test])) < 0.95*loss_baseline
+    @test mean(StatisticalMeasures.cross_entropy(yhat, y[test])) < 0.95*loss_baseline
 
     optimisertest(MLJFlux.NeuralNetworkClassifier,
                   X,

@@ -10,7 +10,8 @@ import Random.seed!
 using Statistics
 import StatsBase
 using StableRNGs
-using cuDNN
+using CUDA, cuDNN
+import StatisticalMeasures
 
 using ComputationalResources
 using ComputationalResources: CPU1, CUDALibs

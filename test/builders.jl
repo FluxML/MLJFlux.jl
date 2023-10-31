@@ -31,7 +31,7 @@ MLJFlux.build(builder::TESTBuilder, rng, n_in, n_out) =
     chain0 = myinit(1, d)
     pretraining_yhat = Xmat*chain0' |> vec
     @test y isa Vector && pretraining_yhat isa Vector
-    pretraining_loss_by_hand =  MLJBase.l2(pretraining_yhat, y) |> mean
+    pretraining_loss_by_hand =  StatisticalMeasures.l2(pretraining_yhat, y) |> mean
     mean(((pretraining_yhat - y).^2)[1:2])
 
     # compare:

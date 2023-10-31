@@ -197,7 +197,7 @@ with caution.
 
 Instructions for coercing common image formats into some
 `AbstractVector{<:Image}` are
-[here](https://alan-turing-institute.github.io/MLJScientificTypes.jl/dev/#Type-coercion-for-image-data-1).
+[here](https://juliaai.github.io/ScientificTypes.jl/dev/#Type-coercion-for-image-data).
 
 
 ### Warm restart

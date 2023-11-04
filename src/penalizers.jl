@@ -1,7 +1,6 @@
 # Note (1). See
 # https://discourse.julialang.org/t/weight-regularisation-which-iterates-params-m-in-flux-mutating-arrays-is-not-supported/64314
 
-
 """ Penalizer(λ, α)
 
 Returns a callable object `penalizer` for evaluating regularization

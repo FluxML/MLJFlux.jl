@@ -3,10 +3,15 @@ abstract type MLJFluxDeterministic <: MLJModelInterface.Deterministic end
 
 const MLJFluxModel = Union{MLJFluxProbabilistic,MLJFluxDeterministic}
 
-for Model in [:NeuralNetworkClassifier, :ImageClassifier]
+for Model in [:NeuralNetworkClassifier, :NeuralNetworkBinaryClassifier, :ImageClassifier]
 
+  # default settings that are not equal across models
   default_builder_ex =
     Model == :ImageClassifier ? :(image_builder(VGGHack)) : Short()
+  default_finaliser = 
+    Model == :NeuralNetworkBinaryClassifier ? Flux.σ : Flux.softmax
+  default_loss = 
+    Model == :NeuralNetworkBinaryClassifier ? Flux.binarycrossentropy : Flux.crossentropy
 
   ex = quote
     mutable struct $Model{B,F,O,L} <: MLJFluxProbabilistic
@@ -23,7 +28,7 @@ for Model in [:NeuralNetworkClassifier, :ImageClassifier]
       acceleration::AbstractResource  # eg, `CPU1()` or `CUDALibs()`
     end
 
-    function $Model(; builder::B=$default_builder_ex, finaliser::F=Flux.softmax, optimiser::O=Flux.Optimise.Adam(), loss::L=Flux.crossentropy, epochs=10, batch_size=1, lambda=0, alpha=0, rng=Random.GLOBAL_RNG, optimiser_changes_trigger_retraining=false, acceleration=CPU1()
+    function $Model(; builder::B=$default_builder_ex, finaliser::F=$default_finaliser, optimiser::O=Flux.Optimise.Adam(), loss::L=$default_loss, epochs=10, batch_size=1, lambda=0, alpha=0, rng=Random.GLOBAL_RNG, optimiser_changes_trigger_retraining=false, acceleration=CPU1()
     ) where {B,F,O,L}
 
       model = $Model{B,F,O,L}(builder, finaliser, optimiser, loss, epochs, batch_size, lambda, alpha, rng, optimiser_changes_trigger_retraining, acceleration

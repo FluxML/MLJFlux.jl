@@ -4,7 +4,7 @@ ModelType = MLJFlux.NeuralNetworkRegressor
     model = MLJFlux.ImageClassifier()
     clone = deepcopy(model)
     @test model == clone
-    clone.optimiser.eta *= 10
+    clone.optimiser = Optimisers.Adam(model.optimiser.eta*10)
     @test model != clone
 end
 

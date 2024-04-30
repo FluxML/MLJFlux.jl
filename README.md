@@ -250,15 +250,6 @@ to builders for the purposes of weight initialization. This can be
 any `AbstractRNG` or the seed (integer) for a `MersenneTwister` that
 will be reset on every cold restart of model (machine) training.
 
-Until there is a [mechanism for
-doing so](https://github.com/FluxML/Flux.jl/issues/1617) `rng` is *not*
-passed to dropout layers and one must manually seed the `GLOBAL_RNG`
-for reproducibility purposes, when using a builder that includes
-`Dropout` (such as `MLJFlux.Short`). If training models on a
-GPU (i.e., `acceleration isa CUDALibs`) one must additionally call
-`CUDA.seed!(...)`.
-
-
 ### Built-in builders
 
 The following builders are provided out-of-the-box. Query their

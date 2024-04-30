@@ -24,7 +24,7 @@ MLJFlux.build(builder::TESTBuilder, rng, n_in, n_out) =
     mach = machine(model, X, y)
     fit!(mach, verbosity=0)
 
-    # extract the pre-training loss computed in the `fit!(chain, ...)` method:
+    # extract the pre-training loss computed in the `MLJFlux.train(...)` method:
     pretraining_loss = report(mach).training_losses[1]
 
     # compute by hand:
@@ -40,12 +40,12 @@ MLJFlux.build(builder::TESTBuilder, rng, n_in, n_out) =
 end
 
 @testset_accelerated "Short" accel begin
-    builder = MLJFlux.Short(n_hidden=4, σ=Flux.relu, dropout=0)
+    builder = MLJFlux.Short(n_hidden=4, σ=Flux.relu, dropout=0.5)
     chain = MLJFlux.build(builder, StableRNGs.StableRNG(123), 5, 3)
     ps = Flux.params(chain)
     @test size.(ps) == [(4, 5), (4,), (3, 4), (3,)]
 
-    # reproducibility (without dropout):
+    # reproducibility:
     chain2 = MLJFlux.build(builder, StableRNGs.StableRNG(123), 5, 3)
     x = rand(Float32, 5)
     @test chain(x) ≈ chain2(x)

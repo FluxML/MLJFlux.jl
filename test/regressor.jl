@@ -3,10 +3,8 @@ Random.seed!(123)
 N = 200
 X = MLJBase.table(randn(Float32, N, 5));
 
-# TODO: replace Short2 -> Short when
-# https://github.com/FluxML/Flux.jl/pull/1618 is resolved:
-builder = Short2(σ=identity)
-optimiser = Flux.Optimise.Adam()
+builder = MLJFlux.Short(σ=identity)
+optimiser = Optimisers.Adam()
 
 losses = []
 
@@ -20,24 +18,28 @@ train, test = MLJBase.partition(1:N, 0.7)
 
     # Table input:
     @testset "Table input" begin
-        basictest(MLJFlux.NeuralNetworkRegressor,
-                  X,
-                  y,
-                  builder,
-                  optimiser,
-                  0.7,
-                  accel)
+        basictest(
+            MLJFlux.NeuralNetworkRegressor,
+            X,
+            y,
+            builder,
+            optimiser,
+            0.7,
+            accel,
+        )
     end
-   
+
     # Matrix input:
     @testset "Matrix input" begin
-        basictest(MLJFlux.NeuralNetworkRegressor,
-                  matrix(X),
-                  y,
-                  builder,
-                  optimiser,
-                  0.7,
-                  accel)
+        @test basictest(
+            MLJFlux.NeuralNetworkRegressor,
+            matrix(X),
+            y,
+            builder,
+            optimiser,
+            0.7,
+            accel,
+        )
     end
 
     # test model is a bit better than constant predictor:
@@ -55,12 +57,14 @@ train, test = MLJBase.partition(1:N, 0.7)
     goal = 0.9*model.loss(truth .- mean(truth), 0)
     @test model.loss(yhat, truth) < goal
 
-    optimisertest(MLJFlux.NeuralNetworkRegressor,
-                  X,
-                  y,
-                  builder,
-                  optimiser,
-                  accel)
+    @test optimisertest(
+        MLJFlux.NeuralNetworkRegressor,
+        X,
+        y,
+        builder,
+        optimiser,
+        accel,
+    )
 
 end
 
@@ -80,28 +84,34 @@ losses = []
 
     # Table input:
     @testset "Table input" begin
-        basictest(MLJFlux.MultitargetNeuralNetworkRegressor,
-                X,
-                y,
-                builder,
-                optimiser,
-                1.0,
-                accel)
+        @test basictest(
+            MLJFlux.MultitargetNeuralNetworkRegressor,
+            X,
+            y,
+            builder,
+            optimiser,
+            1.0,
+            accel,
+        )
     end
     # Matrix input:
     @testset "Matrix input" begin
-        basictest(MLJFlux.MultitargetNeuralNetworkRegressor,
-                matrix(X),
-                ymatrix,
-                builder,
-                optimiser,
-                1.0,
-                accel)
+        @test basictest(
+            MLJFlux.MultitargetNeuralNetworkRegressor,
+            matrix(X),
+            ymatrix,
+            builder,
+            optimiser,
+            1.0,
+            accel,
+        )
     end
 
     # test model is a bit better than constant predictor
-    model = MLJFlux.MultitargetNeuralNetworkRegressor(acceleration=accel,
-                                                      builder=builder)
+    model = MLJFlux.MultitargetNeuralNetworkRegressor(
+        acceleration=accel,
+        builder=builder,
+    )
     @time fitresult, _, rpt =
         fit(model, 0, MLJBase.selectrows(X, train), selectrows(y, train))
     first_last_training_loss = rpt[1][[1, end]]
@@ -112,12 +122,14 @@ losses = []
     goal = 0.8*model.loss(truth .- mean(truth), 0)
     @test model.loss(Tables.matrix(yhat), truth) < goal
 
-    optimisertest(MLJFlux.MultitargetNeuralNetworkRegressor,
-              X,
-              y,
-              builder,
-              optimiser,
-              accel)
+    @test optimisertest(
+        MLJFlux.MultitargetNeuralNetworkRegressor,
+        X,
+        y,
+        builder,
+        optimiser,
+        accel,
+    )
 
 end
 

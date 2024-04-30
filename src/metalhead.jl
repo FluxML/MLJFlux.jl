@@ -130,7 +130,7 @@ function VGGHack(
         depth in keys(Metalhead.VGG_CONFIGS),
         "depth must be from one in $(sort(collect(keys(Metalhead.VGG_CONFIGS))))"
     )
-    model = Metalhead.VGG(imsize;
+    model = Metalhead.vgg(imsize;
                 config = Metalhead.VGG_CONFIGS[depth],
                 inchannels,
                 batchnorm,

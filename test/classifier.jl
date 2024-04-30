@@ -19,7 +19,7 @@ end |> categorical;
 # TODO: replace Short2 -> Short when
 # https://github.com/FluxML/Flux.jl/issues/1372 is resolved:
 builder = Short2()
-optimiser = Flux.Optimise.Adam(0.03)
+optimiser = Optimisers.Adam(0.03)
 
 losses = []
 

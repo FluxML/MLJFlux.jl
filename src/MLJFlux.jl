@@ -1,4 +1,4 @@
-module MLJFlux 
+module MLJFlux
 
 export CUDALibs, CPU1
 
@@ -14,6 +14,7 @@ using ColorTypes
 using ComputationalResources
 using Random
 import Metalhead
+import Optimisers
 
 include("utilities.jl")
 const MMI=MLJModelInterface

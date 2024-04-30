@@ -58,7 +58,7 @@ losses = []
                                     batch_size=2,
                                     acceleration=accel,
                                     rng=stable_rng)
-    model.optimiser.eta = 0.005
+    model.optimiser = clonewith(model.optimiser, 0.005) # changes the learning rate
     @time fitresult, cache, _report = MLJBase.fit(model, 0, images, labels);
     first_last_training_loss = _report[1][[1, end]]
     push!(losses, first_last_training_loss[2])

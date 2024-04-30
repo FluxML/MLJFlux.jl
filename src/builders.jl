@@ -57,8 +57,7 @@ function build(builder::Short, rng, n, m)
     init=Flux.glorot_uniform(rng)
     Flux.Chain(
         Flux.Dense(n, n_hidden, builder.σ, init=init),
-        # TODO: fix next after https://github.com/FluxML/Flux.jl/issues/1617
-        Flux.Dropout(builder.dropout),
+        Flux.Dropout(builder.dropout; rng),
         Flux.Dense(n_hidden, m, init=init))
 end
 

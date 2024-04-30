@@ -12,6 +12,7 @@ import StatsBase
 using StableRNGs
 using CUDA, cuDNN
 import StatisticalMeasures
+import Optimisers
 
 using ComputationalResources
 using ComputationalResources: CPU1, CUDALibs

@@ -8,6 +8,11 @@ macro testset_accelerated(name::String, var, opts::Expr, ex)
     testset_accelerated(name, var, ex; eval(opts)...)
 end
 
+clonewith(optimiser, args...) =
+    error("`basictest` and `optimisertest` only support `Adam` optimiser. ")
+clonewith(optimiser::Optimisers.Adam, args...) =
+    Optimisers.Adam(args...)
+
 # To exclude a resource, say, CPU1, do like
 # `@test_accelerated "cool test" accel (exclude=[CPU1,],) begin ... end`
 function testset_accelerated(name::String, var, ex; exclude=[])
@@ -105,14 +110,14 @@ function basictest(ModelType, X, y, builder, optimiser, threshold, accel)
                     MLJBase.update(model, 2, fitresult, cache, $X, $y ));
 
          # change learning rate and check it does *not* restart:
-         model.optimiser.eta /= 2
+         model.optimiser = clonewith(model.optimiser, model.optimiser.eta/2)
          fitresult, cache, _report =
          @test_logs(MLJBase.update(model, 2, fitresult, cache, $X, $y));
 
          # set `optimiser_changes_trigger_retraining = true` and change
          # learning rate and check it does restart:
          model.optimiser_changes_trigger_retraining = true
-         model.optimiser.eta /= 2
+         model.optimiser = clonewith(model.optimiser, model.optimiser.eta/2)
          @test_logs((:info, r""), # one line of :info per extra epoch
                     (:info, r""),
                     MLJBase.update(model, 2, fitresult, cache, $X, $y));

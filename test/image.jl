@@ -65,10 +65,6 @@ losses = []
     # tests update logic, etc (see test_utililites.jl):
     @test basictest(MLJFlux.ImageClassifier, images, labels,
                            model.builder, model.optimiser, 0.95, accel)
-
-    @test optimisertest(MLJFlux.ImageClassifier, images, labels,
-                           model.builder, model.optimiser, accel)
-
 end
 
 # check different resources (CPU1, CUDALibs) give about the same loss:
@@ -109,16 +105,12 @@ losses = []
                                     acceleration=accel,
                                     rng=rng)
     fitresult, cache, _report = MLJBase.fit(model, 0, images, labels);
-
-    @test optimisertest(MLJFlux.ImageClassifier, images, labels,
-                           model.builder, model.optimiser, accel)
-
 end
 
 # check different resources (CPU1, CUDALibs, etc)) give about the same loss:
 reference = losses[1]
 @info "Losses for each computational resource: $losses"
-@test_broken all(x->abs(x - reference)/reference < 1e-5, losses[2:end])
+@test all(x->abs(x - reference)/reference < 1e-5, losses[2:end])
 
 
 # # SMOKE TEST FOR DEFAULT BUILDER

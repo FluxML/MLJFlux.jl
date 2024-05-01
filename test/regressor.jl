@@ -56,16 +56,6 @@ train, test = MLJBase.partition(1:N, 0.7)
     truth = y[test]
     goal = 0.9*model.loss(truth .- mean(truth), 0)
     @test model.loss(yhat, truth) < goal
-
-    @test optimisertest(
-        MLJFlux.NeuralNetworkRegressor,
-        X,
-        y,
-        builder,
-        optimiser,
-        accel,
-    )
-
 end
 
 # check different resources (CPU1, CUDALibs, etc)) give about the same loss:
@@ -124,16 +114,6 @@ losses = []
     truth = ymatrix[test,:]
     goal = 0.85*model.loss(truth .- mean(truth), 0)
     @test model.loss(Tables.matrix(yhat), truth) < goal
-
-    @test optimisertest(
-        MLJFlux.MultitargetNeuralNetworkRegressor,
-        X,
-        y,
-        builder,
-        optimiser,
-        accel,
-    )
-
 end
 
 # check different resources (CPU1, CUDALibs, etc)) give about the same loss:

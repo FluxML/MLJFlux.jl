@@ -163,7 +163,7 @@ function optimisertest(ModelType, X, y, builder, optimiser, accel)
              if accel isa CPU1
                  @test isapprox(l1, l2)
              else
-                 @test_broken isapprox(l1, l2, rtol=1e-8)
+                 @test isapprox(l1, l2, rtol=1e-8)
              end
 
              # USING USER SPECIFIED RNG SEED (unsupported on GPU)

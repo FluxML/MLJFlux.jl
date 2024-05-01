@@ -24,7 +24,7 @@ optimiser = Optimisers.Adam(0.03)
 losses = []
 
 @testset_accelerated "NeuralNetworkClassifier" accel begin
-    Random.seed!(123)
+
     # Table input:
     @testset "Table input" begin
         basictest(MLJFlux.NeuralNetworkClassifier,
@@ -35,6 +35,7 @@ losses = []
                   0.85,
                   accel)
     end
+
     # Matrix input:
     @testset "Matrix input" begin
         basictest(MLJFlux.NeuralNetworkClassifier,
@@ -59,14 +60,17 @@ losses = []
         StatisticalMeasures.cross_entropy(fill(dist, length(test)), y[test]) |> mean
 
     # check flux model is an improvement on predicting constant
-    # distribution:
-    stable_rng = StableRNGs.StableRNG(123)
+    # distribution
+    # (GPUs only support `default_rng`):
+    rng = accel == CPU1() ? StableRNGs.StableRNG(123) : Random.default_rng()
+    seed!(rng, 123)
+    rng = StableRNGs.StableRNG(123)
     model = MLJFlux.NeuralNetworkClassifier(epochs=50,
                                             builder=builder,
                                             optimiser=optimiser,
                                             acceleration=accel,
                                             batch_size=10,
-                                            rng=stable_rng)
+                                            rng=rng)
     @time mach = fit!(machine(model, X, y), rows=train, verbosity=0)
     first_last_training_loss = MLJBase.report(mach)[1][[1, end]]
     push!(losses, first_last_training_loss[2])

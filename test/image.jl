@@ -1,8 +1,5 @@
 # # BASIC IMAGE TESTS GREY
 
-Random.seed!(123)
-stable_rng = StableRNGs.StableRNG(123)
-
 mutable struct MyNeuralNetwork <: MLJFlux.Builder
     kernel1
     kernel2
@@ -30,18 +27,19 @@ function MLJFlux.build(builder::MyNeuralNetwork, rng, ip, op, n_channels)
 end
 
 builder = MyNeuralNetwork((2,2), (2,2))
-images, labels = MLJFlux.make_images(stable_rng);
+images, labels = MLJFlux.make_images(StableRNG(123));
 losses = []
 
 @testset_accelerated "ImageClassifier basic tests" accel begin
 
-    Random.seed!(123)
-    stable_rng = StableRNGs.StableRNG(123)
+    # GPUs only support `default_rng`:
+    rng = accel == CPU1() ? StableRNGs.StableRNG(123) : Random.default_rng()
+    seed!(rng, 123)
 
     model = MLJFlux.ImageClassifier(builder=builder,
                                     epochs=10,
                                     acceleration=accel,
-                                    rng=stable_rng)
+                                    rng=rng)
 
     fitresult, cache, _report = MLJBase.fit(model, 0, images, labels)
 
@@ -57,7 +55,7 @@ losses = []
                                     epochs=10,
                                     batch_size=2,
                                     acceleration=accel,
-                                    rng=stable_rng)
+                                    rng=rng)
     model.optimiser = clonewith(model.optimiser, 0.005) # changes the learning rate
     @time fitresult, cache, _report = MLJBase.fit(model, 0, images, labels);
     first_last_training_loss = _report[1][[1, end]]
@@ -82,18 +80,19 @@ reference = losses[1]
 # # BASIC IMAGE TESTS COLOR
 
 builder = MyNeuralNetwork((2,2), (2,2))
-images, labels = MLJFlux.make_images(stable_rng, color=true)
+images, labels = MLJFlux.make_images(StableRNG(123), color=true)
 losses = []
 
 @testset_accelerated "ColorImages" accel begin
 
-    Random.seed!(123)
-    stable_rng = StableRNGs.StableRNG(123)
+    # GPUs only support `default_rng`:
+    rng = accel == CPU1() ? StableRNGs.StableRNG(123) : Random.default_rng()
+    seed!(rng, 123)
 
     model = MLJFlux.ImageClassifier(builder=builder,
                                     epochs=10,
                                     acceleration=accel,
-                                    rng=stable_rng)
+                                    rng=rng)
     # tests update logic, etc (see test_utililites.jl):
     @test basictest(MLJFlux.ImageClassifier, images, labels,
                            model.builder, model.optimiser, 0.95, accel)
@@ -108,7 +107,7 @@ losses = []
                                     builder=builder,
                                     batch_size=2,
                                     acceleration=accel,
-                                    rng=stable_rng)
+                                    rng=rng)
     fitresult, cache, _report = MLJBase.fit(model, 0, images, labels);
 
     @test optimisertest(MLJFlux.ImageClassifier, images, labels,
@@ -124,14 +123,19 @@ reference = losses[1]
 
 # # SMOKE TEST FOR DEFAULT BUILDER
 
-images, labels = MLJFlux.make_images(stable_rng, image_size=(32, 32), n_images=12,
+images, labels = MLJFlux.make_images(StableRNG(123), image_size=(32, 32), n_images=12,
 noise=0.2, color=true);
 
 @testset_accelerated "ImageClassifier basic tests" accel begin
+
+    # GPUs only support `default_rng`:
+    rng = accel == CPU1() ? StableRNGs.StableRNG(123) : Random.default_rng()
+    seed!(rng, 123)
+
     model = MLJFlux.ImageClassifier(epochs=5,
                                     batch_size=4,
                                     acceleration=accel,
-                                    rng=stable_rng)
+                                    rng=rng)
     fitresult, _, _ = MLJBase.fit(model, 0, images, labels);
     predict(model, fitresult, images)
 end

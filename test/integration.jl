@@ -2,6 +2,7 @@ rng = StableRNGs.StableRNG(123)
 
 table = load_iris()
 y, X = unpack(table, ==(:target), _->true, rng=rng)
+X = Tables.table(Float32.(Tables.matrix(X)))
 
 @testset_accelerated "regularization has an effect" accel begin
 

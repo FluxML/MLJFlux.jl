@@ -32,10 +32,7 @@ losses = []
 
 @testset_accelerated "ImageClassifier basic tests" accel begin
 
-    # GPUs only support `default_rng`:
-    rng = Random.default_rng()
-    seed!(rng, 123)
-
+    rng = StableRNG(123)
     model = MLJFlux.ImageClassifier(builder=builder,
                                     epochs=10,
                                     acceleration=accel,
@@ -81,10 +78,8 @@ losses = []
 
 @testset_accelerated "ColorImages" accel begin
 
-    # GPUs only support `default_rng`:
-    rng = Random.default_rng()
-    seed!(rng, 123)
 
+    rng = StableRNG(123)
     model = MLJFlux.ImageClassifier(builder=builder,
                                     epochs=10,
                                     acceleration=accel,

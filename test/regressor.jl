@@ -6,8 +6,6 @@ X = MLJBase.table(randn(Float32, N, 5));
 builder = MLJFlux.Short(σ=identity)
 optimiser = Optimisers.Adam()
 
-losses = []
-
 Random.seed!(123)
 y = 1 .+ X.x1 - X.x2 .- 2X.x4 + X.x5
 train, test = MLJBase.partition(1:N, 0.7)
@@ -41,7 +39,7 @@ train, test = MLJBase.partition(1:N, 0.7)
     end
 
     # test model is a bit better than constant predictor:
-    # (GPUs only support `default_rng`):
+    # (GPUs only support `default_rng` when there's `Dropout`):
     rng = Random.default_rng()
     seed!(rng, 123)
     model = MLJFlux.NeuralNetworkRegressor(builder=builder,
@@ -50,7 +48,6 @@ train, test = MLJBase.partition(1:N, 0.7)
     @time fitresult, _, rpt =
         fit(model, 0, MLJBase.selectrows(X, train), y[train])
     first_last_training_loss = rpt[1][[1, end]]
-    push!(losses, first_last_training_loss[2])
 #    @show first_last_training_loss
     yhat = predict(model, fitresult, selectrows(X, test))
     truth = y[test]
@@ -58,16 +55,9 @@ train, test = MLJBase.partition(1:N, 0.7)
     @test model.loss(yhat, truth) < goal
 end
 
-# check different resources (CPU1, CUDALibs, etc)) give about the same loss:
-reference = losses[1]
-@info "Losses for each computational resource: $losses"
-#@test all(x->abs(x - reference)/reference < 1e-6, losses[2:end])
-
 Random.seed!(123)
 ymatrix = hcat(1 .+ X.x1 - X.x2, 1 .- 2X.x4 + X.x5);
 y = MLJBase.table(ymatrix);
-
-losses = []
 
 @testset_accelerated "MultitargetNeuralNetworkRegressor" accel begin
 
@@ -97,7 +87,7 @@ losses = []
     end
 
     # test model is a bit better than constant predictor
-    # (GPUs only support `default_rng`):
+    # (GPUs only support `default_rng` when there's `Dropout`):
     rng = Random.default_rng()
     seed!(rng, 123)
     model = MLJFlux.MultitargetNeuralNetworkRegressor(
@@ -108,17 +98,10 @@ losses = []
     @time fitresult, _, rpt =
         fit(model, 0, MLJBase.selectrows(X, train), selectrows(y, train))
     first_last_training_loss = rpt[1][[1, end]]
-    push!(losses, first_last_training_loss[2])
-#   @show first_last_training_loss
     yhat = predict(model, fitresult, selectrows(X, test))
     truth = ymatrix[test,:]
     goal = 0.85*model.loss(truth .- mean(truth), 0)
     @test model.loss(Tables.matrix(yhat), truth) < goal
 end
-
-# check different resources (CPU1, CUDALibs, etc)) give about the same loss:
-reference = losses[1]
-@info "Losses for each computational resource: $losses"
-#@test all(x->abs(x - reference)/reference < 1e-6, losses[2:end])
 
 true

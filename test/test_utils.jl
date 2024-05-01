@@ -62,12 +62,14 @@ function basictest(ModelType, X, y, builder, optimiser, threshold, accel)
 
     eval(quote
 
-         stable_rng = StableRNGs.StableRNG(123)
+         # GPUs only support `default_rng`:
+         rng = accel == CPU1() ? StableRNGs.StableRNG(123) : Random.default_rng()
+         seed!(rng, 123)
 
          model = $ModelType_ex(builder=$builder,
                                optimiser=$optimiser,
                                acceleration=$accel_ex,
-                               rng=stable_rng)
+                               rng=rng)
 
          fitresult, cache, _report = MLJBase.fit(model, 0, $X, $y);
 
@@ -98,7 +100,7 @@ function basictest(ModelType, X, y, builder, optimiser, threshold, accel)
                                optimiser=$optimiser,
                                epochs=2,
                                acceleration=$accel_ex,
-                               rng=stable_rng)
+                               rng=rng)
 
          fitresult, cache, _report = MLJBase.fit(model, 0, $X, $y);
 

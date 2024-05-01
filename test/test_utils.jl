@@ -139,14 +139,14 @@ function optimisertest(ModelType, X, y, builder, optimiser, accel)
 
     eval(quote
 
-         model = $ModelType_ex(builder=$builder,
-                               optimiser=$optimiser,
-                               acceleration=$accel_ex,
-                               epochs=1)
+             model = $ModelType_ex(builder=$builder,
+                                   optimiser=$optimiser,
+                                   acceleration=$accel_ex,
+                                   epochs=1)
 
              mach = machine(model, $X, $y);
 
-             # USING GLOBAL RNG
+             # USING DEFAULT RNG
 
              # two epochs in stages:
              Random.seed!(123) # chains are always initialized on CPU
@@ -164,27 +164,26 @@ function optimisertest(ModelType, X, y, builder, optimiser, accel)
                  @test isapprox(l1, l2)
              else
                  @test_broken isapprox(l1, l2, rtol=1e-8)
+                 @show l1/l2
              end
 
-             # USING USER SPECIFIED RNG SEED
+             # USING USER SPECIFIED RNG SEED (unsupported on GPU)
 
-             # two epochs in stages:
-             model.rng = 1234
-             mach = machine(model, $X, $y);
+             if !(acceleration isa CUDALibs)
+                 # two epochs in stages:
+                 model.rng = 1234
+                 mach = machine(model, $X, $y);
 
-             fit!(mach, verbosity=0, force=true);
-             model.epochs = model.epochs + 1
-             fit!(mach, verbosity=0); # update
-             l1 = MLJBase.report(mach).training_losses[end]
+                 fit!(mach, verbosity=0, force=true);
+                 model.epochs = model.epochs + 1
+                 fit!(mach, verbosity=0); # update
+                 l1 = MLJBase.report(mach).training_losses[end]
 
-             # two epochs in one go:
-             fit!(mach, verbosity=1, force=true)
-             l2 = MLJBase.report(mach).training_losses[end]
+                 # two epochs in one go:
+                 fit!(mach, verbosity=1, force=true)
+                 l2 = MLJBase.report(mach).training_losses[end]
 
-             if accel isa CPU1
                  @test isapprox(l1, l2)
-             else
-                 @test_broken isapprox(l1, l2, rtol=1e-8)
              end
 
          end)

@@ -42,7 +42,7 @@ train, test = MLJBase.partition(1:N, 0.7)
 
     # test model is a bit better than constant predictor:
     # (GPUs only support `default_rng`):
-    rng = accel == CPU1() ? StableRNGs.StableRNG(123) : Random.default_rng()
+    rng = Random.default_rng()
     seed!(rng, 123)
     model = MLJFlux.NeuralNetworkRegressor(builder=builder,
                                            acceleration=accel,
@@ -108,7 +108,7 @@ losses = []
 
     # test model is a bit better than constant predictor
     # (GPUs only support `default_rng`):
-    rng = accel == CPU1() ? StableRNGs.StableRNG(123) : Random.default_rng()
+    rng = Random.default_rng()
     seed!(rng, 123)
     model = MLJFlux.MultitargetNeuralNetworkRegressor(
         acceleration=accel,

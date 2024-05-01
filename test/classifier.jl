@@ -62,9 +62,8 @@ losses = []
     # check flux model is an improvement on predicting constant
     # distribution
     # (GPUs only support `default_rng`):
-    rng = accel == CPU1() ? StableRNGs.StableRNG(123) : Random.default_rng()
+    rng = Random.default_rng()
     seed!(rng, 123)
-    rng = StableRNGs.StableRNG(123)
     model = MLJFlux.NeuralNetworkClassifier(epochs=50,
                                             builder=builder,
                                             optimiser=optimiser,

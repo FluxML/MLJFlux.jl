@@ -164,7 +164,6 @@ function optimisertest(ModelType, X, y, builder, optimiser, accel)
                  @test isapprox(l1, l2)
              else
                  @test_broken isapprox(l1, l2, rtol=1e-8)
-                 @show l1/l2
              end
 
              # USING USER SPECIFIED RNG SEED (unsupported on GPU)

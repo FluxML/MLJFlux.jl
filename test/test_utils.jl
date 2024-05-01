@@ -169,7 +169,7 @@ function optimisertest(ModelType, X, y, builder, optimiser, accel)
 
              # USING USER SPECIFIED RNG SEED (unsupported on GPU)
 
-             if !(acceleration isa CUDALibs)
+             if !(accel isa CUDALibs)
                  # two epochs in stages:
                  model.rng = 1234
                  mach = machine(model, $X, $y);

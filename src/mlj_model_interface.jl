@@ -38,7 +38,7 @@ function MLJModelInterface.clean!(model::MLJFluxModel)
         warning *= "Specifying an RNG seed is unsupported when "*
             "`acceleration isa CUDALibs()`. Using `default_rng()` instead. `"
         model.rng = Random.default_rng()
-    end 
+    end
     return warning
 end
 

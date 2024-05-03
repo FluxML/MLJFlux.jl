@@ -16,10 +16,11 @@ y = map(ycont) do η
     end
 end |> categorical;
 
-# In the tests below we want to check GPU and CPU give similar results. We use Short2
-# instead of Short because Dropout in Short does not appear to behave the same on GPU as
-# on a CPU, even when we use `default_rng()` for both.
-builder = Short2()
+# In the tests below we want to check GPU and CPU give similar results. We use the `MLP`
+# builer instead of the default `Short()` because `Dropout()` in `Short()` does not appear
+# to behave the same on GPU as on a CPU, even when we use `default_rng()` for both.
+
+builder = MLJFlux.MLP(hidden=(8,))
 optimiser = Optimisers.Adam(0.03)
 
 losses = []

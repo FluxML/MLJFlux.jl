@@ -27,21 +27,6 @@ MLJFlux.gpu_isdead() && push!(EXCLUDED_RESOURCE_TYPES, CUDALibs)
     "these types, as unavailable:\n$EXCLUDED_RESOURCE_TYPES\n"*
     "Excluded tests marked as \"broken\"."
 
-# Alternative version of `Short` builder with no dropout:
-mutable struct Short2 <: MLJFlux.Builder
-    n_hidden::Int     # if zero use geometric mean of input/output
-    σ
-end
-Short2(; n_hidden=0, σ=Flux.sigmoid) = Short2(n_hidden, σ)
-function MLJFlux.build(builder::Short2, rng, n, m)
-    n_hidden =
-        builder.n_hidden == 0 ? round(Int, sqrt(n*m)) : builder.n_hidden
-    init = Flux.glorot_uniform(rng)
-    return Flux.Chain(
-        Flux.Dense(n, n_hidden, builder.σ, init=init),
-        Flux.Dense(n_hidden, m, init=init))
-end
-
 seed!(123)
 
 include("test_utils.jl")

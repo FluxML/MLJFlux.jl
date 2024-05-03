@@ -205,7 +205,7 @@ Train the machine with `fit!(mach, rows=...)`.
   GPU is available.
 
 - `lambda::Float64=0`: The strength of the weight regularization penalty. Can be any value
-  in the range `[0, ∞)`.
+  in the range `[0, ∞)`. Note the history reports unpenalized losses.
 
 - `alpha::Float64=0`: The L2/L1 mix of regularization, in the range `[0, 1]`. A value of 0
   represents L2 regularization, and a value of 1 represents L1 regularization.
@@ -394,7 +394,7 @@ Train the machine with `fit!(mach, rows=...)`.
   GPU is available.
 
 - `lambda::Float64=0`: The strength of the weight regularization penalty. Can be any value
-  in the range `[0, ∞)`.
+  in the range `[0, ∞)`. Note the history reports unpenalized losses.
 
 - `alpha::Float64=0`: The L2/L1 mix of regularization, in the range `[0, 1]`. A value of 0
   represents L2 regularization, and a value of 1 represents L1 regularization.
@@ -630,7 +630,7 @@ Train the machine with `fit!(mach, rows=...)`.
   GPU is available.
 
 - `lambda::Float64=0`: The strength of the weight regularization penalty. Can be any value
-  in the range `[0, ∞)`.
+  in the range `[0, ∞)`. Note the history reports unpenalized losses.
 
 - `alpha::Float64=0`: The L2/L1 mix of regularization, in the range `[0, 1]`. A value of 0
   represents L2 regularization, and a value of 1 represents L1 regularization.
@@ -859,7 +859,7 @@ Here:
   GPU is available.
 
 - `lambda::Float64=0`: The strength of the weight regularization penalty. Can be any value
-  in the range `[0, ∞)`.
+  in the range `[0, ∞)`. Note the history reports unpenalized losses.
 
 - `alpha::Float64=0`: The L2/L1 mix of regularization, in the range `[0, 1]`. A value of 0
   represents L2 regularization, and a value of 1 represents L1 regularization.

@@ -110,10 +110,8 @@ epochs = 10
     Random.seed!(123)
     opt = Optimisers.Adam(0.001)
     opt_state = Optimisers.setup(opt, chain_yes_drop)
-    penalty = MLJFlux.Penalty(model)
     _chain_yes_drop, _, history = MLJFlux.train(
         model,
-        penalty,
         chain_yes_drop,
         opt,
         opt_state,
@@ -127,10 +125,8 @@ epochs = 10
     Random.seed!(123)
     opt = Optimisers.Adam(0.001)
     opt_state = Optimisers.setup(opt, chain_no_drop)
-    penalty = MLJFlux.Penalty(model)
     _chain_no_drop, _, history = MLJFlux.train(
         model,
-        penalty,
         chain_no_drop,
         opt,
         opt_state,

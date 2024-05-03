@@ -14,13 +14,12 @@
 abstract type Builder <: MLJModelInterface.MLJType end
 
 """
-    Linear(; σ=Flux.relu, rng=Random.GLOBAL_RNG)
+    Linear(; σ=Flux.relu)
 
-MLJFlux builder that constructs a fully connected two layer network
-with activation function `σ`. The number of input and output nodes is
-determined from the data. The bias and coefficients are initialized
-using `Flux.glorot_uniform(rng)`. If `rng` is an integer, it is
-instead used as the seed for a `MersenneTwister`.
+MLJFlux builder that constructs a fully connected two layer network with activation
+function `σ`. The number of input and output nodes is determined from the data. Weights
+are initialized using `Flux.glorot_uniform(rng)`, where `rng` is inferred from the `rng`
+field of the MLJFlux model.
 
 """
 mutable struct Linear <: Builder
@@ -31,7 +30,7 @@ build(builder::Linear, rng, n::Integer, m::Integer) =
     Flux.Chain(Flux.Dense(n, m, builder.σ, init=Flux.glorot_uniform(rng)))
 
 """
-    Short(; n_hidden=0, dropout=0.5, σ=Flux.sigmoid, rng=GLOBAL_RNG)
+    Short(; n_hidden=0, dropout=0.5, σ=Flux.sigmoid)
 
 MLJFlux builder that constructs a full-connected three-layer network
 using `n_hidden` nodes in the hidden layer and the specified `dropout`
@@ -40,9 +39,8 @@ hidden and final layers. If `n_hidden=0` (the default) then `n_hidden`
 is the geometric mean of the number of input and output nodes.  The
 number of input and output nodes is determined from the data.
 
-The each layer is initialized using `Flux.glorot_uniform(rng)`. If
-`rng` is an integer, it is instead used as the seed for a
-`MersenneTwister`.
+Each layer is initialized using `Flux.glorot_uniform(rng)`, where `rng` is inferred from
+the `rng` field of the MLJFlux model.
 
 """
 mutable struct Short <: Builder
@@ -62,16 +60,14 @@ function build(builder::Short, rng, n, m)
 end
 
 """
-    MLP(; hidden=(100,), σ=Flux.relu, rng=GLOBAL_RNG)
+    MLP(; hidden=(100,), σ=Flux.relu)
 
-MLJFlux builder that constructs a Multi-layer perceptron network. The
-ith element of `hidden` represents the number of neurons in the ith
-hidden layer. An activation function `σ` is applied between each
-layer.
+MLJFlux builder that constructs a Multi-layer perceptron network. The ith element of
+`hidden` represents the number of neurons in the ith hidden layer. An activation function
+`σ` is applied between each layer.
 
-The each layer is initialized using `Flux.glorot_uniform(rng)`. If
-`rng` is an integer, it is instead used as the seed for a
-`MersenneTwister`.
+Each layer is initialized using `Flux.glorot_uniform(rng)`, where `rng` is inferred from
+the `rng` field of the MLJFlux model.
 
 """
 mutable struct MLP{N} <: MLJFlux.Builder
@@ -109,6 +105,7 @@ Creates a builder for `neural_net`. The variables `rng`, `n_in`, `n_out` and
 input and output sizes `n_in` and `n_out` and number of input channels `n_channels`.
 
 # Examples
+
 ```jldoctest
 julia> import MLJFlux: @builder;
 
@@ -131,4 +128,5 @@ macro builder(ex)
     end)
 end
 
-build(b::GenericBuilder, rng, n_in, n_out, n_channels = 1) = b.apply(rng, n_in, n_out, n_channels)
+build(b::GenericBuilder, rng, n_in, n_out, n_channels = 1) =
+    b.apply(rng, n_in, n_out, n_channels)

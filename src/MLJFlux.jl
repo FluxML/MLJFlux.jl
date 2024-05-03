@@ -19,7 +19,6 @@ import Optimisers
 include("utilities.jl")
 const MMI=MLJModelInterface
 
-include("penalizers.jl")
 include("builders.jl")
 include("metalhead.jl")
 include("types.jl")

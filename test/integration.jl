@@ -11,7 +11,9 @@ X = Tables.table(Float32.(Tables.matrix(X)))
                                     rng=rng)
     model2 = deepcopy(model)
     model3 = deepcopy(model)
+    model4 = deepcopy(model)
     model3.lambda = 0.1
+    model4.alpha = 0.1 # still no regularization here because `lambda=0`.
 
     e = evaluate(model, X, y, resampling=Holdout(), measure=StatisticalMeasures.LogLoss())
     loss1 = e.measurement[1]
@@ -22,6 +24,10 @@ X = Tables.table(Float32.(Tables.matrix(X)))
     e = evaluate(model3, X, y, resampling=Holdout(), measure=StatisticalMeasures.LogLoss())
     loss3 = e.measurement[1]
 
+    e = evaluate(model4, X, y, resampling=Holdout(), measure=StatisticalMeasures.LogLoss())
+    loss4 = e.measurement[1]
+
     @test loss1 ≈ loss2
-    @test_broken !(loss2 ≈ loss3)
+    @test !(loss1 ≈ loss3)
+    @test loss1 ≈ loss4
 end

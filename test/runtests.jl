@@ -27,9 +27,7 @@ MLJFlux.gpu_isdead() && push!(EXCLUDED_RESOURCE_TYPES, CUDALibs)
     "these types, as unavailable:\n$EXCLUDED_RESOURCE_TYPES\n"*
     "Excluded tests marked as \"broken\"."
 
-# alternative version of Short builder with no dropout; see
-# https://github.com/FluxML/Flux.jl/issues/1372 and
-# https://github.com/FluxML/Flux.jl/issues/1372
+# Alternative version of `Short` builder with no dropout:
 mutable struct Short2 <: MLJFlux.Builder
     n_hidden::Int     # if zero use geometric mean of input/output
     σ
@@ -58,9 +56,6 @@ macro conditional_testset(name, expr)
             @testset $name $expr
         end
     end)
-end
-@conditional_testset "penalizers" begin
-    include("penalizers.jl")
 end
 
 @conditional_testset "core" begin

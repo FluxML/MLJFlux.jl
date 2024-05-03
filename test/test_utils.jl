@@ -189,3 +189,39 @@ function optimisertest(ModelType, X, y, builder, optimiser, accel)
 
     return true
 end
+
+
+# # LOSS PENALIZERS
+
+"""
+    Penalizer(λ, α)
+
+Returns a callable object `penalizer` for evaluating regularization
+penalties associated with some numerical array. Specifically,
+`penalizer(A)` returns
+
+   λ*(α*L1 + (1 - α)*L2),
+
+where `L1` is the sum of absolute values of the elments of `A` and
+`L2` is the sum of squares of those elements.
+
+"""
+struct Penalizer{T}
+    lambda::T
+    alpha::T
+    function Penalizer(lambda, alpha)
+        lambda == 0 && return new{Nothing}(nothing, nothing)
+        T = promote_type(typeof.((lambda, alpha))...)
+        return new{T}(lambda, alpha)
+    end
+end
+
+(::Penalizer{Nothing})(::Any) = 0
+function (p::Penalizer)(A)
+    λ = p.lambda
+    α = p.alpha
+    # avoiding broadcasting; see Note (1) above
+    L2 = sum(abs2, A)
+    L1 = sum(abs,  A)
+    return  λ*(α*L1 + (1 - α)*L2)
+end

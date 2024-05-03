@@ -37,6 +37,48 @@ end
     end
 end
 
+@testset "regularization" begin
+    rng = StableRNG(123)
+    nobservations = 12
+    Xuser = rand(Float32, nobservations, 3)
+    yuser = rand(Float32, nobservations)
+    alpha = rand(rng)
+    lambda = rand(rng)
+    optimiser = Optimisers.Momentum()
+    builder = MLJFlux.Linear()
+    epochs = 1 # don't change this
+    opts = (; alpha, lambda, optimiser, builder, epochs)
+
+    for batch_size in [1, 2, 3]
+
+        # (1) train using weight/sign decay, as implemented in MLJFlux:
+        model = MLJFlux.NeuralNetworkRegressor(; batch_size, rng=StableRNG(123), opts...);
+        mach = machine(model, Xuser, yuser);
+        fit!(mach, verbosity=0);
+        w1 = Optimisers.trainables(fitted_params(mach).chain)
+
+        # (2) manually train for one epoch explicitly adding a loss penalty:
+        chain = MLJFlux.build(builder, StableRNG(123), 3, 1);
+        penalty = Penalizer(lambda, alpha); # defined in test_utils.jl
+        X, y = MLJFlux.collate(model, Xuser, yuser);
+        loss = model.loss;
+        n_batches = div(nobservations, batch_size)
+        optimiser_state = Optimisers.setup(optimiser, chain);
+        for i in 1:n_batches
+            batch_loss, gs = Flux.withgradient(chain) do m
+                yhat = m(X[i])
+                loss(yhat, y[i]) + sum(penalty, Optimisers.trainables(m))/n_batches
+            end
+            ∇ = first(gs)
+            optimiser_state, chain = Optimisers.update(optimiser_state, chain, ∇)
+        end
+        w2 = Optimisers.trainables(chain)
+
+        # (3) compare the trained weights
+        @test w1 ≈ w2
+    end
+end
+
 @testset "iteration api" begin
     model = MLJFlux.NeuralNetworkRegressor(epochs=10)
     @test MLJBase.supports_training_losses(model)

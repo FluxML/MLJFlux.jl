@@ -17,7 +17,6 @@ end
 """
     train_epoch(
         model::MLJFlux.MLJFluxModel,
-        penalty,
         chain,
         optimiser,
         optimiser_state,
@@ -32,15 +31,12 @@ Update the parameters of a Flux `chain`, where:
 - the loss function `(yhat, y) -> loss(yhat, y)` is inferred from the
   `model`
 
-- `params -> penalty(params)` is a regularization penalty function
-
 - `X` and `y` are vectors of batches of the training data, as detailed
   in the [`MLJFlux.train`](@ref) document string.
 
 """
 function train_epoch(
     model::MLJFlux.MLJFluxModel,
-    penalty,
     chain,
     optimiser,
     optimiser_state,
@@ -51,8 +47,6 @@ function train_epoch(
     loss = model.loss
     n_batches = length(y)
     training_loss = zero(Float32)
-
-    # IGNORING PENALTY FOR NOW!!
 
     for i in 1:n_batches
         batch_loss, gs = Flux.withgradient(chain) do m
@@ -73,7 +67,6 @@ end
 """
     train(
         model::MLJFlux.MLJFluxModel,
-        penalty,
         chain,
         optimiser,
         optimiser_state,
@@ -85,9 +78,8 @@ end
 
 A private method that can be overloaded for custom models.
 
-Optimize a Flux model `chain`, where `(yhat, y) -> loss(yhat, y)` is
-the loss function inferred from the `model`, and `parameters -> penalty(parameters)` is the
-regularization penalty function.
+Optimize a Flux model `chain`, where `(yhat, y) -> loss(yhat, y)` is the loss function
+inferred from the `model`.
 
 Here `chain` is a `Flux.Chain` object, or other Flux model such that
 `Flux.params(chain)` returns the parameters to be optimized.
@@ -114,13 +106,12 @@ movement.
 # Return value
 
 Returns `(updated_chain, updated_optimiser_state, history)`, where `updated_chain` is a
-trained version of `chain` and `history` is a vector of penalized losses, including the
+trained version of `chain` and `history` is a vector of losses, including the
 initial (no-train) loss.
 
 """
 function train(
     model::MLJFlux.MLJFluxModel,
-    penalty,
     chain,
     optimiser,
     optimiser_state,
@@ -140,15 +131,12 @@ function train(
     # initiate history:
     n_batches = length(y)
 
-    parameters = Flux.params(chain)
-    losses = (loss(chain(X[i]), y[i]) +
-              penalty(parameters) / n_batches for i in 1:n_batches)
+    losses = (loss(chain(X[i]), y[i]) for i in 1:n_batches)
     history = [mean(losses),]
 
     for i in 1:epochs
         chain, optimiser_state, current_loss = train_epoch(
             model,
-            penalty,
             chain,
             optimiser,
             optimiser_state,

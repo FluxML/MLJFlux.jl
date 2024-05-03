@@ -16,8 +16,9 @@ y = map(ycont) do η
     end
 end |> categorical;
 
-# TODO: replace Short2 -> Short when
-# https://github.com/FluxML/Flux.jl/issues/1372 is resolved:
+# In the tests below we want to check GPU and CPU give similar results. We use Short2
+# instead of Short because Dropout in Short does not appear to behave the same on GPU as
+# on a CPU, even when we use `default_rng()` for both.
 builder = Short2()
 optimiser = Optimisers.Adam(0.03)
 

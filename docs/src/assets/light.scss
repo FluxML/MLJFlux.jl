@@ -1,0 +1,107 @@
+@charset "UTF-8";
+
+$family-sans-serif: 'Montserrat', sans-serif;
+$family-monospace: 'Source Code Pro', monospace;
+$themename: "documenter-light"; // CSS file must be called `$(themename).css`
+
+@import "documenter-light";
+
+
+#documenter .content p { // Justify text in paragraphs
+  text-align: justify;
+}
+
+.docstring {
+  border-radius: 15px !important;
+  header {
+    border-radius: 15px 15px 0 0 !important;
+  }
+  pre {
+    border-radius: 10px;
+    padding: 4px;
+  }
+
+  section {
+    padding: 20px;
+
+ 
+  }
+
+}
+
+.docs-package-name {
+  display: none;
+}
+
+
+.admonition {
+  border-radius: 15px !important;
+}
+
+
+code.nohighlight.hljs {
+  background-color: white !important;
+}
+
+
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  max-width: 1200px;
+  padding: 20px;
+}
+
+.grid-item {
+  position: relative;
+  overflow: hidden;
+  border-radius: 15px;
+  transition: transform 0.3s ease;
+  cursor: pointer;
+}
+
+.grid-item img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+.grid-item .item-title {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.9);
+  color: #fff;
+  padding: 8px 15px;
+  font-size: 16px;
+}
+
+.item-title p {
+  font-weight: normal !important;
+  display: none;
+}
+
+
+
+.grid-item:hover p {
+  display: block;
+}
+
+.grid-item:hover #colab {
+  display: block;
+}
+
+#colab {
+  border-radius: 25%;
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 11%;
+  display: none;
+}
+
+.content pre {
+  border-radius: 1rem !important;
+}

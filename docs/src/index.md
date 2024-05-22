@@ -2,7 +2,7 @@
 
 A Julia package integrating deep learning Flux models with MLJ.
 
-### Objectives
+## Objectives
 
 - Provide a user-friendly and high-level interface to fundamental [Flux](https://fluxml.ai/Flux.jl/stable/) deep learning models while still being extensible by supporting custom models written with Flux
 
@@ -15,7 +15,7 @@ A Julia package integrating deep learning Flux models with MLJ.
 
 Also note that MLJFlux is limited to training models only when all training data fits into memory, though it still supports automatic batching of data.
 
-### Installation
+## Installation
 
 ```julia
 import Pkg
@@ -24,7 +24,7 @@ Pkg.add(["MLJ", "MLJFlux", "Flux"])
 ```
 You only need `Flux` if you need to build a custom architecture or experiment with different optimizers, loss functions and activations.
 
-### Quick Start
+## Quick Start
 First load and instantiate mode:
 ```@example
 using MLJ, Flux, MLJFlux
@@ -41,7 +41,7 @@ clf = NeuralNetworkClassifier(
     optimiser=Flux.ADAM(0.01),
     batch_size=8,
     epochs=100, 
-    acceleration=CUDALibs()
+    acceleration=CUDALibs()         # For GPU support
     )
 
 # 3. Wrap it in a machine in fit
@@ -54,9 +54,23 @@ evaluate!(mach, resampling=cv, measure=accuracy)
 ```
 As you can see we were able to use MLJ functionality (i.e., cross validation) with a Flux deep learning model. All arguments provided also have defaults.
 
-Notice that we were also able to define the neural network in a high-level fashion by only specifying the number of neurons per each hidden layer and the activation function. Meanwhile, `MLJFlux` was able to infer the input and output layer as well as use a suitable default for the loss function and output activation given the classification task.
+Notice that we were also able to define the neural network in a high-level fashion by only specifying the number of neurons per each hidden layer and the activation function. Meanwhile, `MLJFlux` was able to infer the input and output layer as well as use a suitable default for the loss function and output activation given the classification task. Notice as well that we did not need to implement a training or prediction loop as in `Flux`.
 
-### Flux or MLJFlux?
+## Basic idea
+
+As in the example above, any MLJFlux model has a `builder` hyperparameter, an object encoding
+instructions for creating a neural network given the data that the
+model eventually sees (e.g., the number of classes in a classification
+problem). While each MLJ model has a simple default builder, users
+may need to define custom builders to get optimal results,
+and this will require familiarity with the [Flux
+API](https://fluxml.ai/Flux.jl/stable/) for defining a neural network
+chain.
+
+In the future MLJFlux may provide a larger assortment of canned
+builders. Pull requests introducing new ones are most welcome.
+
+## Flux or MLJFlux?
 [Flux](https://fluxml.ai/Flux.jl/stable/) is a deep learning framework in Julia that comes with everything you need to build deep learning models (i.e., GPU support, automatic differentiation, layers, activations, losses, optimizers, etc.). [MLJFlux](https://github.com/FluxML/MLJFlux.jl) wraps models built with Flux which provides a more high-level interface for building and training such models. More importantly, it empowers Flux models by extending their support to many common machine learning workflows that are possible via MLJ such as:
 
 - **Estimating performance** of your model using a holdout set or other resampling strategy (e.g., cross-validation) as measured by one or more metrics (e.g., loss functions) that may not have been used in training

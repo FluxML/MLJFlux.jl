@@ -7,6 +7,7 @@ DocMeta.setdocmeta!(MLJFlux, :DocTestSetup, :(using MLJFlux); recursive=true)
 makedocs(
 	sitename = "MLJFlux",
     format = Documenter.HTML(;
+    collapselevel = 1,
     assets = [
         "assets/favicon.ico",
         asset(
@@ -23,10 +24,24 @@ makedocs(
 	modules = [MLJFlux],
 	warnonly = true,
 	pages = ["Introduction" => "index.md",
-            "API"=> "api.md",
-            "Features" => Any[
-                "Tuning"=>"features/tuning.md",
-                "Early Stopping"=>"features/early.md",
+            "Interface"=> Any[
+                "Summary"=>"interface/Summary.md",
+                "Builders"=>"interface/Builders.md",
+                "Custom Builders"=>"interface/Custom Builders.md",
+                "Classification"=>"interface/Classification.md",
+                "Regression"=>"interface/Regression.md",
+                "Multi-Target Regression"=>"interface/Multitarget Regression.md",
+                "Image Classification"=>"interface/Image Classification.md",
+            ],
+            "Workflow Examples" => Any[
+                "Incremental Training"=>"workflow examples/Incremental Training.md",
+                "Validation and Hyperparameter Tuning"=>"workflow examples/Hyperparameter Tuning.md",
+                "Early Stopping"=>"workflow examples/Early Stopping.md",
+                "Model Composition"=>"workflow examples/Composition.md",
+            ],
+            "Tutorials"=>Any[
+                "MNIST Digits Classification"=>"full tutorials/MNIST.md",
+                "Boston House Prices Prediction"=>"full tutorials/Boston.md",
             ],
             "Contributing" => "contributing.md",
             "About" => "about.md"],

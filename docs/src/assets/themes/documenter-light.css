@@ -11717,3 +11717,17 @@ code.hljs {
 .input.is-rounded, #documenter .docs-sidebar form.docs-search>input {
   margin: 1.5rem 0.0rem !important;
 }
+
+th, td {
+  text-align: left !important;
+}
+
+summary {
+  cursor: pointer;
+  margin: 1rem 0rem;
+  
+}
+
+details {
+  margin-bottom: 1.5rem;
+}

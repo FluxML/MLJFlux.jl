@@ -22,9 +22,11 @@ In MLJ a *model* is a mutable struct storing hyper-parameters for some
 learning algorithm indicated by the model name, and that's all. In
 particular, an MLJ model does not store learned parameters.
 
-*Warning:* In Flux the term "model" has another meaning. However, as all
-Flux "models" used in MLJFLux are `Flux.Chain` objects, we call them
-*chains*, and restrict use of "model" to models in the MLJ sense.
+!!! warning "Difference in Definition"
+    In Flux the term "model" has another meaning. However, as all
+    Flux "models" used in MLJFLux are `Flux.Chain` objects, we call them
+    *chains*, and restrict use of "model" to models in the MLJ sense.
+
 ```@raw html
 </details>
 ```
@@ -104,8 +106,9 @@ length as its input.
     Currently, the loss function specified by `loss=...` is applied
     internally by Flux and needs to conform to the Flux API. You cannot,
     for example, supply one of MLJ's probabilistic loss functions, such as
-    `MLJ.cross_entropy` to one of the classifier constructors, although
-    you *should* use MLJ loss functions in MLJ meta-algorithms.
+    `MLJ.cross_entropy` to one of the classifier constructors. 
+
+That said, you can only use MLJ loss functions or metrics in evaluation meta-algorithms (such as cross validation) and they will work even if they underlying model comes from MLJFlux.
 
 ```@raw html
 <details closed><summary><b>More on accelerated training with GPUs</b></summary>

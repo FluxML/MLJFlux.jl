@@ -10919,6 +10919,10 @@ pre:hover .copy-button {
   margin-right: 0.75rem;
   content: "\f06a";
 }
+.admonition-header {
+  border-top-left-radius: 14px !important;
+  border-top-right-radius: 14px !important;
+}
 .admonition-body {
   color: #222;
   padding: 0.5rem 0.75rem;
@@ -11659,9 +11663,9 @@ code.hljs {
 .admonition {
   border-radius: 15px !important;
 }
-code.nohighlight.hljs {
+/* code.nohighlight.hljs {
   background-color: white !important;
-}
+} */
 .grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));

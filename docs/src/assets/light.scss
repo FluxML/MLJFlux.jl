@@ -1,6 +1,6 @@
 @charset "UTF-8";
 
-$family-sans-serif: 'Montserrat', sans-serif;
+$family-sans-serif: 'Lato', sans-serif;
 $family-monospace: 'Source Code Pro', monospace;
 $themename: "documenter-light"; // CSS file must be called `$(themename).css`
 
@@ -37,11 +37,14 @@ $themename: "documenter-light"; // CSS file must be called `$(themename).css`
 .admonition {
   border-radius: 15px !important;
 }
-
-
-code.nohighlight.hljs {
-  background-color: white !important;
+.admonition-header {
+  border-top-left-radius: 14px !important;
+  border-top-right-radius: 14px !important;
 }
+
+// code.nohighlight.hljs {
+//   background-color: white !important;
+// }
 
 
 

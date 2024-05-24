@@ -53,7 +53,7 @@ following conditions:
 - The object returned by `chain(x)` must be an `AbstractFloat` vector
   of length `n_out`.
 
-Alternatively, use `MLJFlux.@builder(neural_net)` to automatically create a builder for
+Alternatively, use [`MLJFlux.@builder(neural_net)`](@ref) to automatically create a builder for
 any valid Flux chain expression `neural_net`, where the symbols `n_in`, `n_out`,
 `n_channels` and `rng` can appear literally, with the interpretations explained above. For
 example,

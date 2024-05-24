@@ -41,14 +41,12 @@ This method must return a `Flux.Chain` instance, `chain`, subject to the
 following conditions:
 
 - `chain(x)` must make sense:
-
-	- for any `x <: Array{<:AbstractFloat, 2}` of size `(n_in,
-	  batch_size)` where `batch_size` is any integer (for use with one
-	  of the first three model types); or
-
-	- for any `x <: Array{<:Float32, 4}` of size `(W, H, n_channels,
-	  batch_size)`, where `(W, H) = n_in`, `n_channels` is 1 or 3, and
-	  `batch_size` is any integer (for use with `ImageClassifier`)
+  - for any `x <: Array{<:AbstractFloat, 2}` of size `(n_in,
+    batch_size)` where `batch_size` is any integer (for use with one
+    of the first three model types); or
+  - for any `x <: Array{<:Float32, 4}` of size `(W, H, n_channels,
+    batch_size)`, where `(W, H) = n_in`, `n_channels` is 1 or 3, and
+    `batch_size` is any integer (for use with `ImageClassifier`)
 
 - The object returned by `chain(x)` must be an `AbstractFloat` vector
   of length `n_out`.

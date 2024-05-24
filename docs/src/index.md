@@ -1,6 +1,6 @@
 # MLJFlux.jl
 
-A Julia package integrating deep learning Flux models with MLJ.
+A Julia package integrating deep learning Flux models with [MLJ](https://juliaai.github.io/MLJ.jl/dev/).
 
 ## Objectives
 

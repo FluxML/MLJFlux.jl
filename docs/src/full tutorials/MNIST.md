@@ -92,8 +92,9 @@ And evaluating the accuracy of the model on a 30% holdout set:
 ```julia
 mach = machine(clf, X, y)
 
-evaluate!(mach,
-				 resampling=Holdout(rng=123, fraction_train=0.7),
-				 operation=predict_mode,
-				 measure=misclassification_rate)
+evaluate!(
+    mach,
+    resampling=Holdout(rng=123, fraction_train=0.7),
+    measure=misclassification_rate,
+    )
 ```

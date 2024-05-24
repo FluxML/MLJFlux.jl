@@ -23,7 +23,7 @@ end
 ```
 
 Note here that `n_in` and `n_out` depend on the size of the data (see
-Table 1).
+[Table 1](@ref Models).
 
 For a concrete image classification example, see
 [examples/mnist](examples/mnist).

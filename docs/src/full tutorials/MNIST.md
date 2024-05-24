@@ -37,13 +37,14 @@ function MLJFlux.build(b::MyConvBuilder, rng, n_in, n_out, n_channels)
 	p = div(k - 1, 2)
 
 	front = Chain(
-			   Conv((k, k), n_channels => c1, pad=(p, p), relu),
-			   MaxPool((2, 2)),
-			   Conv((k, k), c1 => c2, pad=(p, p), relu),
-			   MaxPool((2, 2)),
-			   Conv((k, k), c2 => c3, pad=(p, p), relu),
-			   MaxPool((2 ,2)),
-			   flatten)
+            Conv((k, k), n_channels => c1, pad=(p, p), relu),
+            MaxPool((2, 2)),
+            Conv((k, k), c1 => c2, pad=(p, p), relu),
+            MaxPool((2, 2)),
+            Conv((k, k), c2 => c3, pad=(p, p), relu),
+            MaxPool((2 ,2)),
+           flatten,
+           )
 	d = Flux.outputsize(front, (n_in..., n_channels, 1)) |> first
 	return Chain(front, Dense(d, n_out))
 end

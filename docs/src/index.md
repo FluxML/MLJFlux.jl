@@ -52,7 +52,7 @@ evaluate!(mach, resampling=cv, measure=accuracy)
 ```
 As you can see we were able to use MLJ functionality (i.e., cross validation) with a Flux deep learning model. All arguments provided also have defaults.
 
-Notice that we were also able to define the neural network in a high-level fashion by only specifying the number of neurons per each hidden layer and the activation function. Meanwhile, `MLJFlux` was able to infer the input and output layer as well as use a suitable default for the loss function and output activation given the classification task. Notice as well that we did not need to implement a training or prediction loop as in `Flux`.
+Notice that we were also able to define the neural network in a high-level fashion by only specifying the number of neurons in each hidden layer and the activation function. Meanwhile, `MLJFlux` was able to infer the input and output layer as well as use a suitable default for the loss function and output activation given the classification task. Notice as well that we did not need to implement a training or prediction loop as in `Flux`.
 
 ## Basic idea
 

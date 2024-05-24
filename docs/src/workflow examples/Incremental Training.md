@@ -39,10 +39,12 @@ Chain(Chain(Dense(4, 3, σ), Flux.Dropout{Float64}(0.5, false), Dense(3, 3)), so
 
 ```julia
 r = range(clf, :epochs, lower=1, upper=200, scale=:log10)
-curve = learning_curve(clf, X, y,
-					   range=r,
-					   resampling=Holdout(fraction_train=0.7),
-					   measure=cross_entropy)
+curve = learning_curve(
+    clf, X, y;
+    range=r,
+    resampling=Holdout(fraction_train=0.7),
+    measure=cross_entropy,
+    )
 using Plots
 plot(curve.parameter_values,
 	   curve.measurements,

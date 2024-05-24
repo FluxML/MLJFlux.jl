@@ -46,11 +46,13 @@ curve = learning_curve(
     measure=cross_entropy,
     )
 using Plots
-plot(curve.parameter_values,
-	   curve.measurements,
-	   xlab=curve.parameter_name,
-	   xscale=curve.parameter_scale,
-	   ylab = "Cross Entropy")
+plot(
+    curve.parameter_values,
+    curve.measurements,
+    xlab=curve.parameter_name,
+    xscale=curve.parameter_scale,
+    ylab = "Cross Entropy",
+    )
 
 ```
 

@@ -65,8 +65,6 @@ and this will require familiarity with the [Flux
 API](https://fluxml.ai/Flux.jl/stable/) for defining a neural network
 chain.
 
-In the future MLJFlux may provide a larger assortment of canned
-builders. Pull requests introducing new ones are most welcome.
 
 ## Flux or MLJFlux?
 [Flux](https://fluxml.ai/Flux.jl/stable/) is a deep learning framework in Julia that comes with everything you need to build deep learning models (i.e., GPU support, automatic differentiation, layers, activations, losses, optimizers, etc.). [MLJFlux](https://github.com/FluxML/MLJFlux.jl) wraps models built with Flux which provides a more high-level interface for building and training such models. More importantly, it empowers Flux models by extending their support to many common machine learning workflows that are possible via MLJ such as:

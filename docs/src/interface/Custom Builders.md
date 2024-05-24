@@ -14,9 +14,11 @@ end
 
 function MLJFlux.build(nn::MyBuilder, rng, n_in, n_out)
 	init = Flux.glorot_uniform(rng)
-	return Chain(Dense(n_in, nn.n1, init=init),
-				 Dense(nn.n1, nn.n2, init=init),
-				 Dense(nn.n2, n_out, init=init))
+        return Chain(
+            Dense(n_in, nn.n1, init=init),
+            Dense(nn.n1, nn.n2, init=init),
+            Dense(nn.n2, n_out, init=init),
+            )
 end
 ```
 

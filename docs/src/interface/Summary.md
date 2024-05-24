@@ -108,7 +108,7 @@ length as its input.
     for example, supply one of MLJ's probabilistic loss functions, such as
     `MLJ.cross_entropy` to one of the classifier constructors. 
 
-That said, you can only use MLJ loss functions or metrics in evaluation meta-algorithms (such as cross validation) and they will work even if they underlying model comes from MLJFlux.
+That said, you can only use MLJ loss functions or metrics in evaluation meta-algorithms (such as cross validation) and they will work even if the underlying model comes from `MLJFlux`.
 
 ```@raw html
 <details closed><summary><b>More on accelerated training with GPUs</b></summary>

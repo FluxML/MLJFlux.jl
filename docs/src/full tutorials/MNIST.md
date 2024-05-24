@@ -54,7 +54,7 @@ conform to those is the table above:
 
 ```julia
 N = 500
-Xraw, yraw = MNIST.traindata();
+Xraw, yraw = MNIST(split=:train)[:];
 Xraw = Xraw[:,:,1:N];
 yraw = yraw[1:N];
 

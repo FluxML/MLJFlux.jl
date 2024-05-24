@@ -44,7 +44,6 @@ makedocs(
                 "Boston House Prices Prediction"=>"full tutorials/Boston.md",
             ],
             "Contributing" => "contributing.md",
-            "About" => "about.md"],
         doctest = false,
 )
 

@@ -79,9 +79,11 @@ Instantiating an image classifier model:
 
 ```julia
 ImageClassifier = @load ImageClassifier
-clf = ImageClassifier(builder=MyConvBuilder(3, 16, 32, 32),
-					  epochs=10,
-					  loss=Flux.crossentropy)
+clf = ImageClassifier(
+    builder=MyConvBuilder(3, 16, 32, 32),
+    epochs=10,
+    loss=Flux.crossentropy,
+    )
 ```
 
 And evaluating the accuracy of the model on a 30% holdout set:

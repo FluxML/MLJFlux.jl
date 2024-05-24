@@ -44,9 +44,8 @@ clf = NeuralNetworkClassifier(
     acceleration=CUDALibs()         # For GPU support
     )
 
-# 3. Wrap it in a machine in fit
+# 3. Wrap it in a machine 
 mach = machine(clf, X, y)
-fit!(mach)
 
 # 4. Evaluate the model
 cv=CV(nfolds=5)

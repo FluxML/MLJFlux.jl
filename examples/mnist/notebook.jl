@@ -1,16 +1,16 @@
 # # Using MLJ to classifiy the MNIST image dataset
 
-
 using Pkg
 const DIR = @__DIR__
 Pkg.activate(DIR)
 Pkg.instantiate()
 
-# **Julia version** is assumed to be ^1.7
+# **Julia version** is assumed to be ^1.10
 
 using MLJ
 using Flux
 import MLJFlux
+import MLUtils
 import MLJIteration # for `skip`
 
 using Plots
@@ -23,7 +23,7 @@ gr(size=(600, 300*(sqrt(5)-1)));
 import MLDatasets: MNIST
 
 ENV["DATADEPS_ALWAYS_ACCEPT"] = true
-images, labels = MNIST.traindata();
+images, labels = MNIST(split=:train)[:];
 
 # In MLJ, integers cannot be used for encoding categorical data, so we
 # must force the labels to have the `Multiclass` [scientific
@@ -63,8 +63,6 @@ struct MyConvBuilder
     channels3::Int
 end
 
-make2d(x::AbstractArray) = reshape(x, :, size(x)[end])
-
 function MLJFlux.build(b::MyConvBuilder, rng, n_in, n_out, n_channels)
     k, c1, c2, c3 = b.filter_size, b.channels1, b.channels2, b.channels3
     mod(k, 2) == 1 || error("`filter_size` must be odd. ")
@@ -77,7 +75,7 @@ function MLJFlux.build(b::MyConvBuilder, rng, n_in, n_out, n_channels)
         MaxPool((2, 2)),
         Conv((k, k), c2 => c3, pad=(p, p), relu, init=init),
         MaxPool((2 ,2)),
-        make2d)
+        MLUtils.flatten)
     d = Flux.outputsize(front, (n_in..., n_channels, 1)) |> first
     return Chain(front, Dense(d, n_out, init=init))
 end
@@ -91,10 +89,12 @@ end
 # `acceleration=CUDALibs()` below:
 
 ImageClassifier = @load ImageClassifier
-clf = ImageClassifier(builder=MyConvBuilder(3, 16, 32, 32),
-                      batch_size=50,
-                      epochs=10,
-                      rng=123)
+clf = ImageClassifier(
+    builder=MyConvBuilder(3, 16, 32, 32),
+    batch_size=50,
+    epochs=10,
+    rng=123,
+)
 
 # You can add Flux options `optimiser=...` and `loss=...` here. At
 # present, `loss` must be a Flux-compatible loss, not an MLJ
@@ -196,24 +196,27 @@ update_epochs(epoch) = push!(epochs, epoch)
 save_control =
     MLJIteration.skip(Save(joinpath(DIR, "mnist.jls")), predicate=3)
 
-controls=[Step(2),
-          Patience(3),
-          InvalidValue(),
-          TimeLimit(5/60),
-          save_control,
-          WithLossDo(),
-          WithLossDo(update_loss),
-          WithTrainingLossesDo(update_training_loss),
-          Callback(update_means),
-          WithIterationsDo(update_epochs)
+controls=[
+    Step(2),
+    Patience(3),
+    InvalidValue(),
+    TimeLimit(5/60),
+    save_control,
+    WithLossDo(),
+    WithLossDo(update_loss),
+    WithTrainingLossesDo(update_training_loss),
+    Callback(update_means),
+    WithIterationsDo(update_epochs),
 ];
 
 # The "self-iterating" classifier:
 
-iterated_clf = IteratedModel(model=clf,
-                       controls=controls,
-                       resampling=Holdout(fraction_train=0.7),
-                       measure=log_loss)
+iterated_clf = IteratedModel(
+    clf,
+    controls=controls,
+    resampling=Holdout(fraction_train=0.7),
+    measure=log_loss,
+)
 
 # ### Binding the wrapped model to data:
 
@@ -226,10 +229,13 @@ fit!(mach, rows=1:500);
 
 # ### Comparison of the training and out-of-sample losses:
 
-plot(epochs, losses,
-     xlab = "epoch",
-     ylab = "cross entropy",
-     label="out-of-sample")
+plot(
+    epochs,
+    losses,
+    xlab = "epoch",
+    ylab = "cross entropy",
+    label="out-of-sample",
+)
 plot!(epochs, training_losses, label="training")
 
 savefig(joinpath(DIR, "loss.png"))
@@ -239,18 +245,21 @@ savefig(joinpath(DIR, "loss.png"))
 n_epochs =  length(losses)
 n_parameters = div(length(parameter_means), n_epochs)
 parameter_means2 = reshape(copy(parameter_means), n_parameters, n_epochs)'
-plot(epochs, parameter_means2,
-     title="Flux parameter mean weights",
-     xlab = "epoch")
+plot(
+    epochs,
+    parameter_means2,
+    title="Flux parameter mean weights",
+    xlab = "epoch",
+)
 
-# **Note.** The the higher the number, the deeper the chain parameter.
+# **Note.** The higher the number, the deeper the chain parameter.
 
 savefig(joinpath(DIR, "weights.png"))
 
 
 # ### Retrieving a snapshot for a prediction:
 
-mach2 = machine(joinpath(DIR, "mnist3.jlso"))
+mach2 = machine(joinpath(DIR, "mnist3.jls"))
 predict_mode(mach2, images[501:503])
 
 
@@ -262,9 +271,11 @@ predict_mode(mach2, images[501:503])
 iterated_clf.controls[2] = Patience(4)
 fit!(mach, rows=1:500)
 
-plot(epochs, losses,
-     xlab = "epoch",
-     ylab = "cross entropy",
-     label="out-of-sample")
+plot(
+    epochs,
+    losses,
+    xlab = "epoch",
+    ylab = "cross entropy",
+    label="out-of-sample",
+)
 plot!(epochs, training_losses, label="training")
-

@@ -25,7 +25,6 @@ Pkg.add(["MLJ", "MLJFlux", "Flux"])
 You only need `Flux` if you need to build a custom architecture or experiment with different optimizers, loss functions and activations.
 
 ## Quick Start
-First load and instantiate mode:
 ```@example
 using MLJ, Flux, MLJFlux
 import RDatasets

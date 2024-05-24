@@ -11,7 +11,7 @@ A Julia package integrating deep learning Flux models with [MLJ](https://juliaai
 - Make it easier to apply machine learning techniques provided by MLJ, including: out-of-sample performance evaluation, hyper-parameter optimization, iteration control, and more, to deep learning models
 
 !!! note "MLJFlux Coverage"
-    MLJFlux support is focused on fundamental and widely used deep learning models; sophisticated architectures or techniques such as online learning, reinforcement learning, and adversarial networks are currently beyond its scope. 
+    MLJFlux support is focused on fundamental and widely used deep learning models.  Sophisticated architectures or techniques such as online learning, reinforcement learning, and adversarial networks are currently beyond its scope. 
 
 Also note that MLJFlux is limited to training models only when all training data fits into memory, though it still supports automatic batching of data.
 

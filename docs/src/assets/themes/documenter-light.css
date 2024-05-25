@@ -436,7 +436,7 @@ button,
 input,
 select,
 textarea {
-  font-family: "Montserrat", sans-serif;
+  font-family: "Lato", sans-serif;
 }
 code,
 pre {
@@ -1072,13 +1072,13 @@ a.has-text-danger:focus {
   font-weight: 700 !important;
 }
 .is-family-primary {
-  font-family: "Montserrat", sans-serif !important;
+  font-family: "Lato", sans-serif !important;
 }
 .is-family-secondary {
-  font-family: "Montserrat", sans-serif !important;
+  font-family: "Lato", sans-serif !important;
 }
 .is-family-sans-serif {
-  font-family: "Montserrat", sans-serif !important;
+  font-family: "Lato", sans-serif !important;
 }
 .is-family-monospace {
   font-family: "Source Code Pro", monospace !important;

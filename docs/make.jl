@@ -35,15 +35,15 @@ makedocs(
             ],
             "Workflow Examples" => Any[
                 "Incremental Training"=>"workflow examples/Incremental Training.md",
-                "Validation and Hyperparameter Tuning"=>"workflow examples/Hyperparameter Tuning.md",
-                "Early Stopping"=>"workflow examples/Early Stopping.md",
-                "Model Composition"=>"workflow examples/Composition.md",
+                #"Validation and Hyperparameter Tuning"=>"workflow examples/Hyperparameter Tuning.md",
+                #"Early Stopping"=>"workflow examples/Early Stopping.md",
+                #"Model Composition"=>"workflow examples/Composition.md",
             ],
-            "Tutorials"=>Any[
-                "MNIST Digits Classification"=>"full tutorials/MNIST.md",
-                "Boston House Prices Prediction"=>"full tutorials/Boston.md",
-            ],
-            "Contributing" => "contributing.md",
+            # "Tutorials"=>Any[
+            #     "MNIST Digits Classification"=>"full tutorials/MNIST.md",
+            #     "Boston House Prices Prediction"=>"full tutorials/Boston.md",
+            # ],
+            "Contributing" => "contributing.md"],
         doctest = false,
 )
 

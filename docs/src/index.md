@@ -80,4 +80,4 @@ chain.
 
 - **Comparing** your model with a non-deep learning models
 
-Thus, for model that could be implemented in both `Flux` and `MLJFlux`, one could choose working with `MLJFlux` instead of `Flux` if they are interested in any of the functionality above, while not willing to implement it from scratch and/or when they would prefer working with a more high-level interface equivalent to that of MLJ for their task.
+A comparable project, [FastAI](https://github.com/FluxML/FastAI.jl)/[FluxTraining](https://github.com/FluxML/FluxTraining.jl), also provides a high-level interface for interacting with Flux models and supports a set of features that may overlap with (but not include all of) those supported by MLJFlux.

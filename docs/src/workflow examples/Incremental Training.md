@@ -56,4 +56,6 @@ plot(
 
 ```
 
-![](examples/iris/iris_history.png)
+![](../../../examples/iris/iris_history.png)
+
+This is still work-in-progress. Expect more workflow examples and tutorials soon.

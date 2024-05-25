@@ -50,10 +50,6 @@ and this will require familiarity with the [Flux
 API](https://fluxml.ai/Flux.jl/stable/) for defining a neural network
 chain.
 
-In the future MLJFlux may provide a larger assortment of canned
-builders. Pull requests introducing new ones are most welcome.
-
-
 ### Installation
 
 ```julia

@@ -13,6 +13,8 @@ import MLJFlux
 import MLUtils
 import MLJIteration # for `skip`
 
+# If running on a GPU, you will also need to `import CUDA` and `import cuDNN`.
+
 using Plots
 gr(size=(600, 300*(sqrt(5)-1)));
 
@@ -85,8 +87,7 @@ end
 # is controlled using using the `finaliser` hyperparameter of the
 # classifier.
 
-# We now define the MLJ model. If you have a GPU, substitute
-# `acceleration=CUDALibs()` below:
+# We now define the MLJ model. 
 
 ImageClassifier = @load ImageClassifier
 clf = ImageClassifier(
@@ -94,6 +95,8 @@ clf = ImageClassifier(
     batch_size=50,
     epochs=10,
     rng=123,
+#   rng=Random.default_rng()   # for GPU
+#   acceleration=CUDALibs(),   # for GPU
 )
 
 # You can add Flux options `optimiser=...` and `loss=...` here. At

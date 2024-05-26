@@ -87,7 +87,7 @@ end
 # is controlled using using the `finaliser` hyperparameter of the
 # classifier.
 
-# We now define the MLJ model. 
+# We now define the MLJ model.
 
 ImageClassifier = @load ImageClassifier
 clf = ImageClassifier(
@@ -95,13 +95,11 @@ clf = ImageClassifier(
     batch_size=50,
     epochs=10,
     rng=123,
-#   rng=Random.default_rng()   # for GPU
-#   acceleration=CUDALibs(),   # for GPU
 )
 
 # You can add Flux options `optimiser=...` and `loss=...` here. At
 # present, `loss` must be a Flux-compatible loss, not an MLJ
-# measure. To run on a GPU, set `acceleration=CUDALib()`.
+# measure. To run on a GPU, set `acceleration=CUDALib()` and omit `rng`.
 
 # Binding the model with data in an MLJ machine:
 mach = machine(clf, images, labels);
@@ -132,7 +130,7 @@ fit!(mach, rows=1:500);
 # Computing an out-of-sample estimate of the loss:
 
 predicted_labels = predict(mach, rows=501:1000);
-cross_entropy(predicted_labels, labels[501:1000]) |> mean
+cross_entropy(predicted_labels, labels[501:1000])
 
 # Or, in one line:
 
@@ -157,11 +155,11 @@ evaluate!(mach,
 # - `Patience(3)`: 3 consecutive increases in the loss
 # - `InvalidValue()`: an out-of-sample loss, or a training loss, is `NaN`, `Inf`, or `-Inf`
 # - `TimeLimit(t=5/60)`: training time has exceeded 5 minutes
-
+#
 # These checks (and other controls) will be applied every two epochs
 # (because of the `Step(2)` control). Additionally, training a
 # machine bound to `iterated_clf` will:
-
+#
 # - save a snapshot of the machine every three control cycles (every six epochs)
 # - record traces of the out-of-sample loss and training losses for plotting
 # - record mean value traces of each Flux parameter for plotting

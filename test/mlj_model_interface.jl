@@ -37,7 +37,37 @@ end
     end
 end
 
-@testset "regularization" begin
+@testset "regularization: logic" begin
+    optimiser = Optimisers.Momentum()
+
+    # lambda = 0:
+    model = MLJFlux.NeuralNetworkRegressor(; alpha=0.3, lambda=0, optimiser)
+    chain = MLJFlux.regularized_optimiser(model, 1)
+    @test chain == optimiser
+
+    # alpha = 0:
+    model = MLJFlux.NeuralNetworkRegressor(; alpha=0, lambda=0.3, optimiser)
+    chain = MLJFlux.regularized_optimiser(model, 1)
+    @test chain isa Optimisers.OptimiserChain{
+        Tuple{Optimisers.WeightDecay, Optimisers.Momentum}
+    }
+
+    # alpha = 1:
+    model = MLJFlux.NeuralNetworkRegressor(; alpha=1, lambda=0.3, optimiser)
+    chain = MLJFlux.regularized_optimiser(model, 1)
+    @test chain isa Optimisers.OptimiserChain{
+        Tuple{Optimisers.SignDecay, Optimisers.Momentum}
+    }
+
+    # general case:
+    model = MLJFlux.NeuralNetworkRegressor(; alpha=0.4, lambda=0.3, optimiser)
+    chain = MLJFlux.regularized_optimiser(model, 1)
+    @test chain isa Optimisers.OptimiserChain{
+        Tuple{Optimisers.SignDecay, Optimisers.WeightDecay, Optimisers.Momentum}
+    }
+end
+
+@testset "regularization: integration" begin
     rng = StableRNG(123)
     nobservations = 12
     Xuser = rand(Float32, nobservations, 3)

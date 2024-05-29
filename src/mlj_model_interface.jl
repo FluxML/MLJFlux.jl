@@ -62,12 +62,24 @@ function regularized_optimiser(model, nbatches)
     λ_L2 = (1 - model.alpha)*model.lambda
     λ_sign = λ_L1/nbatches
     λ_weight = 2*λ_L2/nbatches
-    # components in an optimiser chain are executed from left to right:
-    return Optimisers.OptimiserChain(
+
+    # recall components in an optimiser chain are executed from left to right:
+    if model.alpha == 0
+        return Optimisers.OptimiserChain(
+            Optimisers.WeightDecay(λ_weight),
+            model.optimiser,
+        )
+    elseif model.alpha == 1
+        return Optimisers.OptimiserChain(
+            Optimisers.SignDecay(λ_sign),
+            model.optimiser,
+        )
+   else  return Optimisers.OptimiserChain(
         Optimisers.SignDecay(λ_sign),
         Optimisers.WeightDecay(λ_weight),
         model.optimiser,
-    )
+        )
+    end 
 end
 
 function MLJModelInterface.fit(model::MLJFluxModel,

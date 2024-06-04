@@ -42,10 +42,11 @@ makedocs(
                 "Early Stopping"=>"workflow examples/Early Stopping/iteration.md",
                 "Live Training"=>"workflow examples/Live Training/live-training.md",
             ],
-            # "Tutorials"=>Any[
-            #     "MNIST Digits Classification"=>"full tutorials/MNIST.md",
-            #     "Boston House Prices Prediction"=>"full tutorials/Boston.md",
-            # ],
+            "Tutorials"=>Any[
+                # "MNIST Digits Classification"=>"full tutorials/MNIST.md",
+                # "Boston House Prices Prediction"=>"full tutorials/Boston.md",
+                "Spam Detection with RNNs"=>"full tutorials/Spam Detection with RNNs/SMS.md"
+            ],
             "Contributing" => "contributing.md"],
         doctest = false,
 )

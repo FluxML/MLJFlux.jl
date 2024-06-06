@@ -142,7 +142,7 @@ fit!(mach, rows=train);
 predicted_labels = predict(mach, rows=test);
 cross_entropy(predicted_labels, labels[test])
 
-# Or, in one line:
+# Or to fit and predict, in one line:
 
 evaluate!(mach,
           resampling=Holdout(fraction_train=0.5),

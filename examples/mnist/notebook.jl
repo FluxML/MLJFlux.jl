@@ -82,10 +82,14 @@ function MLJFlux.build(b::MyConvBuilder, rng, n_in, n_out, n_channels)
     return Chain(front, Dense(d, n_out, init=init))
 end
 
-# **Note.** There is no final `softmax` here, as this is applied by
-# default in all MLJFLux classifiers. Customisation of this behaviour
-# is controlled using using the `finaliser` hyperparameter of the
-# classifier.
+# **Notes.**
+
+# - There is no final `softmax` here, as this is applied by default in all MLJFLux
+#   classifiers. Customisation of this behaviour is controlled using using the `finaliser`
+#   hyperparameter of the classifier.
+#
+# - Instead of calculating the padding `p`, Flux can infer the required padding in each
+#   dimension, which you enable by replacing `pad = (p, p)` with `pad = SamePad()`.
 
 # We now define the MLJ model.
 
@@ -97,14 +101,15 @@ clf = ImageClassifier(
     rng=123,
 )
 
-# You can add Flux options `optimiser=...` and `loss=...` here. At
-# present, `loss` must be a Flux-compatible loss, not an MLJ
-# measure. To run on a GPU, set `acceleration=CUDALib()` and omit `rng`.
+# You can add Flux options `optimiser=...` and `loss=...` in the above constructor
+# call. At present, `loss` must be a Flux-compatible loss, not an MLJ measure. To run on a
+# GPU, add to the constructor `acceleration=CUDALib()` and omit `rng`.
 
 # For illustration purposes, we won't use all the data here:
 
 train = 1:500
-test = test
+test = 501:1000
+
 
 # Binding the model with data in an MLJ machine:
 mach = machine(clf, images, labels);
@@ -176,12 +181,9 @@ evaluate!(mach,
 
 # Some helpers
 
-make2d(x::AbstractArray) = reshape(x, :, size(x)[end])
-make1d(x::AbstractArray) = reshape(x, length(x));
-
 # To extract Flux params from an MLJFlux machine
 
-parameters(mach) = make1d.(Flux.params(fitted_params(mach)));
+parameters(mach) = vec.(Flux.params(fitted_params(mach)));
 
 # To store the traces:
 
@@ -258,7 +260,7 @@ plot(
     xlab = "epoch",
 )
 
-# **Note.** The higher the number, the deeper the chain parameter.
+# **Note.** The higher the number, the deeper the layer we are weight-averaging. 
 
 savefig(joinpath(DIR, "weights.png"))
 

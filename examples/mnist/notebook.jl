@@ -101,12 +101,17 @@ clf = ImageClassifier(
 # present, `loss` must be a Flux-compatible loss, not an MLJ
 # measure. To run on a GPU, set `acceleration=CUDALib()` and omit `rng`.
 
+# For illustration purposes, we won't use all the data here:
+
+train = 1:500
+test = test
+
 # Binding the model with data in an MLJ machine:
 mach = machine(clf, images, labels);
 
 # Training for 10 epochs on the first 500 images:
 
-fit!(mach, rows=1:500, verbosity=2);
+fit!(mach, rows=train, verbosity=2);
 
 # Inspecting:
 
@@ -125,12 +130,12 @@ Flux.params(chain)[2]
 # Adding 20 more epochs:
 
 clf.epochs = clf.epochs + 20
-fit!(mach, rows=1:500);
+fit!(mach, rows=train);
 
 # Computing an out-of-sample estimate of the loss:
 
-predicted_labels = predict(mach, rows=501:1000);
-cross_entropy(predicted_labels, labels[501:1000])
+predicted_labels = predict(mach, rows=test);
+cross_entropy(predicted_labels, labels[test])
 
 # Or, in one line:
 
@@ -226,7 +231,7 @@ mach = machine(iterated_clf, images, labels);
 
 # ### Training
 
-fit!(mach, rows=1:500);
+fit!(mach, rows=train);
 
 # ### Comparison of the training and out-of-sample losses:
 
@@ -270,7 +275,7 @@ predict_mode(mach2, images[501:503])
 # ignored) will allow you to restart training from where it left off.
 
 iterated_clf.controls[2] = Patience(4)
-fit!(mach, rows=1:500)
+fit!(mach, rows=train)
 
 plot(
     epochs,

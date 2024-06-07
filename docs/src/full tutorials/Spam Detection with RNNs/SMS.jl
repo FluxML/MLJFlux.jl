@@ -125,7 +125,7 @@ struct Intify end
 Flux.@layer Intify
 (m::Intify)(x) = Int.(x)
 
-# Here we define out network:
+# Here we define our network:
 builder = MLJFlux.@builder begin
 	Chain(
 		Intify(),                         # Cast input to integer

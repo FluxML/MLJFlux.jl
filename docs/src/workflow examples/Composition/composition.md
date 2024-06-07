@@ -44,7 +44,7 @@ Let's load `BorderlineSMOTE1` to oversample the data and `Standardizer` to stand
 ````@example composition
 BorderlineSMOTE1 = @load BorderlineSMOTE1 pkg=Imbalance verbosity=0
 NeuralNetworkClassifier = @load NeuralNetworkClassifier pkg=MLJFlux
-Standardizer = @load Standardizer pkg=MLJModels
+# We didn't need to load Standardizer because it is a  local model for MLJ (see `localmodels()`)
 
 clf = NeuralNetworkClassifier(
     builder=MLJFlux.MLP(; hidden=(5,4), σ=Flux.relu),
@@ -75,7 +75,7 @@ for inference, the standardizer will automatically use the training set's mean a
 will be transparent.
 
 ### Training the Composed Model
-It's indistinguishable from training a single model. Isn't MLJ beautiful?
+It's indistinguishable from training a single model.
 
 ````@example composition
 mach = machine(pipeline, X, y)

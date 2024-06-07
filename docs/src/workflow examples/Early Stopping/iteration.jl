@@ -53,13 +53,14 @@ callbacks = [
 ]
 
 # Construct the iterated model and pass to it the stop_conditions and the callbacks:
-iterated_model = IteratedModel(model=clf,
-                               resampling=CV(nfolds=6),    # Split the data internally into 0.7 training and 0.3 validation
-                               measures=log_loss,
-                               iteration_parameter=:(epochs),
-                               controls=vcat(stop_conditions, callbacks),
-                               retrain=false                  # no need to retrain on all data at the end
-                               );
+iterated_model = IteratedModel(
+    model=clf,
+    resampling=CV(nfolds=6),    # Split the data internally into 0.7 training and 0.3 validation
+    measures=log_loss,
+    iteration_parameter=:(epochs),
+    controls=vcat(stop_conditions, callbacks),
+    retrain=false                  # no need to retrain on all data at the end
+);
 
 # You can see more advanced stopping conditions as well as how to involve callbacks in the [documentation](https://juliaai.github.io/MLJ.jl/stable/controlling_iterative_models/#Controlling-Iterative-Models)
 

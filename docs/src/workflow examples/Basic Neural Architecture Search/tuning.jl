@@ -50,25 +50,25 @@ function generate_networks(;
 	neuron_step::Int,
 	num_layers::Int,
 )
-    ## Define the range of neurons
-	neuron_range = min_neurons:neuron_step:max_neurons     
+	## Define the range of neurons
+	neuron_range = min_neurons:neuron_step:max_neurons
 
-    ## Empty list to store the network configurations
-	networks = Vector{Tuple{Vararg{Int, num_layers}}}()    
+	## Empty list to store the network configurations
+	networks = Vector{Tuple{Vararg{Int, num_layers}}}()
 
 	## Recursive helper function to generate all combinations of tuples
 	function generate_tuple(current_layers, remaining_layers)
 		if remaining_layers > 0
 			for n in neuron_range
-			## current_layers =[] then current_layers=[(min_neurons)], 
-                ## [(min_neurons+neuron_step)], [(min_neurons+2*neuron_step)],...
-			## for each of these we call generate_layers again which appends
-                ## the n combinations for each one of them
+				## current_layers =[] then current_layers=[(min_neurons)], 
+				## [(min_neurons+neuron_step)], [(min_neurons+2*neuron_step)],...
+				## for each of these we call generate_layers again which appends
+				## the n combinations for each one of them
 				generate_tuple(vcat(current_layers, [n]), remaining_layers - 1)
 			end
 		else
-		## in the base case, no more layers to "recurse on" 
-            ## and we just append the current_layers as a tuple
+			## in the base case, no more layers to "recurse on" 
+			## and we just append the current_layers as a tuple
 			push!(networks, tuple(current_layers...))
 		end
 	end

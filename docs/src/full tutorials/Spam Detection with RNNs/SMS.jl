@@ -120,7 +120,7 @@ struct Mean end
 Flux.@layer Mean
 (m::Mean)(x) = mean(x, dims = 2)[:, 1, :]   # [batch_size, seq_len, hidden_dim] => [batch_size, 1, hidden_dim]=> [batch_size, hidden_dim]
 
-# For compatibility, we will also define a layer that simply casts the input to integers as the embedding layer in Flux expects integets but the MLJFlux model expects floats:
+# For compatibility, we will also define a layer that simply casts the input to integers as the embedding layer in Flux expects integers but the MLJFlux model expects floats:
 struct Intify end
 Flux.@layer Intify
 (m::Intify)(x) = Int.(x)

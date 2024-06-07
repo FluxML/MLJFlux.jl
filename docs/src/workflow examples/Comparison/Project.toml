@@ -2,7 +2,6 @@
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 DecisionTree = "7806a523-6efd-50cb-b5f6-3fa6f1930dbb"
 Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c"
-Literate = "98b081ad-f1c9-55d3-8b20-4c87d4299306"
 MLJ = "add582a8-e3ab-11e8-2d5e-e98b27df1bc7"
 MLJDecisionTreeInterface = "c6f25543-311c-4c74-83dc-3ea6d1015661"
 MLJFlux = "094fc8d1-fd35-5302-93ea-dabda2abf845"

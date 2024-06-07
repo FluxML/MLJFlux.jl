@@ -60,7 +60,7 @@ pipeline = standarizer |> balanced_model
 
 
 # ### Training the Composed Model
-# It's indistinguishable from training a single model. Isn't MLJ beautiful?
+# It's indistinguishable from training a single model.
 
 mach = machine(pipeline, X, y)
 fit!(mach)

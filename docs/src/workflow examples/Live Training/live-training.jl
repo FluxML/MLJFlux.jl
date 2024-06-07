@@ -1,4 +1,4 @@
-# # Incremental Training with MLJFlux
+# # Live Training with MLJFlux
 
 using Pkg     #src
 Pkg.activate(@__DIR__);     #src

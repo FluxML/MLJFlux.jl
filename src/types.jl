@@ -30,9 +30,9 @@ for Model in [:NeuralNetworkClassifier, :NeuralNetworkBinaryClassifier, :ImageCl
 
       function $Model(
           ;builder::B=$default_builder_ex,
-          finaliser::F=Flux.softmax,
+          finaliser::F=$default_finaliser,
           optimiser::O=Optimisers.Adam(),
-          loss::L=Flux.crossentropy,
+          loss::L=$default_loss,
           epochs=10,
           batch_size=1,
           lambda=0,

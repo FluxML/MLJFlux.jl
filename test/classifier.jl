@@ -16,15 +16,17 @@ y = map(ycont) do η
     end
 end |> categorical;
 
-# TODO: replace Short2 -> Short when
-# https://github.com/FluxML/Flux.jl/issues/1372 is resolved:
-builder = Short2()
-optimiser = Flux.Optimise.Adam(0.03)
+# In the tests below we want to check GPU and CPU give similar results. We use the `MLP`
+# builer instead of the default `Short()` because `Dropout()` in `Short()` does not appear
+# to behave the same on GPU as on a CPU, even when we use `default_rng()` for both.
+
+builder = MLJFlux.MLP(hidden=(8,))
+optimiser = Optimisers.Adam(0.03)
 
 losses = []
 
 @testset_accelerated "NeuralNetworkClassifier" accel begin
-    Random.seed!(123)
+
     # Table input:
     @testset "Table input" begin
         basictest(MLJFlux.NeuralNetworkClassifier,
@@ -35,6 +37,7 @@ losses = []
                   0.85,
                   accel)
     end
+
     # Matrix input:
     @testset "Matrix input" begin
         basictest(MLJFlux.NeuralNetworkClassifier,
@@ -59,14 +62,16 @@ losses = []
         StatisticalMeasures.cross_entropy(fill(dist, length(test)), y[test]) |> mean
 
     # check flux model is an improvement on predicting constant
-    # distribution:
-    stable_rng = StableRNGs.StableRNG(123)
+    # distribution
+    # (GPUs only support `default_rng`):
+    rng = Random.default_rng()
+    seed!(rng, 123)
     model = MLJFlux.NeuralNetworkClassifier(epochs=50,
                                             builder=builder,
                                             optimiser=optimiser,
                                             acceleration=accel,
                                             batch_size=10,
-                                            rng=stable_rng)
+                                            rng=rng)
     @time mach = fit!(machine(model, X, y), rows=train, verbosity=0)
     first_last_training_loss = MLJBase.report(mach)[1][[1, end]]
     push!(losses, first_last_training_loss[2])

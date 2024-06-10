@@ -23,10 +23,32 @@ for Model in [:NeuralNetworkClassifier, :ImageClassifier]
       acceleration::AbstractResource  # eg, `CPU1()` or `CUDALibs()`
     end
 
-    function $Model(; builder::B=$default_builder_ex, finaliser::F=Flux.softmax, optimiser::O=Flux.Optimise.Adam(), loss::L=Flux.crossentropy, epochs=10, batch_size=1, lambda=0, alpha=0, rng=Random.GLOBAL_RNG, optimiser_changes_trigger_retraining=false, acceleration=CPU1()
-    ) where {B,F,O,L}
+      function $Model(
+          ;builder::B=$default_builder_ex,
+          finaliser::F=Flux.softmax,
+          optimiser::O=Optimisers.Adam(),
+          loss::L=Flux.crossentropy,
+          epochs=10,
+          batch_size=1,
+          lambda=0,
+          alpha=0,
+          rng=Random.default_rng(),
+          optimiser_changes_trigger_retraining=false,
+          acceleration=CPU1(),
+          ) where {B,F,O,L}
 
-      model = $Model{B,F,O,L}(builder, finaliser, optimiser, loss, epochs, batch_size, lambda, alpha, rng, optimiser_changes_trigger_retraining, acceleration
+          model = $Model{B,F,O,L}(
+              builder,
+              finaliser,
+              optimiser,
+              loss,
+              epochs,
+              batch_size,
+              lambda,
+              alpha,
+              rng,
+              optimiser_changes_trigger_retraining,
+              acceleration,
       )
 
       message = clean!(model)
@@ -57,10 +79,31 @@ for Model in [:NeuralNetworkRegressor, :MultitargetNeuralNetworkRegressor]
       acceleration::AbstractResource  # eg, `CPU1()` or `CUDALibs()`
     end
 
-    function $Model(; builder::B=Linear(), optimiser::O=Flux.Optimise.Adam(), loss::L=Flux.mse, epochs=10, batch_size=1, lambda=0, alpha=0, rng=Random.GLOBAL_RNG, optimiser_changes_trigger_retraining=false, acceleration=CPU1()
+      function $Model(
+          ; builder::B=Linear(),
+          optimiser::O=Optimisers.Adam(),
+          loss::L=Flux.mse,
+          epochs=10,
+          batch_size=1,
+          lambda=0,
+          alpha=0,
+          rng=Random.default_rng(),
+          optimiser_changes_trigger_retraining=false,
+          acceleration=CPU1(),
     ) where {B,O,L}
 
-      model = $Model{B,O,L}(builder, optimiser, loss, epochs, batch_size, lambda, alpha, rng, optimiser_changes_trigger_retraining, acceleration)
+          model = $Model{B,O,L}(
+              builder,
+              optimiser,
+              loss,
+              epochs,
+              batch_size,
+              lambda,
+              alpha,
+              rng,
+              optimiser_changes_trigger_retraining,
+              acceleration,
+          )
 
       message = clean!(model)
       isempty(message) || @warn message
@@ -126,11 +169,10 @@ Train the machine with `fit!(mach, rows=...)`.
    MLJFlux.jl documentation for examples of user-defined builders. See also `finaliser`
    below.
 
-- `optimiser::Flux.Adam()`: A `Flux.Optimise` optimiser. The optimiser performs the
-  updating of the weights of the network. For further reference, see [the Flux optimiser
-  documentation](https://fluxml.ai/Flux.jl/stable/training/optimisers/). To choose a
-  learning rate (the update rate of the optimizer), a good rule of thumb is to start out
-  at `10e-3`, and tune using powers of 10 between `1` and `1e-7`.
+- `optimiser::Optimisers.Adam()`: An Optimisers.jl optimiser. The optimiser performs the
+  updating of the weights of the network. To choose a learning rate (the update rate of
+  the optimizer), a good rule of thumb is to start out at `10e-3`, and tune using powers
+  of 10 between `1` and `1e-7`.
 
 - `loss=Flux.crossentropy`: The loss function which the network will optimize. Should be a
   function which can be called in the form `loss(yhat, y)`.  Possible loss functions are
@@ -163,13 +205,13 @@ Train the machine with `fit!(mach, rows=...)`.
   GPU is available.
 
 - `lambda::Float64=0`: The strength of the weight regularization penalty. Can be any value
-  in the range `[0, ∞)`.
+  in the range `[0, ∞)`. Note the history reports unpenalized losses.
 
 - `alpha::Float64=0`: The L2/L1 mix of regularization, in the range `[0, 1]`. A value of 0
   represents L2 regularization, and a value of 1 represents L1 regularization.
 
 - `rng::Union{AbstractRNG, Int64}`: The random number generator or seed used during
-  training.
+  training. The default is `Random.default_rng()`.
 
 - `optimizer_changes_trigger_retraining::Bool=false`: Defines what happens when re-fitting
   a machine if the associated optimiser has changed. If `true`, the associated machine
@@ -316,11 +358,10 @@ Train the machine with `fit!(mach, rows=...)`.
    below for a user-specified builder. A convenience macro `@builder` is also
    available. See also `finaliser` below.
 
-- `optimiser::Flux.Adam()`: A `Flux.Optimise` optimiser. The optimiser performs the
-  updating of the weights of the network. For further reference, see [the Flux optimiser
-  documentation](https://fluxml.ai/Flux.jl/stable/training/optimisers/). To choose a
-  learning rate (the update rate of the optimizer), a good rule of thumb is to start out
-  at `10e-3`, and tune using powers of 10 between `1` and `1e-7`.
+- `optimiser::Optimisers.Adam()`: An Optimisers.jl optimiser. The optimiser performs the
+  updating of the weights of the network. To choose a learning rate (the update rate of
+  the optimizer), a good rule of thumb is to start out at `10e-3`, and tune using powers
+  of 10 between `1` and `1e-7`.
 
 - `loss=Flux.crossentropy`: The loss function which the network will optimize. Should be a
   function which can be called in the form `loss(yhat, y)`.  Possible loss functions are
@@ -353,13 +394,13 @@ Train the machine with `fit!(mach, rows=...)`.
   GPU is available.
 
 - `lambda::Float64=0`: The strength of the weight regularization penalty. Can be any value
-  in the range `[0, ∞)`.
+  in the range `[0, ∞)`. Note the history reports unpenalized losses.
 
 - `alpha::Float64=0`: The L2/L1 mix of regularization, in the range `[0, 1]`. A value of 0
   represents L2 regularization, and a value of 1 represents L1 regularization.
 
 - `rng::Union{AbstractRNG, Int64}`: The random number generator or seed used during
-  training.
+  training. The default is `Random.default_rng()`.
 
 - `optimizer_changes_trigger_retraining::Bool=false`: Defines what happens when re-fitting
   a machine if the associated optimiser has changed. If `true`, the associated machine
@@ -560,11 +601,10 @@ Train the machine with `fit!(mach, rows=...)`.
    `MLJFlux.MLP`. See MLJFlux documentation for more on builders, and the example below
    for using the `@builder` convenience macro.
 
-- `optimiser::Flux.Adam()`: A `Flux.Optimise` optimiser. The optimiser performs the
-  updating of the weights of the network. For further reference, see [the Flux optimiser
-  documentation](https://fluxml.ai/Flux.jl/stable/training/optimisers/). To choose a
-  learning rate (the update rate of the optimizer), a good rule of thumb is to start out
-  at `10e-3`, and tune using powers of 10 between `1` and `1e-7`.
+- `optimiser::Optimisers.Adam()`: An Optimisers.jl optimiser. The optimiser performs the
+  updating of the weights of the network. To choose a learning rate (the update rate of
+  the optimizer), a good rule of thumb is to start out at `10e-3`, and tune using powers
+  of 10 between `1` and `1e-7`.
 
 - `loss=Flux.mse`: The loss function which the network will optimize. Should be a function
   which can be called in the form `loss(yhat, y)`.  Possible loss functions are listed in
@@ -590,13 +630,13 @@ Train the machine with `fit!(mach, rows=...)`.
   GPU is available.
 
 - `lambda::Float64=0`: The strength of the weight regularization penalty. Can be any value
-  in the range `[0, ∞)`.
+  in the range `[0, ∞)`. Note the history reports unpenalized losses.
 
 - `alpha::Float64=0`: The L2/L1 mix of regularization, in the range `[0, 1]`. A value of 0
   represents L2 regularization, and a value of 1 represents L1 regularization.
 
 - `rng::Union{AbstractRNG, Int64}`: The random number generator or seed used during
-  training.
+  training. The default is `Random.default_rng()`.
 
 - `optimizer_changes_trigger_retraining::Bool=false`: Defines what happens when re-fitting
   a machine if the associated optimiser has changed. If `true`, the associated machine
@@ -772,11 +812,15 @@ In MLJ or MLJBase, bind an instance `model` to data with
 
 Here:
 
-- `X` is either a `Matrix` or any table of input features (eg, a `DataFrame`) whose columns are of scitype
-  `Continuous`; check column scitypes with `schema(X)`. If `X` is a `Matrix`, it is assumed to have columns corresponding to features and rows corresponding to observations.
+- `X` is either a `Matrix` or any table of input features (eg, a `DataFrame`) whose
+  columns are of scitype `Continuous`; check column scitypes with `schema(X)`. If `X` is a
+  `Matrix`, it is assumed to have columns corresponding to features and rows corresponding
+  to observations.
 
-- `y` is the target, which can be any table or matrix of output targets whose element scitype is
-  `Continuous`; check column scitypes with `schema(y)`. If `y` is a `Matrix`, it is assumed to have columns corresponding to variables and rows corresponding to observations.
+- `y` is the target, which can be any table or matrix of output targets whose element
+  scitype is `Continuous`; check column scitypes with `schema(y)`. If `y` is a `Matrix`,
+  it is assumed to have columns corresponding to variables and rows corresponding to
+  observations.
 
 
 # Hyper-parameters
@@ -786,11 +830,10 @@ Here:
   documentation for more on builders, and the example below for using the `@builder`
   convenience macro.
 
-- `optimiser::Flux.Adam()`: A `Flux.Optimise` optimiser. The optimiser performs the
-  updating of the weights of the network. For further reference, see [the Flux optimiser
-  documentation](https://fluxml.ai/Flux.jl/stable/training/optimisers/). To choose a
-  learning rate (the update rate of the optimizer), a good rule of thumb is to start out
-  at `10e-3`, and tune using powers of 10 between `1` and `1e-7`.
+- `optimiser::Optimisers.Adam()`: An Optimisers.jl optimiser. The optimiser performs the
+  updating of the weights of the network. To choose a learning rate (the update rate of
+  the optimizer), a good rule of thumb is to start out at `10e-3`, and tune using powers
+  of 10 between `1` and `1e-7`.
 
 - `loss=Flux.mse`: The loss function which the network will optimize. Should be a function
   which can be called in the form `loss(yhat, y)`.  Possible loss functions are listed in
@@ -816,13 +859,13 @@ Here:
   GPU is available.
 
 - `lambda::Float64=0`: The strength of the weight regularization penalty. Can be any value
-  in the range `[0, ∞)`.
+  in the range `[0, ∞)`. Note the history reports unpenalized losses.
 
 - `alpha::Float64=0`: The L2/L1 mix of regularization, in the range `[0, 1]`. A value of 0
   represents L2 regularization, and a value of 1 represents L1 regularization.
 
 - `rng::Union{AbstractRNG, Int64}`: The random number generator or seed used during
-  training.
+  training. The default is `Random.default_rng()`.
 
 - `optimizer_changes_trigger_retraining::Bool=false`: Defines what happens when re-fitting
   a machine if the associated optimiser has changed. If `true`, the associated machine

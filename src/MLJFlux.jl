@@ -32,6 +32,7 @@ export NeuralNetworkRegressor, MultitargetNeuralNetworkRegressor
 export NeuralNetworkClassifier, ImageClassifier
 export CUDALibs, CPU1
 
+include("deprecated.jl")
 
 
 end #module

@@ -295,7 +295,7 @@ fit!(mach, verbosity=2) # trains 5 more epochs
 We can inspect the mean training loss using the `cross_entropy` function:
 
 ```julia
-training_loss = cross_entropy(predict(mach, X), y) |> mean
+training_loss = cross_entropy(predict(mach, X), y)
 ```
 
 And we can access the Flux chain (model) using `fitted_params`:
@@ -451,6 +451,7 @@ examples in the MLJFlux.jl documentation.
 
 ```julia
 using MLJ, Flux
+import Optimisers
 import RDatasets
 ```
 
@@ -458,7 +459,12 @@ First, we can load the data:
 
 ```julia
 mtcars = RDatasets.dataset("datasets", "mtcars");
-y, X = unpack(mtcars, ==(:VS), in([:MPG, :Cyl, :Disp, :HP, :WT, :QSec])); # a vector and a table
+y, X = unpack(mtcars, ==(:VS), in([:MPG, :Cyl, :Disp, :HP, :WT, :QSec]));
+```
+
+Note that `y` is a vector and `X` a table.
+
+```julia
 y = categorical(y) # classifier takes catogorical input
 X_f32 = Float32.(X) # To match floating point type of the neural network layers
 NeuralNetworkBinaryClassifier = @load NeuralNetworkBinaryClassifier pkg=MLJFlux
@@ -476,8 +482,13 @@ We can train the model in an incremental fashion, altering the learning rate as 
 provided `optimizer_changes_trigger_retraining` is `false` (the default). Here, we also
 change the number of (total) iterations:
 
+```julia-repl
+julia> bclf.optimiser
+Adam(0.001, (0.9, 0.999), 1.0e-8)
+```
+
 ```julia
-bclf.optimiser.eta = bclf.optimiser.eta * 2
+bclf.optimiser = Optimisers.Adam(eta = bclf.optimiser.eta * 2)
 bclf.epochs = bclf.epochs + 5
 
 fit!(mach, verbosity=2) # trains 5 more epochs
@@ -486,7 +497,7 @@ fit!(mach, verbosity=2) # trains 5 more epochs
 We can inspect the mean training loss using the `cross_entropy` function:
 
 ```julia
-training_loss = cross_entropy(predict(mach, X_f32), y) |> mean
+training_loss = cross_entropy(predict(mach, X_f32), y)
 ```
 
 And we can access the Flux chain (model) using `fitted_params`:
@@ -500,16 +511,22 @@ Finally, we can see how the out-of-sample performance changes over time, using M
 
 ```julia
 r = range(bclf, :epochs, lower=1, upper=200, scale=:log10)
-curve = learning_curve(bclf, X_f32, y,
-                     range=r,
-                     resampling=Holdout(fraction_train=0.7),
-                     measure=cross_entropy)
+curve = learning_curve(
+    bclf,
+    X_f32,
+    y,
+    range=r,
+    resampling=Holdout(fraction_train=0.7),
+    measure=cross_entropy,
+)
 using Plots
-plot(curve.parameter_values,
-     curve.measurements,
-     xlab=curve.parameter_name,
-     xscale=curve.parameter_scale,
-     ylab = "Cross Entropy")
+plot(
+   curve.parameter_values,
+   curve.measurements,
+   xlab=curve.parameter_name,
+   xscale=curve.parameter_scale,
+   ylab = "Cross Entropy",
+)
 
 ```
 
@@ -745,7 +762,7 @@ measure (loss/score):
 
 ```julia
 predicted_labels = predict(mach, rows=501:1000);
-cross_entropy(predicted_labels, labels[501:1000]) |> mean
+cross_entropy(predicted_labels, labels[501:1000])
 ```
 
 The preceding `fit!`/`predict`/evaluate workflow can be alternatively executed as follows:
@@ -975,7 +992,7 @@ evaluate!(mach, resampling=CV(nfolds=5), measure=l2)
 # loss for `(Xtest, test)`:
 fit!(mach) # train on `(X, y)`
 yhat = predict(mach, Xtest)
-l2(yhat, ytest)  |> mean
+l2(yhat, ytest)
 ```
 
 These losses, for the pipeline model, refer to the target on the original, unstandardized,
@@ -1168,7 +1185,7 @@ all data bound to `mach`) and compare this with performance on the test set:
 
 ```julia
 # custom MLJ loss:
-multi_loss(yhat, y) = l2(MLJ.matrix(yhat), MLJ.matrix(y)) |> mean
+multi_loss(yhat, y) = l2(MLJ.matrix(yhat), MLJ.matrix(y))
 
 # CV estimate, based on `(X, y)`:
 evaluate!(mach, resampling=CV(nfolds=5), measure=multi_loss)

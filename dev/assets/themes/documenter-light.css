@@ -11729,5 +11729,9 @@ summary {
 }
 
 details {
+  padding: 10px 20px;
+  border: 0px solid #e4eaef;
+  border-radius: 20px;
   margin-bottom: 1.5rem;
+  background-color: #e4eaef;
 }

@@ -30,7 +30,7 @@ first(X, 5)
 
 ### Instantiating the model
 
-Now let's construct our model. This follows a similar setup the one followed in the [Quick Start](../../index.md).
+Now let's construct our model. This follows a similar setup the one followed in the [Quick Start](../../index.md#Quick-Start).
 
 ````@example tuning
 NeuralNetworkClassifier = @load NeuralNetworkClassifier pkg = "MLJFlux"

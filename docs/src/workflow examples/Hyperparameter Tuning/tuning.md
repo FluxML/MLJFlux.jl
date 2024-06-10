@@ -27,7 +27,7 @@ nothing #hide
 ````
 
 ### Instantiating the model
-Now let's construct our model. This follows a similar setup the one followed in the [Quick Start](../../index.md).
+Now let's construct our model. This follows a similar setup the one followed in the [Quick Start](../../index.md#Quick-Start).
 
 ````@example Tuning
 NeuralNetworkClassifier = @load NeuralNetworkClassifier pkg=MLJFlux

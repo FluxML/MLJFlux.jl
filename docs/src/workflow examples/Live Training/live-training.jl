@@ -21,7 +21,7 @@ X = Float32.(X);      # To be compatible with type of network network parameters
 
 
 # ### Instantiating the model
-# Now let's construct our model. This follows a similar setup to the one followed in the [Quick Start](../../index.md).
+# Now let's construct our model. This follows a similar setup to the one followed in the [Quick Start](../../index.md#Quick-Start).
 
 NeuralNetworkClassifier = @load NeuralNetworkClassifier pkg=MLJFlux
 

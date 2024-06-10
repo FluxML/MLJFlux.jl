@@ -34,14 +34,16 @@ makedocs(
                 "Image Classification"=>"interface/Image Classification.md",
             ],
             "Workflow Examples" => Any[
-                "Incremental Training"=>"workflow examples/Incremental Training.md",
-                #"Validation and Hyperparameter Tuning"=>"workflow examples/Hyperparameter Tuning.md",
-                #"Early Stopping"=>"workflow examples/Early Stopping.md",
-                #"Model Composition"=>"workflow examples/Composition.md",
+                "Incremental Training"=>"workflow examples/Incremental Training/incremental.md",
+                "Hyperparameter Tuning"=>"workflow examples/Hyperparameter Tuning/tuning.md",
+                "Neural Architecture Search"=>"workflow examples/Basic Neural Architecture Search/tuning.md",
+                "Model Composition"=>"workflow examples/Composition/composition.md",
+                "Model Comparison"=>"workflow examples/Comparison/comparison.md",
+                "Early Stopping"=>"workflow examples/Early Stopping/iteration.md",
+                "Live Training"=>"workflow examples/Live Training/live-training.md",
             ],
             # "Tutorials"=>Any[
-            #     "MNIST Digits Classification"=>"full tutorials/MNIST.md",
-            #     "Boston House Prices Prediction"=>"full tutorials/Boston.md",
+                # "Spam Detection with RNNs"=>"full tutorials/Spam Detection with RNNs/SMS.md"
             # ],
             "Contributing" => "contributing.md"],
         doctest = false,

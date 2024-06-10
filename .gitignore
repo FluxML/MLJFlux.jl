@@ -7,3 +7,4 @@
 sandbox/
 docs/build
 /examples/mnist/mnist_machine*
+Manifest.toml

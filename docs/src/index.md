@@ -81,3 +81,5 @@ chain.
 - **Comparing** your model with a non-deep learning models
 
 A comparable project, [FastAI](https://github.com/FluxML/FastAI.jl)/[FluxTraining](https://github.com/FluxML/FluxTraining.jl), also provides a high-level interface for interacting with Flux models and supports a set of features that may overlap with (but not include all of) those supported by MLJFlux.
+
+Many of the features mentioned above are showcased in the workflow examples that you can access from the sidebar.

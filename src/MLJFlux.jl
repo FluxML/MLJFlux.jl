@@ -29,7 +29,7 @@ include("image.jl")
 include("mlj_model_interface.jl")
 
 export NeuralNetworkRegressor, MultitargetNeuralNetworkRegressor
-export NeuralNetworkClassifier, ImageClassifier
+export NeuralNetworkClassifier, NeuralNetworkBinaryClassifier, ImageClassifier
 export CUDALibs, CPU1
 
 include("deprecated.jl")

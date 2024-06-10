@@ -274,3 +274,9 @@ function collate(model, X, y)
     ymatrix = reformat(y)
     return [_get(Xmatrix, b) for b in row_batches], [_get(ymatrix, b) for b in row_batches]
 end
+function collate(model::NeuralNetworkBinaryClassifier, X, y)
+    row_batches = Base.Iterators.partition(1:nrows(y), model.batch_size)
+    Xmatrix = reformat(X)
+    yvec = (y .== classes(y)[2])' # convert to boolean
+    return [_get(Xmatrix, b) for b in row_batches], [_get(yvec, b) for b in row_batches]
+end

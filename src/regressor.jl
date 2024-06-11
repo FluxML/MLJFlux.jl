@@ -49,7 +49,7 @@ shape(model::MultitargetNeuralNetworkRegressor, X, y) = (ncols(X), ncols(y))
 build(model::MultitargetNeuralNetworkRegressor, rng, shape) =
     build(model.builder, rng, shape...)
 
-function fitresult(model::MultitargetNeuralNetworkRegressor, chaintype, y)
+function fitresult(model::MultitargetNeuralNetworkRegressor, chain, y)
     if y isa Matrix
         target_column_names = nothing
     else

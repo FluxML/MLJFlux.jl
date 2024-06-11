@@ -50,10 +50,6 @@ and this will require familiarity with the [Flux
 API](https://fluxml.ai/Flux.jl/stable/) for defining a neural network
 chain.
 
-In the future MLJFlux may provide a larger assortment of canned
-builders. Pull requests introducing new ones are most welcome.
-
-
 ### Installation
 
 ```julia
@@ -197,7 +193,7 @@ with caution.
 
 Instructions for coercing common image formats into some
 `AbstractVector{<:Image}` are
-[here](https://alan-turing-institute.github.io/MLJScientificTypes.jl/dev/#Type-coercion-for-image-data-1).
+[here](https://juliaai.github.io/ScientificTypes.jl/dev/#Type-coercion-for-image-data).
 
 
 ### Warm restart
@@ -249,15 +245,6 @@ Every MLJFlux model includes an `rng` hyper-parameter that is passed
 to builders for the purposes of weight initialization. This can be
 any `AbstractRNG` or the seed (integer) for a `MersenneTwister` that
 will be reset on every cold restart of model (machine) training.
-
-Until there is a [mechanism for
-doing so](https://github.com/FluxML/Flux.jl/issues/1617) `rng` is *not*
-passed to dropout layers and one must manually seed the `GLOBAL_RNG`
-for reproducibility purposes, when using a builder that includes
-`Dropout` (such as `MLJFlux.Short`). If training models on a
-GPU (i.e., `acceleration isa CUDALibs`) one must additionally call
-`CUDA.seed!(...)`.
-
 
 ### Built-in builders
 

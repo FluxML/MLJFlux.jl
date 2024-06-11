@@ -8,6 +8,11 @@ macro testset_accelerated(name::String, var, opts::Expr, ex)
     testset_accelerated(name, var, ex; eval(opts)...)
 end
 
+clonewith(optimiser, args...) =
+    error("`basictest` and `optimisertest` only support `Adam` optimiser. ")
+clonewith(optimiser::Optimisers.Adam, args...) =
+    Optimisers.Adam(args...)
+
 # To exclude a resource, say, CPU1, do like
 # `@test_accelerated "cool test" accel (exclude=[CPU1,],) begin ... end`
 function testset_accelerated(name::String, var, ex; exclude=[])
@@ -57,12 +62,14 @@ function basictest(ModelType, X, y, builder, optimiser, threshold, accel)
 
     eval(quote
 
-         stable_rng = StableRNGs.StableRNG(123)
+         # GPUs only support `default_rng`:
+         rng = accel == CPU1() ? StableRNGs.StableRNG(123) : Random.default_rng()
+         seed!(rng, 123)
 
          model = $ModelType_ex(builder=$builder,
                                optimiser=$optimiser,
                                acceleration=$accel_ex,
-                               rng=stable_rng)
+                               rng=rng)
 
          fitresult, cache, _report = MLJBase.fit(model, 0, $X, $y);
 
@@ -93,7 +100,7 @@ function basictest(ModelType, X, y, builder, optimiser, threshold, accel)
                                optimiser=$optimiser,
                                epochs=2,
                                acceleration=$accel_ex,
-                               rng=stable_rng)
+                               rng=rng)
 
          fitresult, cache, _report = MLJBase.fit(model, 0, $X, $y);
 
@@ -105,14 +112,14 @@ function basictest(ModelType, X, y, builder, optimiser, threshold, accel)
                     MLJBase.update(model, 2, fitresult, cache, $X, $y ));
 
          # change learning rate and check it does *not* restart:
-         model.optimiser.eta /= 2
+         model.optimiser = clonewith(model.optimiser, model.optimiser.eta/2)
          fitresult, cache, _report =
          @test_logs(MLJBase.update(model, 2, fitresult, cache, $X, $y));
 
          # set `optimiser_changes_trigger_retraining = true` and change
          # learning rate and check it does restart:
          model.optimiser_changes_trigger_retraining = true
-         model.optimiser.eta /= 2
+         model.optimiser = clonewith(model.optimiser, model.optimiser.eta/2)
          @test_logs((:info, r""), # one line of :info per extra epoch
                     (:info, r""),
                     MLJBase.update(model, 2, fitresult, cache, $X, $y));
@@ -132,14 +139,14 @@ function optimisertest(ModelType, X, y, builder, optimiser, accel)
 
     eval(quote
 
-         model = $ModelType_ex(builder=$builder,
-                               optimiser=$optimiser,
-                               acceleration=$accel_ex,
-                               epochs=1)
+             model = $ModelType_ex(builder=$builder,
+                                   optimiser=$optimiser,
+                                   acceleration=$accel_ex,
+                                   epochs=1)
 
              mach = machine(model, $X, $y);
 
-             # USING GLOBAL RNG
+             # USING DEFAULT RNG
 
              # two epochs in stages:
              Random.seed!(123) # chains are always initialized on CPU
@@ -156,31 +163,65 @@ function optimisertest(ModelType, X, y, builder, optimiser, accel)
              if accel isa CPU1
                  @test isapprox(l1, l2)
              else
-                 @test_broken isapprox(l1, l2, rtol=1e-8)
+                 @test isapprox(l1, l2, rtol=1e-8)
              end
 
-             # USING USER SPECIFIED RNG SEED
+             # USING USER SPECIFIED RNG SEED (unsupported on GPU)
 
-             # two epochs in stages:
-             model.rng = 1234
-             mach = machine(model, $X, $y);
+             if !(accel isa CUDALibs)
+                 # two epochs in stages:
+                 model.rng = 1234
+                 mach = machine(model, $X, $y);
 
-             fit!(mach, verbosity=0, force=true);
-             model.epochs = model.epochs + 1
-             fit!(mach, verbosity=0); # update
-             l1 = MLJBase.report(mach).training_losses[end]
+                 fit!(mach, verbosity=0, force=true);
+                 model.epochs = model.epochs + 1
+                 fit!(mach, verbosity=0); # update
+                 l1 = MLJBase.report(mach).training_losses[end]
 
-             # two epochs in one go:
-             fit!(mach, verbosity=1, force=true)
-             l2 = MLJBase.report(mach).training_losses[end]
+                 # two epochs in one go:
+                 fit!(mach, verbosity=1, force=true)
+                 l2 = MLJBase.report(mach).training_losses[end]
 
-             if accel isa CPU1
                  @test isapprox(l1, l2)
-             else
-                 @test_broken isapprox(l1, l2, rtol=1e-8)
              end
 
          end)
 
     return true
+end
+
+
+# # LOSS PENALIZERS
+
+"""
+    Penalizer(λ, α)
+
+Returns a callable object `penalizer` for evaluating regularization
+penalties associated with some numerical array. Specifically,
+`penalizer(A)` returns
+
+   λ*(α*L1 + (1 - α)*L2),
+
+where `L1` is the sum of absolute values of the elments of `A` and
+`L2` is the sum of squares of those elements.
+
+"""
+struct Penalizer{T}
+    lambda::T
+    alpha::T
+    function Penalizer(lambda, alpha)
+        lambda == 0 && return new{Nothing}(nothing, nothing)
+        T = promote_type(typeof.((lambda, alpha))...)
+        return new{T}(lambda, alpha)
+    end
+end
+
+(::Penalizer{Nothing})(::Any) = 0
+function (p::Penalizer)(A)
+    λ = p.lambda
+    α = p.alpha
+    # avoiding broadcasting; see Note (1) above
+    L2 = sum(abs2, A)
+    L1 = sum(abs,  A)
+    return  λ*(α*L1 + (1 - α)*L2)
 end

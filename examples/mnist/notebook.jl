@@ -1,17 +1,19 @@
 # # Using MLJ to classifiy the MNIST image dataset
 
-
 using Pkg
 const DIR = @__DIR__
 Pkg.activate(DIR)
 Pkg.instantiate()
 
-# **Julia version** is assumed to be ^1.7
+# **Julia version** is assumed to be ^1.10
 
 using MLJ
 using Flux
 import MLJFlux
+import MLUtils
 import MLJIteration # for `skip`
+
+# If running on a GPU, you will also need to `import CUDA` and `import cuDNN`.
 
 using Plots
 gr(size=(600, 300*(sqrt(5)-1)));
@@ -23,7 +25,7 @@ gr(size=(600, 300*(sqrt(5)-1)));
 import MLDatasets: MNIST
 
 ENV["DATADEPS_ALWAYS_ACCEPT"] = true
-images, labels = MNIST.traindata();
+images, labels = MNIST(split=:train)[:];
 
 # In MLJ, integers cannot be used for encoding categorical data, so we
 # must force the labels to have the `Multiclass` [scientific
@@ -63,8 +65,6 @@ struct MyConvBuilder
     channels3::Int
 end
 
-make2d(x::AbstractArray) = reshape(x, :, size(x)[end])
-
 function MLJFlux.build(b::MyConvBuilder, rng, n_in, n_out, n_channels)
     k, c1, c2, c3 = b.filter_size, b.channels1, b.channels2, b.channels3
     mod(k, 2) == 1 || error("`filter_size` must be odd. ")
@@ -77,35 +77,46 @@ function MLJFlux.build(b::MyConvBuilder, rng, n_in, n_out, n_channels)
         MaxPool((2, 2)),
         Conv((k, k), c2 => c3, pad=(p, p), relu, init=init),
         MaxPool((2 ,2)),
-        make2d)
+        MLUtils.flatten)
     d = Flux.outputsize(front, (n_in..., n_channels, 1)) |> first
     return Chain(front, Dense(d, n_out, init=init))
 end
 
-# **Note.** There is no final `softmax` here, as this is applied by
-# default in all MLJFLux classifiers. Customisation of this behaviour
-# is controlled using using the `finaliser` hyperparameter of the
-# classifier.
+# **Notes.**
 
-# We now define the MLJ model. If you have a GPU, substitute
-# `acceleration=CUDALibs()` below:
+# - There is no final `softmax` here, as this is applied by default in all MLJFLux
+#   classifiers. Customisation of this behaviour is controlled using using the `finaliser`
+#   hyperparameter of the classifier.
+#
+# - Instead of calculating the padding `p`, Flux can infer the required padding in each
+#   dimension, which you enable by replacing `pad = (p, p)` with `pad = SamePad()`.
+
+# We now define the MLJ model.
 
 ImageClassifier = @load ImageClassifier
-clf = ImageClassifier(builder=MyConvBuilder(3, 16, 32, 32),
-                      batch_size=50,
-                      epochs=10,
-                      rng=123)
+clf = ImageClassifier(
+    builder=MyConvBuilder(3, 16, 32, 32),
+    batch_size=50,
+    epochs=10,
+    rng=123,
+)
 
-# You can add Flux options `optimiser=...` and `loss=...` here. At
-# present, `loss` must be a Flux-compatible loss, not an MLJ
-# measure. To run on a GPU, set `acceleration=CUDALib()`.
+# You can add Flux options `optimiser=...` and `loss=...` in the above constructor
+# call. At present, `loss` must be a Flux-compatible loss, not an MLJ measure. To run on a
+# GPU, add to the constructor `acceleration=CUDALib()` and omit `rng`.
+
+# For illustration purposes, we won't use all the data here:
+
+train = 1:500
+test = 501:1000
+
 
 # Binding the model with data in an MLJ machine:
 mach = machine(clf, images, labels);
 
 # Training for 10 epochs on the first 500 images:
 
-fit!(mach, rows=1:500, verbosity=2);
+fit!(mach, rows=train, verbosity=2);
 
 # Inspecting:
 
@@ -124,14 +135,14 @@ Flux.params(chain)[2]
 # Adding 20 more epochs:
 
 clf.epochs = clf.epochs + 20
-fit!(mach, rows=1:500);
+fit!(mach, rows=train);
 
 # Computing an out-of-sample estimate of the loss:
 
-predicted_labels = predict(mach, rows=501:1000);
-cross_entropy(predicted_labels, labels[501:1000]) |> mean
+predicted_labels = predict(mach, rows=test);
+cross_entropy(predicted_labels, labels[test])
 
-# Or, in one line:
+# Or to fit and predict, in one line:
 
 evaluate!(mach,
           resampling=Holdout(fraction_train=0.5),
@@ -154,11 +165,11 @@ evaluate!(mach,
 # - `Patience(3)`: 3 consecutive increases in the loss
 # - `InvalidValue()`: an out-of-sample loss, or a training loss, is `NaN`, `Inf`, or `-Inf`
 # - `TimeLimit(t=5/60)`: training time has exceeded 5 minutes
-
+#
 # These checks (and other controls) will be applied every two epochs
 # (because of the `Step(2)` control). Additionally, training a
 # machine bound to `iterated_clf` will:
-
+#
 # - save a snapshot of the machine every three control cycles (every six epochs)
 # - record traces of the out-of-sample loss and training losses for plotting
 # - record mean value traces of each Flux parameter for plotting
@@ -170,12 +181,9 @@ evaluate!(mach,
 
 # Some helpers
 
-make2d(x::AbstractArray) = reshape(x, :, size(x)[end])
-make1d(x::AbstractArray) = reshape(x, length(x));
-
 # To extract Flux params from an MLJFlux machine
 
-parameters(mach) = make1d.(Flux.params(fitted_params(mach)));
+parameters(mach) = vec.(Flux.params(fitted_params(mach)));
 
 # To store the traces:
 
@@ -196,24 +204,27 @@ update_epochs(epoch) = push!(epochs, epoch)
 save_control =
     MLJIteration.skip(Save(joinpath(DIR, "mnist.jls")), predicate=3)
 
-controls=[Step(2),
-          Patience(3),
-          InvalidValue(),
-          TimeLimit(5/60),
-          save_control,
-          WithLossDo(),
-          WithLossDo(update_loss),
-          WithTrainingLossesDo(update_training_loss),
-          Callback(update_means),
-          WithIterationsDo(update_epochs)
+controls=[
+    Step(2),
+    Patience(3),
+    InvalidValue(),
+    TimeLimit(5/60),
+    save_control,
+    WithLossDo(),
+    WithLossDo(update_loss),
+    WithTrainingLossesDo(update_training_loss),
+    Callback(update_means),
+    WithIterationsDo(update_epochs),
 ];
 
 # The "self-iterating" classifier:
 
-iterated_clf = IteratedModel(model=clf,
-                       controls=controls,
-                       resampling=Holdout(fraction_train=0.7),
-                       measure=log_loss)
+iterated_clf = IteratedModel(
+    clf,
+    controls=controls,
+    resampling=Holdout(fraction_train=0.7),
+    measure=log_loss,
+)
 
 # ### Binding the wrapped model to data:
 
@@ -222,14 +233,17 @@ mach = machine(iterated_clf, images, labels);
 
 # ### Training
 
-fit!(mach, rows=1:500);
+fit!(mach, rows=train);
 
 # ### Comparison of the training and out-of-sample losses:
 
-plot(epochs, losses,
-     xlab = "epoch",
-     ylab = "cross entropy",
-     label="out-of-sample")
+plot(
+    epochs,
+    losses,
+    xlab = "epoch",
+    ylab = "cross entropy",
+    label="out-of-sample",
+)
 plot!(epochs, training_losses, label="training")
 
 savefig(joinpath(DIR, "loss.png"))
@@ -239,18 +253,21 @@ savefig(joinpath(DIR, "loss.png"))
 n_epochs =  length(losses)
 n_parameters = div(length(parameter_means), n_epochs)
 parameter_means2 = reshape(copy(parameter_means), n_parameters, n_epochs)'
-plot(epochs, parameter_means2,
-     title="Flux parameter mean weights",
-     xlab = "epoch")
+plot(
+    epochs,
+    parameter_means2,
+    title="Flux parameter mean weights",
+    xlab = "epoch",
+)
 
-# **Note.** The the higher the number, the deeper the chain parameter.
+# **Note.** The higher the number, the deeper the layer we are weight-averaging. 
 
 savefig(joinpath(DIR, "weights.png"))
 
 
 # ### Retrieving a snapshot for a prediction:
 
-mach2 = machine(joinpath(DIR, "mnist3.jlso"))
+mach2 = machine(joinpath(DIR, "mnist3.jls"))
 predict_mode(mach2, images[501:503])
 
 
@@ -260,11 +277,13 @@ predict_mode(mach2, images[501:503])
 # ignored) will allow you to restart training from where it left off.
 
 iterated_clf.controls[2] = Patience(4)
-fit!(mach, rows=1:500)
+fit!(mach, rows=train)
 
-plot(epochs, losses,
-     xlab = "epoch",
-     ylab = "cross entropy",
-     label="out-of-sample")
+plot(
+    epochs,
+    losses,
+    xlab = "epoch",
+    ylab = "cross entropy",
+    label="out-of-sample",
+)
 plot!(epochs, training_losses, label="training")
-

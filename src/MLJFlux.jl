@@ -1,4 +1,4 @@
-module MLJFlux 
+module MLJFlux
 
 export CUDALibs, CPU1
 
@@ -14,11 +14,11 @@ using ColorTypes
 using ComputationalResources
 using Random
 import Metalhead
+import Optimisers
 
 include("utilities.jl")
 const MMI=MLJModelInterface
 
-include("penalizers.jl")
 include("builders.jl")
 include("metalhead.jl")
 include("types.jl")
@@ -29,9 +29,10 @@ include("image.jl")
 include("mlj_model_interface.jl")
 
 export NeuralNetworkRegressor, MultitargetNeuralNetworkRegressor
-export NeuralNetworkClassifier, ImageClassifier
+export NeuralNetworkClassifier, NeuralNetworkBinaryClassifier, ImageClassifier
 export CUDALibs, CPU1
 
+include("deprecated.jl")
 
 
 end #module

@@ -1,0 +1,8 @@
+[deps]
+EarlyStopping = "792122b4-ca99-40de-a6bc-6742525f08b6"
+Flux = "587475ba-b771-5e3f-ad9e-33799f191a9c"
+Imbalance = "c709b415-507b-45b7-9a3d-1767c89fde68"
+MLJ = "add582a8-e3ab-11e8-2d5e-e98b27df1bc7"
+MLJBalancing = "45f359ea-796d-4f51-95a5-deb1a414c586"
+MLJFlux = "094fc8d1-fd35-5302-93ea-dabda2abf845"
+RDatasets = "ce6b1742-4840-55fa-b093-852dadbb1d8b"

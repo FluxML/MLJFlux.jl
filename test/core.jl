@@ -4,7 +4,7 @@ stable_rng = StableRNGs.StableRNG(123)
 rowvec(y) = y
 rowvec(y::Vector) = reshape(y, 1, length(y))
 
-@test MLJFlux.MLJModelInterface.istransparent(Flux.Adam(0.1))
+@test MLJBase.MLJModelInterface.istransparent(Optimisers.Adam(0.05))
 
 @testset "nrows" begin
     Xmatrix = rand(stable_rng, Float32, 10, 3)
@@ -103,32 +103,38 @@ test_input = rand(stable_rng, Float32, 5, 1)
 
 epochs = 10
 
-@testset_accelerated "fit! and dropout" accel begin
+@testset_accelerated "train and dropout" accel begin
 
     move = MLJFlux.Mover(accel)
 
     Random.seed!(123)
-    penalty = MLJFlux.Penalty(model)
-    _chain_yes_drop, history = MLJFlux.fit!(model,
-                                            penalty,
-                                            chain_yes_drop,
-                                            Flux.Optimise.Adam(0.001),
-                                            epochs,
-                                            0,
-                                            data[1],
-                                            data[2])
+    opt = Optimisers.Adam(0.001)
+    opt_state = Optimisers.setup(opt, chain_yes_drop)
+    _chain_yes_drop, _, history = MLJFlux.train(
+        model,
+        chain_yes_drop,
+        opt,
+        opt_state,
+        epochs,
+        0,
+        data[1],
+        data[2],
+    )
     println()
 
     Random.seed!(123)
-    penalty = MLJFlux.Penalty(model)
-    _chain_no_drop, history = MLJFlux.fit!(model,
-                                           penalty,
-                                           chain_no_drop,
-                                           Flux.Optimise.Adam(0.001),
-                                           epochs,
-                                           0,
-                                           data[1],
-                                           data[2])
+    opt = Optimisers.Adam(0.001)
+    opt_state = Optimisers.setup(opt, chain_no_drop)
+    _chain_no_drop, _, history = MLJFlux.train(
+        model,
+        chain_no_drop,
+        opt,
+        opt_state,
+        epochs,
+        0,
+        data[1],
+        data[2],
+    )
 
     # check chains have different behaviour after training:
     @test !(_chain_yes_drop(test_input) ≈

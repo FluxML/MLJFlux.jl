@@ -176,7 +176,7 @@ Train the machine with `fit!(mach, rows=...)`.
 - `optimiser::Optimisers.Adam()`: An Optimisers.jl optimiser. The optimiser performs the
   updating of the weights of the network. To choose a learning rate (the update rate of
   the optimizer), a good rule of thumb is to start out at `10e-3`, and tune using powers
-  of 10 between `1` and `1e-7`.
+  of `10` between `1` and `1e-7`.
 
 - `loss=Flux.crossentropy`: The loss function which the network will optimize. Should be a
   function which can be called in the form `loss(yhat, y)`.  Possible loss functions are
@@ -204,8 +204,8 @@ Train the machine with `fit!(mach, rows=...)`.
   one pass through the complete the training dataset.
 
 - `batch_size::int=1`: the batch size to be used for training, representing the number of
-  samples per update of the network weights. Typically, batch size is between 8 and
-  512. Increassing batch size may accelerate training if `acceleration=CUDALibs()` and a
+  samples per update of the network weights.] Typically, batch size is between `8` and
+  `512`. Increassing batch size may accelerate training if `acceleration=CUDALibs()` and a
   GPU is available.
 
 - `lambda::Float64=0`: The strength of the weight regularization penalty. Can be any value
@@ -367,7 +367,7 @@ Train the machine with `fit!(mach, rows=...)`.
   updating of the weights of the network. For further reference, see [the Flux optimiser
   documentation](https://fluxml.ai/Flux.jl/stable/training/optimisers/). To choose a
   learning rate (the update rate of the optimizer), a good rule of thumb is to start out
-  at `10e-3`, and tune using powers of 10 between `1` and `1e-7`.
+  at `10e-3`, and tune using powers of `10` between `1` and `1e-7`.
 
 - `loss=Flux.binarycrossentropy`: The loss function which the network will optimize. Should be a
   function which can be called in the form `loss(yhat, y)`.  Possible loss functions are
@@ -395,8 +395,8 @@ Train the machine with `fit!(mach, rows=...)`.
   one pass through the complete the training dataset.
 
 - `batch_size::int=1`: the batch size to be used for training, representing the number of
-  samples per update of the network weights. Typically, batch size is between 8 and
-  512. Increassing batch size may accelerate training if `acceleration=CUDALibs()` and a
+  samples per update of the network weights. Typically, batch size is between `8` and
+  `512`. Increassing batch size may accelerate training if `acceleration=CUDALibs()` and a
   GPU is available.
 
 - `lambda::Float64=0`: The strength of the weight regularization penalty. Can be any value
@@ -574,7 +574,7 @@ Train the machine with `fit!(mach, rows=...)`.
 - `optimiser::Optimisers.Adam()`: An Optimisers.jl optimiser. The optimiser performs the
   updating of the weights of the network. To choose a learning rate (the update rate of
   the optimizer), a good rule of thumb is to start out at `10e-3`, and tune using powers
-  of 10 between `1` and `1e-7`.
+  of `10` between `1` and `1e-7`.
 
 - `loss=Flux.crossentropy`: The loss function which the network will optimize. Should be a
   function which can be called in the form `loss(yhat, y)`.  Possible loss functions are
@@ -818,7 +818,7 @@ Train the machine with `fit!(mach, rows=...)`.
 - `optimiser::Optimisers.Adam()`: An Optimisers.jl optimiser. The optimiser performs the
   updating of the weights of the network. To choose a learning rate (the update rate of
   the optimizer), a good rule of thumb is to start out at `10e-3`, and tune using powers
-  of 10 between `1` and `1e-7`.
+  of `10` between `1` and `1e-7`.
 
 - `loss=Flux.mse`: The loss function which the network will optimize. Should be a function
   which can be called in the form `loss(yhat, y)`.  Possible loss functions are listed in
@@ -839,8 +839,8 @@ Train the machine with `fit!(mach, rows=...)`.
   one pass through the complete the training dataset.
 
 - `batch_size::int=1`: the batch size to be used for training, representing the number of
-  samples per update of the network weights. Typically, batch size is between 8 and
-  512. Increasing batch size may accelerate training if `acceleration=CUDALibs()` and a
+  samples per update of the network weights. Typically, batch size is between `8` and
+  `512`. Increasing batch size may accelerate training if `acceleration=CUDALibs()` and a
   GPU is available.
 
 - `lambda::Float64=0`: The strength of the weight regularization penalty. Can be any value
@@ -1049,7 +1049,7 @@ Here:
 - `optimiser::Optimisers.Adam()`: An Optimisers.jl optimiser. The optimiser performs the
   updating of the weights of the network. To choose a learning rate (the update rate of
   the optimizer), a good rule of thumb is to start out at `10e-3`, and tune using powers
-  of 10 between `1` and `1e-7`.
+  of `10` between `1` and `1e-7`.
 
 - `loss=Flux.mse`: The loss function which the network will optimize. Should be a function
   which can be called in the form `loss(yhat, y)`.  Possible loss functions are listed in
@@ -1070,8 +1070,8 @@ Here:
   one pass through the complete the training dataset.
 
 - `batch_size::int=1`: the batch size to be used for training, representing the number of
-  samples per update of the network weights. Typically, batch size is between 8 and
-  512. Increassing batch size may accelerate training if `acceleration=CUDALibs()` and a
+  samples per update of the network weights. Typically, batch size is between `8` and
+  `512`. Increassing batch size may accelerate training if `acceleration=CUDALibs()` and a
   GPU is available.
 
 - `lambda::Float64=0`: The strength of the weight regularization penalty. Can be any value

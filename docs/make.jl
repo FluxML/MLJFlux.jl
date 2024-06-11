@@ -36,15 +36,15 @@ makedocs(
         ],
         "Workflow Examples" => Any[
             "Incremental Training"=>
-                "workflow_examples/Incremental Training/notebook.md",
+                "common_workflows/incremental_training/notebook.md",
             "Hyperparameter Tuning"=>
-                "workflow_examples/Hyperparameter Tuning/notebook.md",
+                "common_workflows/hyperparameter_tuning/notebook.md",
             "Neural Architecture Search"=>
-                "workflow_examples/Basic Neural Architecture Search/notebook.md",
-            "Model Composition"=>"workflow_examples/Composition/notebook.md",
-            "Model Comparison"=>"workflow_examples/Comparison/notebook.md",
-            "Early Stopping"=>"workflow_examples/Early Stopping/notebook.md",
-            "Live Training"=>"workflow_examples/Live Training/notebook.md",
+                "common_workflows/architecture_search/notebook.md",
+            "Model Composition"=>"common_workflows/composition/notebook.md",
+            "Model Comparison"=>"common_workflows/comparison/notebook.md",
+            "Early Stopping"=>"common_workflows/early_stopping/notebook.md",
+            "Live Training"=>"common_workflows/live_training/notebook.md",
         ],
         # "Tutorials"=>Any[
         # "Spam Detection with RNNs"=>"extended_examples/Spam Detection with RNNs/notebook.md"

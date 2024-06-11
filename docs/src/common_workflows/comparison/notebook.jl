@@ -8,7 +8,7 @@ Pkg.instantiate();     #!md
 
 # **Julia version** is assumed to be 1.10.* This tutorial is available as a Jupyter
 # notebook or julia script
-# [here](https://github.com/FluxML/MLJFlux.jl/tree/dev/docs/src/workflow_examples/Comparison).
+# [here](https://github.com/FluxML/MLJFlux.jl/tree/dev/docs/src/common_workflows/comparison).
 
 
 # ### Basic Imports

@@ -11,7 +11,7 @@ Pkg.instantiate();     #!md
 
 # **Julia version** is assumed to be 1.10.* This tutorial is available as a Jupyter
 # notebook or julia script
-# [here](https://github.com/FluxML/MLJFlux.jl/tree/dev/docs/src/workflow_examples/architecture_search).
+# [here](https://github.com/FluxML/MLJFlux.jl/tree/dev/docs/src/common_workflows/architecture_search).
 
 # ### Basic Imports
 

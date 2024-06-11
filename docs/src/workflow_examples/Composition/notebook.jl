@@ -1,13 +1,17 @@
 # # Model Composition with MLJFlux
 
-# In this workflow example, we see how MLJFlux enables composing MLJ models with MLJFlux models. We will assume a
-# class imbalance setting and wrap an oversampler with a deep learning model from MLJFlux.
+# In this workflow example, we see how MLJFlux enables composing MLJ models with MLJFlux
+# models. We will assume a class imbalance setting and wrap an oversampler with a deep
+# learning model from MLJFlux.
 
 using Pkg     #!md
 Pkg.activate(@__DIR__);     #!md
 Pkg.instantiate();     #!md
 
-# **Julia version** is assumed to be 1.10.*
+# **Julia version** is assumed to be 1.10.* This tutorial is available as a Jupyter
+# notebook or julia script
+# [here](https://github.com/FluxML/MLJFlux.jl/tree/dev/docs/src/workflow_examples/Composition).
+
 
 # ### Basic Imports
 

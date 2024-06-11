@@ -4,7 +4,10 @@ using Pkg     #!md
 Pkg.activate(@__DIR__);     #!md
 Pkg.instantiate();     #!md
 
-# **Julia version** is assumed to be 1.10.*
+# **Julia version** is assumed to be 1.10.* This tutorial is available as a Jupyter
+# notebook or julia script
+# [here](https://github.com/FluxML/MLJFlux.jl/tree/dev/docs/src/workflow_examples/live_training).
+
 
 # ### Basic Imports
 

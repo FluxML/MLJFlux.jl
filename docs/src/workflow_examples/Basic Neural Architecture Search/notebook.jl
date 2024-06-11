@@ -1,14 +1,17 @@
 # # Neural Architecture Search with MLJFlux
 
-# Neural Architecture Search is (NAS) is an instance of hyperparameter tuning concerned with tuning model hyperparameters
-# defining the architecture itself. Although it's typically performed with sophisticated search algorithms for efficiency,
-# in this example we will be using a simple random search.
+# Neural Architecture Search is (NAS) is an instance of hyperparameter tuning concerned
+# with tuning model hyperparameters defining the architecture itself. Although it's
+# typically performed with sophisticated search algorithms for efficiency, in this example
+# we will be using a simple random search.
 
 using Pkg     #!md
 Pkg.activate(@__DIR__);     #!md
 Pkg.instantiate();     #!md
 
-# **Julia version** is assumed to be 1.10.*
+# **Julia version** is assumed to be 1.10.* This tutorial is available as a Jupyter
+# notebook or julia script
+# [here](https://github.com/FluxML/MLJFlux.jl/tree/dev/docs/src/workflow_examples/architecture_search).
 
 # ### Basic Imports
 

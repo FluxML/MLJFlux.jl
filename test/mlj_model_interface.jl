@@ -35,6 +35,10 @@ end
         end
         @test model.acceleration == CUDALibs()
     end
+
+    @test_throws MLJFlux.ERR_BAD_OPTIMISER NeuralNetworkClassifier(
+        optimiser=Flux.Optimise.Adam(),
+    )
 end
 
 @testset "regularization: logic" begin

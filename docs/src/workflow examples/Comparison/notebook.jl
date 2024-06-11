@@ -44,10 +44,11 @@ XGBoostClassifier = @load XGBoostClassifier pkg=XGBoost
 clf4 = XGBoostClassifier();
 
 
-# ### Wrapping One of the Models in a TunedModel Instead of just comparing with four
-# models with the default/given hyperparameters, we will give `XGBoostClassifier` an
-# unfair advantage By wrapping it in a `TunedModel` that considers the best learning rate
-# η for the model.
+# ### Wrapping One of the Models in a TunedModel
+
+# Instead of just comparing with four models with the default/given hyperparameters, we
+# will give `XGBoostClassifier` an unfair advantage By wrapping it in a `TunedModel` that
+# considers the best learning rate η for the model.
 
 r1 = range(clf4, :eta, lower=0.01, upper=0.5, scale=:log10)
 tuned_model_xg = TunedModel(
@@ -62,7 +63,9 @@ tuned_model_xg = TunedModel(
 # comparing the models over a large set of their hyperparameters.
 
 # ### Comparing the models
+
 # We simply pass the four models to the `models` argument of the `TunedModel` construct
+
 tuned_model = TunedModel(
     models=[clf1, clf2, clf3, tuned_model_xg],
     tuning=Explicit(),
@@ -71,6 +74,7 @@ tuned_model = TunedModel(
 );
 
 # Then wrapping our tuned model in a machine and fitting it.
+
 mach = machine(tuned_model, X, y);
 fit!(mach, verbosity=0);
 

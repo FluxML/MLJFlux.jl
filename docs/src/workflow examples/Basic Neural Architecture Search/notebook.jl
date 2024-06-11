@@ -28,7 +28,9 @@ first(X, 5)
 
 # ### Instantiating the model
 
-# Now let's construct our model. This follows a similar setup the one followed in the [Quick Start](../../index.md#Quick-Start).
+# Now let's construct our model. This follows a similar setup the one followed in the
+# [Quick Start](../../index.md#Quick-Start).
+
 NeuralNetworkClassifier = @load NeuralNetworkClassifier pkg = "MLJFlux"
 clf = NeuralNetworkClassifier(
     builder = MLJFlux.MLP(; hidden = (1, 1, 1), σ = Flux.relu),
@@ -39,11 +41,13 @@ clf = NeuralNetworkClassifier(
 )
 
 
-# ### Generating Network Architectures We know that the MLP builder takes a tuple of the
-# form $(z_1, z_2, ..., z_k)$ to define a network with $k$ hidden layers and where the ith
-# layer has $z_i$ neurons. We will proceed by defining a function that can generate all
-# possible networks with a specific number of hidden layers, a minimum and maximum number
-# of neurons per layer and increments to consider for the number of neurons.
+# ### Generating Network Architectures
+
+# We know that the MLP builder takes a tuple of the form $(z_1, z_2, ..., z_k)$ to define
+# a network with $k$ hidden layers and where the ith layer has $z_i$ neurons. We will
+# proceed by defining a function that can generate all possible networks with a specific
+# number of hidden layers, a minimum and maximum number of neurons per layer and
+# increments to consider for the number of neurons.
 
 function generate_networks(
     ;min_neurons::Int,
@@ -94,7 +98,6 @@ networks_space =
 networks_space[1:5]
 
 # ### Wrapping the Model for Tuning
-
 
 # Let's use this array to define the range of hyperparameters and pass it along with the
 # model to the `TunedModel` constructor.

@@ -33,12 +33,14 @@ Imbalance.checkbalance(y)
 
 # ### Instantiating the model
 
-# Let's load `BorderlineSMOTE1` to oversample the data and `Standardizer` to standardize it.
+# Let's load `BorderlineSMOTE1` to oversample the data and `Standardizer` to standardize
+# it.
+
 BorderlineSMOTE1 = @load BorderlineSMOTE1 pkg=Imbalance verbosity=0
 NeuralNetworkClassifier = @load NeuralNetworkClassifier pkg=MLJFlux
 
-## We didn't need to load Standardizer because it is a local model for MLJ (see
-## `localmodels()`)
+# We didn't need to load Standardizer because it is a local model for MLJ (see
+# `localmodels()`)
 
 clf = NeuralNetworkClassifier(
     builder=MLJFlux.MLP(; hidden=(5,4), σ=Flux.relu),
@@ -51,6 +53,7 @@ clf = NeuralNetworkClassifier(
 # First we wrap the oversampler with the neural network via the `BalancedModel`
 # construct. This comes from `MLJBalancing` And allows combining resampling methods with
 # MLJ models in a sequential pipeline.
+
 oversampler = BorderlineSMOTE1(k=5, ratios=1.0, rng=42)
 balanced_model = BalancedModel(model=clf, balancer1=oversampler)
 standarizer = Standardizer()
@@ -63,6 +66,7 @@ pipeline = standarizer |> balanced_model
 
 
 # ### Training the Composed Model
+
 # It's indistinguishable from training a single model.
 
 mach = machine(pipeline, X, y)

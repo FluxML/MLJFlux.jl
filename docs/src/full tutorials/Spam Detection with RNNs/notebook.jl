@@ -40,17 +40,13 @@ first(df, 5)
 
 # - Return the filtered vector of words
 
-const STOP_WORDS = ["a", "an", "and", "are", "as", "at", "be", "but", "by", "for",
-                    "if", "in", "into", "is", "it", "no", "not", "of", "on", "or",
-                    "such", "that", "the", "their", "then", "there", "these", "they",
-                    "this", "to", "was", "will", "with"]
+const STOP_WORDS = Languages.stopwords(Languages.English())
 
 function preprocess_text(text)
     ## (1) Splitting texts into words (so later it can be a sequence of vectors)
     tokens = WordTokenizers.tokenize(text)
 
     ## (2) Stop word removal
-    top_words = Languages.stopwords(Languages.English())
     filtered_tokens = filter(token -> !(token in STOP_WORDS), tokens)
 
     return filtered_tokens

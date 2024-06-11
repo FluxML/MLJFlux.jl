@@ -124,16 +124,17 @@ const Regressor =
 
 MMI.metadata_pkg.(
   (
-    NeuralNetworkRegressor,
-    MultitargetNeuralNetworkRegressor,
-    NeuralNetworkClassifier,
-    ImageClassifier,
+      NeuralNetworkRegressor,
+      MultitargetNeuralNetworkRegressor,
+      NeuralNetworkClassifier,
+      ImageClassifier,
+      NeuralNetworkBinaryClassifier,
   ),
-  name="MLJFlux",
-  uuid="094fc8d1-fd35-5302-93ea-dabda2abf845",
-  url="https://github.com/alan-turing-institute/MLJFlux.jl",
-  julia=true,
-  license="MIT",
+    name="MLJFlux",
+    uuid="094fc8d1-fd35-5302-93ea-dabda2abf845",
+    url="https://github.com/alan-turing-institute/MLJFlux.jl",
+    julia=true,
+    license="MIT",
 )
 
 

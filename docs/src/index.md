@@ -28,6 +28,7 @@ You only need `Flux` if you need to build a custom architecture or experiment wi
 ```@example
 using MLJ, Flux, MLJFlux
 import RDatasets
+import Optimisers
 
 # 1. Load Data
 iris = RDatasets.dataset("datasets", "iris");
@@ -37,7 +38,7 @@ y, X = unpack(iris, ==(:Species), colname -> true, rng=123);
 NeuralNetworkClassifier = @load NeuralNetworkClassifier pkg="MLJFlux"
 clf = NeuralNetworkClassifier(
     builder=MLJFlux.MLP(; hidden=(5,4), σ=Flux.relu),
-    optimiser=Flux.ADAM(0.01),
+    optimiser=Optimisers.Adam(0.01),
     batch_size=8,
     epochs=100, 
     acceleration=CUDALibs()         # For GPU support

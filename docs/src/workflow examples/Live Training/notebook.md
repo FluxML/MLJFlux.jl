@@ -8,7 +8,7 @@ EditURL = "notebook.jl"
 
 ### Basic Imports
 
-````@example notebook
+````@julia
 using MLJ               # Has MLJFlux models
 using Flux              # For more flexibility
 import RDatasets        # Dataset source
@@ -18,7 +18,7 @@ import Optimisers       # native Flux.jl optimisers no longer supported
 
 ### Loading and Splitting the Data
 
-````@example notebook
+````@julia
 iris = RDatasets.dataset("datasets", "iris");
 y, X = unpack(iris, ==(:Species), colname -> true, rng=123);
 X = Float32.(X);      # To be compatible with type of network network parameters
@@ -30,7 +30,7 @@ nothing #hide
 Now let's construct our model. This follows a similar setup to the one followed in the
 [Quick Start](../../index.md#Quick-Start).
 
-````@example notebook
+````@julia
 NeuralNetworkClassifier = @load NeuralNetworkClassifier pkg=MLJFlux
 
 clf = NeuralNetworkClassifier(
@@ -45,7 +45,7 @@ clf = NeuralNetworkClassifier(
 Now let's wrap this in an iterated model. We will use a callback that makes a plot for
 validation losses each iteration.
 
-````@example notebook
+````@julia
 stop_conditions = [
     Step(1),            # Repeatedly train for one iteration
     NumberLimit(100),   # Don't train for more than 100 iterations
@@ -74,7 +74,7 @@ iterated_model = IteratedModel(
 ### Live Training
 Simply fitting the model is all we need
 
-````@example notebook
+````@julia
 mach = machine(iterated_model, X, y)
 fit!(mach, force=true)
 ````

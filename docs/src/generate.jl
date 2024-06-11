@@ -5,9 +5,9 @@ function generate(dir; execute=true, pluto=false)
         Pkg.add("Literate")
         using Literate
 
-        const OUTDIR = $dir
-        const outdir = splitpath(OUTDIR)[end]
-        const INFILE = joinpath(OUTDIR, "notebook.jl")
+        OUTDIR = $dir
+        outdir = splitpath(OUTDIR)[end]
+        INFILE = joinpath(OUTDIR, "notebook.jl")
 
         @info "Generating notebooks for $outdir. "
 
@@ -28,7 +28,13 @@ function generate(dir; execute=true, pluto=false)
             @warn "Not generating a pre-executed Jupyter notebook for $outdir. "
         end
 
-        Literate.markdown(INFILE, OUTDIR)
+        Literate.markdown(
+            INFILE,
+            OUTDIR,
+            # overrides the default ```@example notebook ... ```, which will be ambiguous:
+            config=Dict("codefence" => Pair("````@julia", "````" )),
+            # config=Dict("codefence" => Pair("````@example $outdir", "````" )),
+        )
 
     end |> eval
 end

@@ -9,7 +9,7 @@ In this workflow example we explore how to incrementally train MLJFlux models.
 
 ### Basic Imports
 
-````@example notebook
+````@julia
 using MLJ               # Has MLJFlux models
 using Flux              # For more flexibility
 import RDatasets        # Dataset source
@@ -18,7 +18,7 @@ import Optimisers       # native Flux.jl optimisers no longer supported
 
 ### Loading and Splitting the Data
 
-````@example notebook
+````@julia
 iris = RDatasets.dataset("datasets", "iris");
 y, X = unpack(iris, ==(:Species), colname -> true, rng=123);
 X = Float32.(X)      # To be compatible with type of network network parameters
@@ -36,7 +36,7 @@ nothing #hide
 Now let's construct our model. This follows a similar setup to the one followed in the
 [Quick Start](../../index.md#Quick-Start).
 
-````@example notebook
+````@julia
 NeuralNetworkClassifier = @load NeuralNetworkClassifier pkg=MLJFlux
 clf = NeuralNetworkClassifier(
     builder=MLJFlux.MLP(; hidden=(5,4), σ=Flux.relu),
@@ -52,18 +52,18 @@ clf = NeuralNetworkClassifier(
 Now let's train the model. Calling fit! will automatically train it for 100 epochs as
 specified above.
 
-````@example notebook
+````@julia
 mach = machine(clf, X_train, y_train)
 fit!(mach)
 ````
 
 Let's evaluate the training loss and validation accuracy
 
-````@example notebook
+````@julia
 training_loss = cross_entropy(predict(mach, X_train), y_train)
 ````
 
-````@example notebook
+````@julia
 val_acc = accuracy(predict_mode(mach, X_test), y_test)
 ````
 
@@ -75,7 +75,7 @@ Now let's train it for another 30 epochs at half the original learning rate. All
 to do is changes these hyperparameters and call fit again. It won't reset the model
 parameters before training.
 
-````@example notebook
+````@julia
 clf.optimiser = Optimisers.Adam(clf.optimiser.eta/2)
 clf.epochs = clf.epochs + 30
 fit!(mach, verbosity=2);
@@ -84,11 +84,11 @@ nothing #hide
 
 Let's evaluate the training loss and validation accuracy
 
-````@example notebook
+````@julia
 training_loss = cross_entropy(predict(mach, X_train), y_train)
 ````
 
-````@example notebook
+````@julia
 training_acc = accuracy(predict_mode(mach, X_test), y_test)
 ````
 

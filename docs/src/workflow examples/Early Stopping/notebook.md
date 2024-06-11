@@ -10,7 +10,7 @@ In this workflow example, we learn how MLJFlux enables us to easily use early st
 
 ### Basic Imports
 
-````@example notebook
+````@julia
 using MLJ               # Has MLJFlux models
 using Flux              # For more flexibility
 import RDatasets        # Dataset source
@@ -20,7 +20,7 @@ import Optimisers       # native Flux.jl optimisers no longer supported
 
 ### Loading and Splitting the Data
 
-````@example notebook
+````@julia
 iris = RDatasets.dataset("datasets", "iris");
 y, X = unpack(iris, ==(:Species), colname -> true, rng=123);
 X = Float32.(X);      # To be compatible with type of network network parameters
@@ -30,7 +30,7 @@ nothing #hide
 ### Instantiating the model Now let's construct our model. This follows a similar setup
 to the one followed in the [Quick Start](../../index.md#Quick-Start).
 
-````@example notebook
+````@julia
 NeuralNetworkClassifier = @load NeuralNetworkClassifier pkg=MLJFlux
 
 clf = NeuralNetworkClassifier(
@@ -46,7 +46,7 @@ clf = NeuralNetworkClassifier(
 
 Let's start by defining the condition that can cause the model to early stop.
 
-````@example notebook
+````@julia
 stop_conditions = [
     Step(1),            # Repeatedly train for one iteration
     NumberLimit(100),   # Don't train for more than 100 iterations
@@ -58,7 +58,7 @@ stop_conditions = [
 
 We can also define callbacks. Here we want to store the validation loss for each iteration
 
-````@example notebook
+````@julia
 validation_losses = []
 callbacks = [
     WithLossDo(loss->push!(validation_losses, loss)),
@@ -67,7 +67,7 @@ callbacks = [
 
 Construct the iterated model and pass to it the stop_conditions and the callbacks:
 
-````@example notebook
+````@julia
 iterated_model = IteratedModel(
     model=clf,
     resampling=Holdout(fraction_train=0.7); # loss and stopping are based on out-of-sample
@@ -87,7 +87,7 @@ You can see more advanced stopping conditions as well as how to involve callback
 At this point, all we need is to fit the model and iteration controls will be
 automatically handled
 
-````@example notebook
+````@julia
 mach = machine(iterated_model, X, y)
 fit!(mach)
 # We can get the training losses like so
@@ -99,7 +99,7 @@ nothing #hide
 
 We can see that the model converged after 100 iterations.
 
-````@example notebook
+````@julia
 plot(training_losses, label="Training Loss", linewidth=2)
 plot!(validation_losses, label="Validation Loss", linewidth=2, size=(800,400))
 ````

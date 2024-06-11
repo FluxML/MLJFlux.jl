@@ -264,6 +264,7 @@ examples in the MLJFlux.jl documentation.
 using MLJ
 using Flux
 import RDatasets
+import Optimisers
 ```
 
 First, we can load the data:
@@ -287,7 +288,7 @@ provided `optimizer_changes_trigger_retraining` is `false` (the default). Here, 
 change the number of (total) iterations:
 
 ```julia
-clf.optimiser.eta = clf.optimiser.eta * 2
+clf.optimiser = Optimisers.Adam(clf.optimiser.eta * 2)
 clf.epochs = clf.epochs + 5
 
 fit!(mach, verbosity=2) # trains 5 more epochs
@@ -659,6 +660,7 @@ In this example we use MLJFlux and a custom builder to classify the MNIST image 
 using MLJ
 using Flux
 import MLJFlux
+import Optimisers
 import MLJIteration # for `skip` control
 ```
 
@@ -887,6 +889,7 @@ In this example we build a regression model for the Boston house price dataset.
 using MLJ
 import MLJFlux
 using Flux
+import Optimisers
 ```
 
 First, we load in the data: The `:MEDV` column becomes the target vector `y`, and all
@@ -917,7 +920,8 @@ following `@builder` call, `n_in` is a proxy for the number input features (whic
 known at `fit!` time) and `rng` is a proxy for a RNG (which will be passed from the `rng`
 field of `model` defined below). We also have the parameter `n_out` which is the number of
 output features. As we are doing single target regression, the value passed will always be
-`1`, but the builder we define will also work for [`MultitargetNeuralRegressor`](@ref).
+`1`, but the builder we define will also work for
+[`MultitargetNeuralNetworkRegressor`](@ref).
 
 ```julia
 builder = MLJFlux.@builder begin
@@ -971,7 +975,7 @@ rates = rates = [5e-5, 1e-4, 0.005, 0.001, 0.05]
 plt=plot()
 
 foreach(rates) do η
-  pipe.transformed_target_model_deterministic.model.optimiser.eta = η
+  pipe.transformed_target_model_deterministic.model.optimiser = Optimisers.Adam(η)
   fit!(mach, force=true, verbosity=0)
   losses =
       report(mach).transformed_target_model_deterministic.model.training_losses[3:end]
@@ -980,7 +984,7 @@ end
 
 plt
 
-pipe.transformed_target_model_deterministic.model.optimiser.eta = 0.0001
+pipe.transformed_target_model_deterministic.model.optimiser.eta = Optimisers.Adam(0.0001)
 ```
 
 With the learning rate fixed, we compute a CV estimate of the performance (using
@@ -1117,6 +1121,7 @@ In this example we apply a multi-target regression model to synthetic data:
 using MLJ
 import MLJFlux
 using Flux
+import Optimisers
 ```
 
 First, we generate some synthetic data (needs MLJBase 0.20.16 or higher):
@@ -1178,7 +1183,7 @@ report(mach).transformed_target_model_deterministic.model.training_losses
 For experimenting with learning rate, see the [`NeuralNetworkRegressor`](@ref) example.
 
 ```
-pipe.transformed_target_model_deterministic.model.optimiser.eta = 0.0001
+pipe.transformed_target_model_deterministic.model.optimiser = Optimisers.Adam(0.0001)
 ```
 
 With the learning rate fixed, we can now compute a CV estimate of the performance (using

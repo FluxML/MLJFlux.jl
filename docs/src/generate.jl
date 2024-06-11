@@ -25,7 +25,9 @@ function generate(dir; execute=true, pluto=false)
         if $execute
             Literate.notebook(INFILE, OUTDIR, execute=true)
         else
-            @warn "Not generating a pre-executed Jupyter notebook for $outdir. "
+            Literate.notebook(INFILE, OUTDIR, execute=false)
+            @warn "Not generating a pre-executed Jupyter notebook for $outdir. "*
+                "YOU NEED TO EXECUTE \"notebook.ipynb\" MANUALLY!"
         end
 
         Literate.markdown(

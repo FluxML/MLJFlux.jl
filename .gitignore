@@ -8,3 +8,4 @@
 sandbox/
 docs/build
 /examples/mnist/mnist_machine*
+*.jls

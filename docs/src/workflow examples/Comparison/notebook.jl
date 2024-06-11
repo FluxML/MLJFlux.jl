@@ -1,9 +1,10 @@
 # # Model Comparison with MLJFlux
 
-# In this workflow example, we see how we can compare different machine learning models with a neural network from MLJFlux.
-using Pkg     #src
-Pkg.activate(@__DIR__);     #src
-Pkg.instantiate();     #src
+# In this workflow example, we see how we can compare different machine learning models
+# with a neural network from MLJFlux.
+using Pkg     #!md
+Pkg.activate(@__DIR__);     #!md
+Pkg.instantiate();     #!md
 
 # **Julia version** is assumed to be 1.10.*
 
@@ -13,6 +14,7 @@ using MLJ               # Has MLJFlux models
 using Flux              # For more flexibility
 import RDatasets        # Dataset source
 using DataFrames        # To visualize hyperparameter search results
+import Optimisers       # native Flux.jl optimisers no longer supported
 
 # ### Loading and Splitting the Data
 
@@ -20,17 +22,16 @@ iris = RDatasets.dataset("datasets", "iris");
 y, X = unpack(iris, ==(:Species), colname -> true, rng=123);
 
 
-
-# ### Instantiating the models
-# Now let's construct our model. This follows a similar setup to the one followed in the [Quick Start](../../index.md#Quick-Start).
+# ### Instantiating the models Now let's construct our model. This follows a similar setup
+# to the one followed in the [Quick Start](../../index.md#Quick-Start).
 
 NeuralNetworkClassifier = @load NeuralNetworkClassifier pkg=MLJFlux
 
 clf1 = NeuralNetworkClassifier(
     builder=MLJFlux.MLP(; hidden=(5,4), σ=Flux.relu),
-    optimiser=Flux.ADAM(0.01),
+    optimiser=Optimisers.Adam(0.01),
     batch_size=8,
-    epochs=50, 
+    epochs=50,
     rng=42
     )
 
@@ -43,9 +44,10 @@ XGBoostClassifier = @load XGBoostClassifier pkg=XGBoost
 clf4 = XGBoostClassifier();
 
 
-# ### Wrapping One of the Models in a TunedModel
-# Instead of just comparing with four models with the default/given hyperparameters, we will give `XGBoostClassifier` an unfair advantage
-# By wrapping it in a `TunedModel` that considers the best learning rate η for the model.
+# ### Wrapping One of the Models in a TunedModel Instead of just comparing with four
+# models with the default/given hyperparameters, we will give `XGBoostClassifier` an
+# unfair advantage By wrapping it in a `TunedModel` that considers the best learning rate
+# η for the model.
 
 r1 = range(clf4, :eta, lower=0.01, upper=0.5, scale=:log10)
 tuned_model_xg = TunedModel(
@@ -56,7 +58,8 @@ tuned_model_xg = TunedModel(
     measure=cross_entropy,
 );
 
-# Of course, one can wrap each of the four in a TunedModel if they are interested in comparing the models over a large set of their hyperparameters.
+# Of course, one can wrap each of the four in a TunedModel if they are interested in
+# comparing the models over a large set of their hyperparameters.
 
 # ### Comparing the models
 # We simply pass the four models to the `models` argument of the `TunedModel` construct
@@ -73,11 +76,10 @@ fit!(mach, verbosity=0);
 
 # Now let's see the history for more details on the performance for each of the models
 history = report(mach).history
-history_df = DataFrame(mlp = [x[:model] for x in history], measurement = [x[:measurement][1] for x in history]) 
+history_df = DataFrame(
+    mlp = [x[:model] for x in history],
+    measurement = [x[:measurement][1] for x in history],
+)
 sort!(history_df, [order(:measurement)])
 
 # This is Occam's razor in practice.
-
-using Literate #src
-Literate.markdown(@__FILE__, @__DIR__, execute=true) #src
-Literate.notebook(@__FILE__, @__DIR__, execute=true) #src

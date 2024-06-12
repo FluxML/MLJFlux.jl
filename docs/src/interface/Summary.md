@@ -1,7 +1,7 @@
 ## Models
 
 MLJFlux provides the model types below, for use with input features `X` and targets `y` of
-the [scientific type](https://alan-turing-institute.github.io/MLJScientificTypes.jl/dev/)
+the [scientific type](https://juliaai.github.io/ScientificTypes.jl/dev/)
 indicated in the table below. The parameters `n_in`, `n_out` and `n_channels` refer to
 information passed to the builder, as described under [Defining Custom Builders](@ref).
 

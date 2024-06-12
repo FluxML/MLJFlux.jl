@@ -1,19 +1,17 @@
 ## Models
 
-MLJFlux provides four model types, for use with input features `X` and
-targets `y` of the [scientific
-type](https://alan-turing-institute.github.io/MLJScientificTypes.jl/dev/)
-indicated in the table below. The parameters `n_in`, `n_out` and `n_channels`
-refer to information passed to the builder, as described under
-[Defining Custom Builders](@ref).
+MLJFlux provides the model types below, for use with input features `X` and targets `y` of
+the [scientific type](https://juliaai.github.io/ScientificTypes.jl/dev/)
+indicated in the table below. The parameters `n_in`, `n_out` and `n_channels` refer to
+information passed to the builder, as described under [Defining Custom Builders](@ref).
 
-| Model Type                                  | Prediction type | `scitype(X) <: _`                                   | `scitype(y) <: _`                               |
-|---------------------------------------------|-----------------|-----------------------------------------------------|-------------------------------------------------|
-| [`NeuralNetworkRegressor`](@ref)            | `Deterministic` | `Table(Continuous)` with `n_in` columns             | `AbstractVector{<:Continuous)` (`n_out = 1`)    |
-| [`MultitargetNeuralNetworkRegressor`](@ref) | `Deterministic` | `Table(Continuous)` with `n_in` columns             | `<: Table(Continuous)` with `n_out` columns     |
-| [`NeuralNetworkClassifier`](@ref)           | `Probabilistic` | `<:Table(Continuous)` with `n_in` columns           | `AbstractVector{<:Finite}` with `n_out` classes |
-| [`NeuralNetworkBinaryClassifier`](@ref)     | `Probabilistic` | `<:Table(Continuous)` with `n_in` columns           | `AbstractVector{<:Finite{2}}` (`n_out = 2`)     |
-| [`ImageClassifier`](@ref)                   | `Probabilistic` | `AbstractVector(<:Image{W,H})` with `n_in = (W, H)` | `AbstractVector{<:Finite}` with `n_out` classes |
+| Model Type                                  | Prediction type | `scitype(X) <: _`                                                       | `scitype(y) <: _`                               |
+|---------------------------------------------|-----------------|-------------------------------------------------------------------------|-------------------------------------------------|
+| [`NeuralNetworkRegressor`](@ref)            | `Deterministic` | `AbstractMatrix{Continuous}` or `Table(Continuous)` with `n_in` columns | `AbstractVector{<:Continuous)` (`n_out = 1`)    |
+| [`MultitargetNeuralNetworkRegressor`](@ref) | `Deterministic` | `AbstractMatrix{Continuous}` or `Table(Continuous)` with `n_in` columns | `<: Table(Continuous)` with `n_out` columns     |
+| [`NeuralNetworkClassifier`](@ref)           | `Probabilistic` | `AbstractMatrix{Continuous}` or `Table(Continuous)` with `n_in` columns | `AbstractVector{<:Finite}` with `n_out` classes |
+| [`NeuralNetworkBinaryClassifier`](@ref)     | `Probabilistic` | `AbstractMatrix{Continuous}` or `Table(Continuous)` with `n_in` columns | `AbstractVector{<:Finite{2}}` (but `n_out = 1`) |
+| [`ImageClassifier`](@ref)                   | `Probabilistic` | `AbstractVector(<:Image{W,H})` with `n_in = (W, H)`                     | `AbstractVector{<:Finite}` with `n_out` classes |
 
 
 ```@raw html
@@ -33,22 +31,23 @@ particular, an MLJ model does not store learned parameters.
 ```
 
 ```@raw html
-<details open><summary><b>Dealing with non-tabular input</b></summary>
+<details open><summary><b>Are oberservations rows or columns?</b></summary>
 ```
-Any `AbstractMatrix{<:AbstractFloat}` object `Xmat` can be forced to
-have scitype `Table(Continuous)` by replacing it with ` X =
-MLJ.table(Xmat)`. Furthermore, this wrapping, and subsequent
-unwrapping under the hood, will compile to a no-op. At present this
-includes support for sparse matrix data, but the implementation has
-not been optimized for sparse data at this time and so should be used
-with caution.
 
-Instructions for coercing common image formats into some
-`AbstractVector{<:Image}` are
-[here](https://juliaai.github.io/ScientificTypes.jl/dev/#Type-coercion-for-image-data).
+In MLJ the convention for two-dimensional data (tables and matrices) is
+**rows=obervations**. For matrices Flux has the opposite convention. If your data is a
+matrix with whose column index the observation index, then your optimal solution is to
+present the `adjoint` or `transpose` of your matrix to MLJFlux models. Otherwise, you can
+use the matrix as is, or transform one time with `permutedims`, and again present the
+`adjoint` or `transpose` as the optimal solution for MLJFlux training.
+
 ```@raw html
 </details>
 ```
+
+Instructions for coercing common image formats into some `AbstractVector{<:Image}` are
+[here](https://juliaai.github.io/ScientificTypes.jl/dev/#Type-coercion-for-image-data).
+
 
 ```@raw html
 <details closed><summary><b>Fitting and warm restarts</b></summary>

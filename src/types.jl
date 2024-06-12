@@ -950,7 +950,7 @@ We arrange for standardization of the the target by wrapping our model in
 model in a pipeline:
 
 ```julia
-pipe = Standardizer |> TransformedTargetModel(model, target=Standardizer)
+pipe = Standardizer |> TransformedTargetModel(model, transformer=Standardizer)
 ```
 
 If we fit with a high verbosity (>1), we will see the losses during training. We can also
@@ -1166,7 +1166,7 @@ We will arrange for standardization of the the target by wrapping our model in
  model in a pipeline:
 
 ```julia
-pipe = Standardizer |> TransformedTargetModel(model, target=Standardizer)
+pipe = Standardizer |> TransformedTargetModel(model, transformer=Standardizer)
 ```
 
 If we fit with a high verbosity (>1), we will see the losses during training. We can also

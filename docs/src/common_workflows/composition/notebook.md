@@ -4,7 +4,7 @@ EditURL = "notebook.jl"
 
 # Model Composition with MLJFlux
 
-This tutorial is available as a Jupyter notebook or julia script
+This demonstration is available as a Jupyter notebook or julia script
 [here](https://github.com/FluxML/MLJFlux.jl/tree/dev/docs/src/common_workflows/composition).
 
 In this workflow example, we see how MLJFlux enables composing MLJ models with MLJFlux
@@ -28,7 +28,7 @@ import Optimisers       # native Flux.jl optimisers no longer supported
 
 ````@example composition
 iris = RDatasets.dataset("datasets", "iris");
-y, X = unpack(iris, ==(:Species), colname -> true, rng=123);
+y, X = unpack(iris, ==(:Species), rng=123);
 X = Float32.(X);      # To be compatible with type of network network parameters
 nothing #hide
 ````

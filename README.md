@@ -34,7 +34,7 @@ Grab some data and split into features and target:
 
 ```julia
 iris = RDatasets.dataset("datasets", "iris");
-y, X = unpack(iris, ==(:Species), colname -> true, rng=123);
+y, X = unpack(iris, ==(:Species), rng=123);
 X = Float32.(X);      # To optmise for GPUs
 ```
 
@@ -83,17 +83,16 @@ Train the wrapped model:
 julia> mach = machine(iterated_model, X, y)
 julia> fit!(mach)
 
-[ Info: Training machine(ProbabilisticIteratedModel(model = NeuralNetworkClassifier(builder = MLP(hidden = (5, 4), …), …), …), …).
-[ Info: No iteration parameter specified. Using `iteration_parameter=:(epochs)`.
-[ Info: final loss: 0.10431026246922499
-[ Info: final training loss: 0.046286315
-[ Info: Stop triggered by Patience(4) stopping criterion.
-[ Info: Total of 349 iterations.
+[ Info: No iteration parameter specified. Using `iteration_parameter=:(epochs)`. 
+[ Info: final loss: 0.1284184007796247
+[ Info: final training loss: 0.055630706
+[ Info: Stop triggered by NumberSinceBest(5) stopping criterion. 
+[ Info: Total of 811 iterations. 
 ```
 Inspect results:
 
 ```julia-repl
-julia> plot(train_losses, label="Validation Loss", linewidth=2, size=(800,400))
+julia> plot(train_losses, label="Training Loss")
 julia> plot!(validation_losses, label="Validation Loss", linewidth=2, size=(800,400))
 ```
 

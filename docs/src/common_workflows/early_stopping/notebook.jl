@@ -10,7 +10,7 @@ using Pkg     #!md
 Pkg.activate(@__DIR__);     #!md
 Pkg.instantiate();     #!md
 
-# **Julia version** is assumed to be 1.10.* 
+# **Julia version** is assumed to be 1.10.*
 
 
 # ### Basic Imports
@@ -24,7 +24,7 @@ import Optimisers       # native Flux.jl optimisers no longer supported
 # ### Loading and Splitting the Data
 
 iris = RDatasets.dataset("datasets", "iris");
-y, X = unpack(iris, ==(:Species), colname -> true, rng=123);
+y, X = unpack(iris, ==(:Species), rng=123);
 X = Float32.(X);      # To be compatible with type of network network parameters
 
 

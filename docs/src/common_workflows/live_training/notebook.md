@@ -4,7 +4,7 @@ EditURL = "notebook.jl"
 
 # Live Training with MLJFlux
 
-This tutorial is available as a Jupyter notebook or julia script
+This demonstration is available as a Jupyter notebook or julia script
 [here](https://github.com/FluxML/MLJFlux.jl/tree/dev/docs/src/common_workflows/live_training).
 
 **Julia version** is assumed to be 1.10.*
@@ -26,7 +26,7 @@ using Plots
 
 ````@example live_training
 iris = RDatasets.dataset("datasets", "iris");
-y, X = unpack(iris, ==(:Species), colname -> true, rng=123);
+y, X = unpack(iris, ==(:Species), rng=123);
 X = Float32.(X);      # To be compatible with type of network network parameters
 nothing #hide
 ````

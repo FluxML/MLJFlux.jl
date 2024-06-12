@@ -26,7 +26,7 @@ import Optimisers       # native Flux.jl optimisers no longer supported
 
 ````@example comparison
 iris = RDatasets.dataset("datasets", "iris");
-y, X = unpack(iris, ==(:Species), colname -> true, rng=123);
+y, X = unpack(iris, ==(:Species), rng=123);
 nothing #hide
 ````
 

@@ -23,7 +23,7 @@ import Optimisers       # native Flux.jl optimisers no longer supported
 # ### Loading and Splitting the Data
 
 iris = RDatasets.dataset("datasets", "iris");
-y, X = unpack(iris, ==(:Species), colname -> true, rng=123);
+y, X = unpack(iris, ==(:Species), rng=123);
 
 
 # ### Instantiating the models Now let's construct our model. This follows a similar setup

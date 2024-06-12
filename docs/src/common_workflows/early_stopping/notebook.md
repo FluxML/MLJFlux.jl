@@ -2,7 +2,7 @@
 EditURL = "notebook.jl"
 ```
 
-# Early Stopping with MLJFlux
+# Early Stopping with MLJ
 
 This demonstration is available as a Jupyter notebook or julia script
 [here](https://github.com/FluxML/MLJFlux.jl/tree/dev/docs/src/common_workflows/early_stopping).
@@ -26,7 +26,7 @@ import Optimisers       # native Flux.jl optimisers no longer supported
 
 ````@example early_stopping
 iris = RDatasets.dataset("datasets", "iris");
-y, X = unpack(iris, ==(:Species), colname -> true, rng=123);
+y, X = unpack(iris, ==(:Species), rng=123);
 X = Float32.(X);      # To be compatible with type of network network parameters
 nothing #hide
 ````

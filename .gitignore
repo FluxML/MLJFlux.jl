@@ -1,4 +1,5 @@
 /Manifest.toml
+/docs/Manifest.toml
 .ipynb_checkpoints
 *~
 #*
@@ -7,4 +8,4 @@
 sandbox/
 docs/build
 /examples/mnist/mnist_machine*
-Manifest.toml
+*.jls

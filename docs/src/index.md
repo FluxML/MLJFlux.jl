@@ -72,8 +72,9 @@ As in the example above, any MLJFlux model has a `builder` hyperparameter, an ob
 encoding instructions for creating a neural network given the data that the model
 eventually sees (e.g., the number of classes in a classification problem). While each MLJ
 model has a simple default builder, users may need to define custom builders to get
-optimal results, and this will require familiarity with the [Flux
-API](https://fluxml.ai/Flux.jl/stable/) for defining a neural network chain.
+optimal results (see [Defining Custom Builders](@ref) and this will require familiarity
+with the [Flux API](https://fluxml.ai/Flux.jl/stable/) for defining a neural network
+chain.
 
 
 ## Flux or MLJFlux?

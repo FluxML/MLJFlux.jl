@@ -1,14 +1,15 @@
 # # Incremental Training with MLJFlux
 
+# This demonstration is available as a Jupyter notebook or julia script
+# [here](https://github.com/FluxML/MLJFlux.jl/tree/dev/docs/src/common_workflows/incremental_training).
+
 # In this workflow example we explore how to incrementally train MLJFlux models.
 
 using Pkg     #!md
 Pkg.activate(@__DIR__);     #!md
 Pkg.instantiate();     #!md
 
-# **Julia version** is assumed to be 1.10.* This tutorial is available as a Jupyter
-# notebook or julia script
-# [here](https://github.com/FluxML/MLJFlux.jl/tree/dev/docs/src/common_workflows/incremental_training).
+# **Julia version** is assumed to be 1.10.*
 
 # ### Basic Imports
 

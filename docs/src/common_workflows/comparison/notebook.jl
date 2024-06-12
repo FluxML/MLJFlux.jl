@@ -1,14 +1,15 @@
 # # Model Comparison with MLJFlux
 
+# This demonstration is available as a Jupyter notebook or julia script
+# [here](https://github.com/FluxML/MLJFlux.jl/tree/dev/docs/src/common_workflows/comparison).
+
 # In this workflow example, we see how we can compare different machine learning models
 # with a neural network from MLJFlux.
 using Pkg     #!md
 Pkg.activate(@__DIR__);     #!md
 Pkg.instantiate();     #!md
 
-# **Julia version** is assumed to be 1.10.* This tutorial is available as a Jupyter
-# notebook or julia script
-# [here](https://github.com/FluxML/MLJFlux.jl/tree/dev/docs/src/common_workflows/comparison).
+# **Julia version** is assumed to be 1.10.*
 
 
 # ### Basic Imports

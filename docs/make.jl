@@ -25,30 +25,35 @@ makedocs(
     warnonly = true,
     pages = [
         "Introduction" => "index.md",
-        "Interface"=> Any[
-            "Summary"=>"interface/Summary.md",
-            "Builders"=>"interface/Builders.md",
-            "Custom Builders"=>"interface/Custom Builders.md",
-            "Classification"=>"interface/Classification.md",
-            "Regression"=>"interface/Regression.md",
-            "Multi-Target Regression"=>"interface/Multitarget Regression.md",
-            "Image Classification"=>"interface/Image Classification.md",
+        "Interface" => Any[
+            "Summary" => "interface/Summary.md",
+            "Builders" => "interface/Builders.md",
+            "Custom Builders" => "interface/Custom Builders.md",
+            "Classification" => "interface/Classification.md",
+            "Regression" => "interface/Regression.md",
+            "Multi-Target Regression" => "interface/Multitarget Regression.md",
+            "Image Classification" => "interface/Image Classification.md",
         ],
-        "Workflow Examples" => Any[
-            "Incremental Training"=>
+        "Common Workflows" => Any[
+            "Incremental Training" =>
                 "common_workflows/incremental_training/notebook.md",
-            "Hyperparameter Tuning"=>
+            "Hyperparameter Tuning" =>
                 "common_workflows/hyperparameter_tuning/notebook.md",
-            "Neural Architecture Search"=>
+            "Model Composition" =>
+                "common_workflows/composition/notebook.md",
+            "Model Comparison" =>
+                "common_workflows/comparison/notebook.md",
+            "Early Stopping" =>
+                "common_workflows/early_stopping/notebook.md",
+            "Live Training" =>
+                "common_workflows/live_training/notebook.md",
+            "Neural Architecture Search" =>
                 "common_workflows/architecture_search/notebook.md",
-            "Model Composition"=>"common_workflows/composition/notebook.md",
-            "Model Comparison"=>"common_workflows/comparison/notebook.md",
-            "Early Stopping"=>"common_workflows/early_stopping/notebook.md",
-            "Live Training"=>"common_workflows/live_training/notebook.md",
         ],
-        # "Tutorials"=>Any[
-        # "Spam Detection with RNNs"=>"extended_examples/Spam Detection with RNNs/notebook.md"
-        # ],
+        "Extended Examples" => Any[
+            "MNIST Images" => "extended_examples/MNIST/notebook.md",
+            "Spam Detection with RNNs" => "extended_examples/spam_detection/notebook.md",
+        ],
         "Contributing" => "contributing.md"],
     doctest = false,
 )

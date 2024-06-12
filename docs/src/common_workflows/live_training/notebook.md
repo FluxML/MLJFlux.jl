@@ -4,21 +4,27 @@ EditURL = "notebook.jl"
 
 # Live Training with MLJFlux
 
+This tutorial is available as a Jupyter notebook or julia script
+[here](https://github.com/FluxML/MLJFlux.jl/tree/dev/docs/src/common_workflows/live_training).
+
 **Julia version** is assumed to be 1.10.*
 
 ### Basic Imports
 
-````@julia
-using MLJ               # Has MLJFlux models
-using Flux              # For more flexibility
-import RDatasets        # Dataset source
-using Plots             # For training plot
-import Optimisers       # native Flux.jl optimisers no longer supported
+````@example live_training
+using MLJ
+using Flux
+import RDatasets
+import Optimisers
+````
+
+````@example live_training
+using Plots
 ````
 
 ### Loading and Splitting the Data
 
-````@julia
+````@example live_training
 iris = RDatasets.dataset("datasets", "iris");
 y, X = unpack(iris, ==(:Species), colname -> true, rng=123);
 X = Float32.(X);      # To be compatible with type of network network parameters
@@ -30,7 +36,7 @@ nothing #hide
 Now let's construct our model. This follows a similar setup to the one followed in the
 [Quick Start](../../index.md#Quick-Start).
 
-````@julia
+````@example live_training
 NeuralNetworkClassifier = @load NeuralNetworkClassifier pkg=MLJFlux
 
 clf = NeuralNetworkClassifier(
@@ -45,7 +51,7 @@ clf = NeuralNetworkClassifier(
 Now let's wrap this in an iterated model. We will use a callback that makes a plot for
 validation losses each iteration.
 
-````@julia
+````@example live_training
 stop_conditions = [
     Step(1),            # Repeatedly train for one iteration
     NumberLimit(100),   # Don't train for more than 100 iterations
@@ -74,7 +80,7 @@ iterated_model = IteratedModel(
 ### Live Training
 Simply fitting the model is all we need
 
-````@julia
+````@example live_training
 mach = machine(iterated_model, X, y)
 fit!(mach, force=true)
 ````

@@ -1,21 +1,24 @@
 # # Live Training with MLJFlux
 
+# This demonstration is available as a Jupyter notebook or julia script
+# [here](https://github.com/FluxML/MLJFlux.jl/tree/dev/docs/src/common_workflows/live_training).
+
 using Pkg     #!md
 Pkg.activate(@__DIR__);     #!md
 Pkg.instantiate();     #!md
 
-# **Julia version** is assumed to be 1.10.* This tutorial is available as a Jupyter
-# notebook or julia script
-# [here](https://github.com/FluxML/MLJFlux.jl/tree/dev/docs/src/common_workflows/live_training).
-
+# **Julia version** is assumed to be 1.10.*
 
 # ### Basic Imports
 
-using MLJ               # Has MLJFlux models
-using Flux              # For more flexibility
-import RDatasets        # Dataset source
-using Plots             # For training plot
-import Optimisers       # native Flux.jl optimisers no longer supported
+using MLJ
+using Flux
+import RDatasets
+import Optimisers
+
+#-
+
+using Plots
 
 # ### Loading and Splitting the Data
 

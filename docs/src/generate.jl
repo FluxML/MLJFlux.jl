@@ -20,23 +20,20 @@ function generate(dir; execute=true, pluto=false)
             @warn "Not generating a Pluto notebook for $outdir."
         end
 
-        Literate.notebook(INFILE, OUTDIR, execute=false)
-        mv("$OUTDIR/notebook.ipynb", "$OUTDIR/notebook.unexecuted.ipynb", force=true)
-        if $execute
-            Literate.notebook(INFILE, OUTDIR, execute=true)
-        else
-            Literate.notebook(INFILE, OUTDIR, execute=false)
-            @warn "Not generating a pre-executed Jupyter notebook for $outdir. "*
-                "YOU NEED TO EXECUTE \"notebook.ipynb\" MANUALLY!"
-        end
-
         Literate.markdown(
             INFILE,
             OUTDIR,
+            execute=false,
             # overrides the default ```@example notebook ... ```, which will be ambiguous:
-            config=Dict("codefence" => Pair("````@julia", "````" )),
-            # config=Dict("codefence" => Pair("````@example $outdir", "````" )),
+            # config=Dict("codefence" => Pair("````@julia", "````" )),
+            config=Dict("codefence" => Pair("````@example $outdir", "````" )),
         )
+
+        Literate.notebook(INFILE, OUTDIR, execute=false)
+        mv("$OUTDIR/notebook.ipynb", "$OUTDIR/notebook.unexecuted.ipynb", force=true)
+        Literate.notebook(INFILE, OUTDIR, execute=$execute)
+        $execute || @warn "Not generating a pre-executed Jupyter notebook for $outdir. "*
+            "YOU NEED TO EXECUTE \"notebook.ipynb\" MANUALLY!"
 
     end |> eval
 end

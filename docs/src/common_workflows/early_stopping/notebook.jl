@@ -1,5 +1,8 @@
 # # Early Stopping with MLJFlux
 
+# This demonstration is available as a Jupyter notebook or julia script
+# [here](https://github.com/FluxML/MLJFlux.jl/tree/dev/docs/src/common_workflows/early_stopping).
+
 # In this workflow example, we learn how MLJFlux enables us to easily use early stopping
 # when training MLJFlux models.
 
@@ -7,9 +10,7 @@ using Pkg     #!md
 Pkg.activate(@__DIR__);     #!md
 Pkg.instantiate();     #!md
 
-# **Julia version** is assumed to be 1.10.* This tutorial is available as a Jupyter
-# notebook or julia script
-# [here](https://github.com/FluxML/MLJFlux.jl/tree/dev/docs/src/common_workflows/early_stopping).
+# **Julia version** is assumed to be 1.10.* 
 
 
 # ### Basic Imports

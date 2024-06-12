@@ -1,14 +1,14 @@
 # # Using MLJ to classifiy the MNIST image dataset
 
+# This tutorial is available as a Jupyter notebook or julia script
+# [here](https://github.com/FluxML/MLJFlux.jl/tree/dev/docs/src/extended_examples/MNIST).
+
 using Pkg #!md
 const DIR = @__DIR__ #!md
 Pkg.activate(DIR) #!md
 Pkg.instantiate() #!md
 
-# **Julia version** is assumed to be 1.10.* This tutorial is available as a Jupyter
-# notebook or julia script
-# [here](https://github.com/FluxML/MLJFlux.jl/tree/dev/docs/src/extended_examples/MNIST).
-
+# **Julia version** is assumed to be 1.10.*
 
 using MLJ
 using Flux

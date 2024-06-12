@@ -1,5 +1,8 @@
 # # Hyperparameter Tuning with MLJFlux
 
+# This demonstration is available as a Jupyter notebook or julia script
+# [here](https://github.com/FluxML/MLJFlux.jl/tree/dev/docs/src/common_workflows/hyperparameter_tuning).
+
 # In this workflow example we learn how to tune different hyperparameters of MLJFlux
 # models with emphasis on training hyperparameters.
 
@@ -7,9 +10,7 @@ using Pkg     #!md
 Pkg.activate(@__DIR__);     #!md
 Pkg.instantiate();     #!md
 
-# **Julia version** is assumed to be 1.10.* This tutorial is available as a Jupyter
-# notebook or julia script
-# [here](https://github.com/FluxML/MLJFlux.jl/tree/dev/docs/src/common_workflows/hyperparameter_tuning).
+# **Julia version** is assumed to be 1.10.*
 
 
 # ### Basic Imports

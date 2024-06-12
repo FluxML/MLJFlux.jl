@@ -4,15 +4,19 @@ EditURL = "notebook.jl"
 
 # Neural Architecture Search with MLJFlux
 
-Neural Architecture Search is (NAS) is an instance of hyperparameter tuning concerned with tuning model hyperparameters
-defining the architecture itself. Although it's typically performed with sophisticated search algorithms for efficiency,
-in this example we will be using a simple random search.
+This demonstration is available as a Jupyter notebook or julia script
+[here](https://github.com/FluxML/MLJFlux.jl/tree/dev/docs/src/common_workflows/architecture_search).
+
+Neural Architecture Search (NAS) is an instance of hyperparameter tuning concerned
+with tuning model hyperparameters defining the architecture itself. Although it's
+typically performed with sophisticated search algorithms for efficiency, in this example
+we will be using a simple random search.
 
 **Julia version** is assumed to be 1.10.*
 
 ### Basic Imports
 
-````@julia
+````@example architecture_search
 using MLJ               # Has MLJFlux models
 using Flux              # For more flexibility
 using RDatasets: RDatasets        # Dataset source
@@ -22,7 +26,7 @@ import Optimisers       # native Flux.jl optimisers no longer supported
 
 ### Loading and Splitting the Data
 
-````@julia
+````@example architecture_search
 iris = RDatasets.dataset("datasets", "iris");
 y, X = unpack(iris, ==(:Species), colname -> true, rng = 123);
 X = Float32.(X);      # To be compatible with type of network network parameters
@@ -34,7 +38,7 @@ first(X, 5)
 Now let's construct our model. This follows a similar setup the one followed in the
 [Quick Start](../../index.md#Quick-Start).
 
-````@julia
+````@example architecture_search
 NeuralNetworkClassifier = @load NeuralNetworkClassifier pkg = "MLJFlux"
 clf = NeuralNetworkClassifier(
     builder = MLJFlux.MLP(; hidden = (1, 1, 1), σ = Flux.relu),
@@ -53,7 +57,7 @@ proceed by defining a function that can generate all possible networks with a sp
 number of hidden layers, a minimum and maximum number of neurons per layer and
 increments to consider for the number of neurons.
 
-````@julia
+````@example architecture_search
 function generate_networks(
     ;min_neurons::Int,
     max_neurons::Int,
@@ -93,7 +97,7 @@ end
 Now let's generate an array of all possible neural networks with three hidden layers and
 number of neurons per layer ∈ [1,64] with a step of 4
 
-````@julia
+````@example architecture_search
 networks_space =
     generate_networks(
         min_neurons = 1,
@@ -110,7 +114,7 @@ networks_space[1:5]
 Let's use this array to define the range of hyperparameters and pass it along with the
 model to the `TunedModel` constructor.
 
-````@julia
+````@example architecture_search
 r1 = range(clf, :(builder.hidden), values = networks_space)
 
 tuned_clf = TunedModel(
@@ -129,7 +133,7 @@ nothing #hide
 Similar to the last workflow example, all we need now is to fit our model and the search
 will take place automatically:
 
-````@julia
+````@example architecture_search
 mach = machine(tuned_clf, X, y);
 fit!(mach, verbosity = 0);
 fitted_params(mach).best_model
@@ -140,7 +144,7 @@ fitted_params(mach).best_model
 Let's analyze the search results by converting the history array to a dataframe and
 viewing it:
 
-````@julia
+````@example architecture_search
 history = report(mach).history
 history_df = DataFrame(
     mlp = [x[:model].builder for x in history],

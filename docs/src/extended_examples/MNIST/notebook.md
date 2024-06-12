@@ -4,9 +4,12 @@ EditURL = "notebook.jl"
 
 # Using MLJ to classifiy the MNIST image dataset
 
-**Julia version** is assumed to be ^1.10
+This tutorial is available as a Jupyter notebook or julia script
+[here](https://github.com/FluxML/MLJFlux.jl/tree/dev/docs/src/extended_examples/MNIST).
 
-````@julia
+**Julia version** is assumed to be 1.10.*
+
+````@example MNIST
 using MLJ
 using Flux
 import MLJFlux
@@ -16,7 +19,7 @@ import MLJIteration # for `skip`
 
 If running on a GPU, you will also need to `import CUDA` and `import cuDNN`.
 
-````@julia
+````@example MNIST
 using Plots
 gr(size=(600, 300*(sqrt(5)-1)));
 nothing #hide
@@ -26,7 +29,7 @@ nothing #hide
 
 Downloading the MNIST image dataset:
 
-````@julia
+````@example MNIST
 import MLDatasets: MNIST
 
 ENV["DATADEPS_ALWAYS_ACCEPT"] = true
@@ -40,7 +43,7 @@ type](https://juliaai.github.io/ScientificTypes.jl/dev/). For
 more on this, see [Working with Categorical
 Data](https://alan-turing-institute.github.io/MLJ.jl/dev/working_with_categorical_data/).
 
-````@julia
+````@example MNIST
 labels = coerce(labels, Multiclass);
 images = coerce(images, GrayImage);
 nothing #hide
@@ -48,7 +51,7 @@ nothing #hide
 
 Checking scientific types:
 
-````@julia
+````@example MNIST
 @assert scitype(images) <: AbstractVector{<:Image}
 @assert scitype(labels) <: AbstractVector{<:Finite}
 ````
@@ -59,7 +62,7 @@ For general instructions on coercing image data, see [Type coercion
 for image
 data](https://juliaai.github.io/ScientificTypes.jl/dev/#Type-coercion-for-image-data)
 
-````@julia
+````@example MNIST
 images[1]
 ````
 
@@ -71,7 +74,7 @@ alternating convolution and max-pool layers, and a final dense
 layer; the filter size and the number of channels after each
 convolution layer is customisable.
 
-````@julia
+````@example MNIST
 import MLJFlux
 struct MyConvBuilder
     filter_size::Int
@@ -109,7 +112,7 @@ end
 
 We now define the MLJ model.
 
-````@julia
+````@example MNIST
 ImageClassifier = @load ImageClassifier
 clf = ImageClassifier(
     builder=MyConvBuilder(3, 16, 32, 32),
@@ -125,42 +128,42 @@ GPU, add to the constructor `acceleration=CUDALib()` and omit `rng`.
 
 For illustration purposes, we won't use all the data here:
 
-````@julia
+````@example MNIST
 train = 1:500
 test = 501:1000
 ````
 
 Binding the model with data in an MLJ machine:
 
-````@julia
+````@example MNIST
 mach = machine(clf, images, labels);
 nothing #hide
 ````
 
 Training for 10 epochs on the first 500 images:
 
-````@julia
+````@example MNIST
 fit!(mach, rows=train, verbosity=2);
 nothing #hide
 ````
 
 Inspecting:
 
-````@julia
+````@example MNIST
 report(mach)
 ````
 
-````@julia
+````@example MNIST
 chain = fitted_params(mach)
 ````
 
-````@julia
+````@example MNIST
 Flux.params(chain)[2]
 ````
 
 Adding 20 more epochs:
 
-````@julia
+````@example MNIST
 clf.epochs = clf.epochs + 20
 fit!(mach, rows=train);
 nothing #hide
@@ -168,14 +171,14 @@ nothing #hide
 
 Computing an out-of-sample estimate of the loss:
 
-````@julia
+````@example MNIST
 predicted_labels = predict(mach, rows=test);
 cross_entropy(predicted_labels, labels[test])
 ````
 
 Or to fit and predict, in one line:
 
-````@julia
+````@example MNIST
 evaluate!(mach,
           resampling=Holdout(fraction_train=0.5),
           measure=cross_entropy,
@@ -215,14 +218,14 @@ Some helpers
 
 To extract Flux params from an MLJFlux machine
 
-````@julia
+````@example MNIST
 parameters(mach) = vec.(Flux.params(fitted_params(mach)));
 nothing #hide
 ````
 
 To store the traces:
 
-````@julia
+````@example MNIST
 losses = []
 training_losses = []
 parameter_means = Float32[];
@@ -231,7 +234,7 @@ epochs = []
 
 To update the traces:
 
-````@julia
+````@example MNIST
 update_loss(loss) = push!(losses, loss)
 update_training_loss(losses) = push!(training_losses, losses[end])
 update_means(mach) = append!(parameter_means, mean.(parameters(mach)));
@@ -240,7 +243,7 @@ update_epochs(epoch) = push!(epochs, epoch)
 
 The controls to apply:
 
-````@julia
+````@example MNIST
 save_control =
     MLJIteration.skip(Save(joinpath(DIR, "mnist.jls")), predicate=3)
 
@@ -261,7 +264,7 @@ nothing #hide
 
 The "self-iterating" classifier:
 
-````@julia
+````@example MNIST
 iterated_clf = IteratedModel(
     clf,
     controls=controls,
@@ -272,21 +275,21 @@ iterated_clf = IteratedModel(
 
 ### Binding the wrapped model to data:
 
-````@julia
+````@example MNIST
 mach = machine(iterated_clf, images, labels);
 nothing #hide
 ````
 
 ### Training
 
-````@julia
+````@example MNIST
 fit!(mach, rows=train);
 nothing #hide
 ````
 
 ### Comparison of the training and out-of-sample losses:
 
-````@julia
+````@example MNIST
 plot(
     epochs,
     losses,
@@ -301,7 +304,7 @@ savefig(joinpath(DIR, "loss.png"))
 
 ### Evolution of weights
 
-````@julia
+````@example MNIST
 n_epochs =  length(losses)
 n_parameters = div(length(parameter_means), n_epochs)
 parameter_means2 = reshape(copy(parameter_means), n_parameters, n_epochs)'
@@ -316,13 +319,13 @@ plot(
 **Note.** The higher the number in the plot legend, the deeper the layer we are
 **weight-averaging.
 
-````@julia
+````@example MNIST
 savefig(joinpath(DIR, "weights.png"))
 ````
 
 ### Retrieving a snapshot for a prediction:
 
-````@julia
+````@example MNIST
 mach2 = machine(joinpath(DIR, "mnist3.jls"))
 predict_mode(mach2, images[501:503])
 ````
@@ -332,7 +335,7 @@ predict_mode(mach2, images[501:503])
 Mutating `iterated_clf.controls` or `clf.epochs` (which is otherwise
 ignored) will allow you to restart training from where it left off.
 
-````@julia
+````@example MNIST
 iterated_clf.controls[2] = Patience(4)
 fit!(mach, rows=train)
 

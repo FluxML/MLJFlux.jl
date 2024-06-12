@@ -4,14 +4,18 @@ EditURL = "notebook.jl"
 
 # Model Composition with MLJFlux
 
-In this workflow example, we see how MLJFlux enables composing MLJ models with MLJFlux models. We will assume a
-class imbalance setting and wrap an oversampler with a deep learning model from MLJFlux.
+This tutorial is available as a Jupyter notebook or julia script
+[here](https://github.com/FluxML/MLJFlux.jl/tree/dev/docs/src/common_workflows/composition).
+
+In this workflow example, we see how MLJFlux enables composing MLJ models with MLJFlux
+models. We will assume a class imbalance setting and wrap an oversampler with a deep
+learning model from MLJFlux.
 
 **Julia version** is assumed to be 1.10.*
 
 ### Basic Imports
 
-````@julia
+````@example composition
 using MLJ               # Has MLJFlux models
 using Flux              # For more flexibility
 import RDatasets        # Dataset source
@@ -22,7 +26,7 @@ import Optimisers       # native Flux.jl optimisers no longer supported
 
 ### Loading and Splitting the Data
 
-````@julia
+````@example composition
 iris = RDatasets.dataset("datasets", "iris");
 y, X = unpack(iris, ==(:Species), colname -> true, rng=123);
 X = Float32.(X);      # To be compatible with type of network network parameters
@@ -31,7 +35,7 @@ nothing #hide
 
 To simulate an imbalanced dataset, we will take a random sample:
 
-````@julia
+````@example composition
 Random.seed!(803429)
 subset_indices = rand(1:size(X, 1), 100)
 X, y = X[subset_indices, :], y[subset_indices]
@@ -43,7 +47,7 @@ Imbalance.checkbalance(y)
 Let's load `BorderlineSMOTE1` to oversample the data and `Standardizer` to standardize
 it.
 
-````@julia
+````@example composition
 BorderlineSMOTE1 = @load BorderlineSMOTE1 pkg=Imbalance verbosity=0
 NeuralNetworkClassifier = @load NeuralNetworkClassifier pkg=MLJFlux
 ````
@@ -51,7 +55,7 @@ NeuralNetworkClassifier = @load NeuralNetworkClassifier pkg=MLJFlux
 We didn't need to load Standardizer because it is a local model for MLJ (see
 `localmodels()`)
 
-````@julia
+````@example composition
 clf = NeuralNetworkClassifier(
     builder=MLJFlux.MLP(; hidden=(5,4), σ=Flux.relu),
     optimiser=Optimisers.Adam(0.01),
@@ -65,7 +69,7 @@ First we wrap the oversampler with the neural network via the `BalancedModel`
 construct. This comes from `MLJBalancing` And allows combining resampling methods with
 MLJ models in a sequential pipeline.
 
-````@julia
+````@example composition
 oversampler = BorderlineSMOTE1(k=5, ratios=1.0, rng=42)
 balanced_model = BalancedModel(model=clf, balancer1=oversampler)
 standarizer = Standardizer()
@@ -73,7 +77,7 @@ standarizer = Standardizer()
 
 Now let's compose the balanced model with a standardizer.
 
-````@julia
+````@example composition
 pipeline = standarizer |> balanced_model
 ````
 
@@ -85,7 +89,7 @@ set's mean and std and the oversampler will be transparent.
 
 It's indistinguishable from training a single model.
 
-````@julia
+````@example composition
 mach = machine(pipeline, X, y)
 fit!(mach)
 cv=CV(nfolds=5)

@@ -1,9 +1,9 @@
 # # Using MLJ to classifiy the MNIST image dataset
 
-using Pkg
-const DIR = @__DIR__
-Pkg.activate(DIR)
-Pkg.instantiate()
+using Pkg #!md
+const DIR = @__DIR__ #!md
+Pkg.activate(DIR) #!md
+Pkg.instantiate() #!md
 
 # **Julia version** is assumed to be ^1.10
 
@@ -260,7 +260,8 @@ plot(
     xlab = "epoch",
 )
 
-# **Note.** The higher the number, the deeper the layer we are weight-averaging. 
+# **Note.** The higher the number in the plot legend, the deeper the layer we are
+# **weight-averaging.
 
 savefig(joinpath(DIR, "weights.png"))
 

@@ -25,8 +25,8 @@ end
 Note here that `n_in` and `n_out` depend on the size of the data (see
 [Table 1](@ref Models).
 
-For a concrete image classification example, see
-the [Image Classification Example](@ref).
+For a concrete image classification example, see [Using MLJ to classifiy the MNIST image
+dataset](@ref).
 
 More generally, defining a new builder means defining a new struct
 sub-typing `MLJFlux.Builder` and defining a new `MLJFlux.build` method

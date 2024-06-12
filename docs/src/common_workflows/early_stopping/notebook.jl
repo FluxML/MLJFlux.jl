@@ -1,4 +1,4 @@
-# # Early Stopping with MLJFlux
+# # Early Stopping with MLJ
 
 # This demonstration is available as a Jupyter notebook or julia script
 # [here](https://github.com/FluxML/MLJFlux.jl/tree/dev/docs/src/common_workflows/early_stopping).

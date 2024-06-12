@@ -147,11 +147,13 @@ cross_entropy(predicted_labels, labels[test])
 
 # Or to fit and predict, in one line:
 
-evaluate!(mach,
-          resampling=Holdout(fraction_train=0.5),
-          measure=cross_entropy,
-          rows=1:1000,
-          verbosity=0)
+evaluate!(
+    mach,
+    resampling=Holdout(fraction_train=0.5),
+    measure=cross_entropy,
+    rows=1:1000,
+    verbosity=0,
+)
 
 
 # ## Wrapping the MLJFlux model with iteration controls
@@ -205,7 +207,7 @@ update_epochs(epoch) = push!(epochs, epoch)
 # The controls to apply:
 
 save_control =
-    MLJIteration.skip(Save(joinpath(DIR, "mnist.jls")), predicate=3)
+    MLJIteration.skip(Save(joinpath(tempdir(), "mnist.jls")), predicate=3)
 
 controls=[
     Step(2),
@@ -249,7 +251,7 @@ plot(
 )
 plot!(epochs, training_losses, label="training")
 
-savefig(joinpath(DIR, "loss.png"))
+savefig(joinpath(tempdir(), "loss.png"))
 
 # ### Evolution of weights
 
@@ -266,12 +268,12 @@ plot(
 # **Note.** The higher the number in the plot legend, the deeper the layer we are
 # **weight-averaging.
 
-savefig(joinpath(DIR, "weights.png"))
+savefig(joinpath(tempdir(), "weights.png"))
 
 
 # ### Retrieving a snapshot for a prediction:
 
-mach2 = machine(joinpath(DIR, "mnist3.jls"))
+mach2 = machine(joinpath(tempdir(), "mnist3.jls"))
 predict_mode(mach2, images[501:503])
 
 

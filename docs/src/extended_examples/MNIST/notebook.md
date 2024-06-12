@@ -245,7 +245,7 @@ The controls to apply:
 
 ````@example MNIST
 save_control =
-    MLJIteration.skip(Save(joinpath(DIR, "mnist.jls")), predicate=3)
+    MLJIteration.skip(Save(joinpath(tempdir(), "mnist.jls")), predicate=3)
 
 controls=[
     Step(2),
@@ -299,7 +299,7 @@ plot(
 )
 plot!(epochs, training_losses, label="training")
 
-savefig(joinpath(DIR, "loss.png"))
+savefig(joinpath(tempdir(), "loss.png"))
 ````
 
 ### Evolution of weights
@@ -320,14 +320,21 @@ plot(
 **weight-averaging.
 
 ````@example MNIST
-savefig(joinpath(DIR, "weights.png"))
+savefig(joinpath(tempdir(), "weights.png"))
 ````
 
 ### Retrieving a snapshot for a prediction:
 
-````@example MNIST
-mach2 = machine(joinpath(DIR, "mnist3.jls"))
+````julia
+mach2 = machine(joinpath(tempdir(), "mnist3.jls"))
 predict_mode(mach2, images[501:503])
+````
+
+````
+3-element CategoricalArrays.CategoricalArray{Int64,1,UInt32}:
+ 7
+ 9
+ 5
 ````
 
 ### Restarting training

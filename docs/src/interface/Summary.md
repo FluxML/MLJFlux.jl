@@ -7,26 +7,26 @@ indicated in the table below. The parameters `n_in`, `n_out` and `n_channels`
 refer to information passed to the builder, as described under
 [Defining Custom Builders](@ref).
 
-Model Type | Prediction type | `scitype(X) <: _` | `scitype(y) <: _`
------------|-----------------|---------------|----------------------------
-`NeuralNetworkRegressor` | `Deterministic` | `Table(Continuous)` with `n_in` columns | `AbstractVector{<:Continuous)` (`n_out = 1`)
-`MultitargetNeuralNetworkRegressor` | `Deterministic` | `Table(Continuous)` with `n_in` columns | `<: Table(Continuous)` with `n_out` columns
-`NeuralNetworkClassifier` | `Probabilistic` | `<:Table(Continuous)` with `n_in` columns | `AbstractVector{<:Finite}` with `n_out` classes
-`NeuralNetworkBinaryClassifier` | `Probabilistic` | `<:Table(Continuous)` with `n_in` columns | `AbstractVector{<:Finite{2}}` (`n_out = 2`)
-`ImageClassifier` | `Probabilistic` | `AbstractVector(<:Image{W,H})` with `n_in = (W, H)` | `AbstractVector{<:Finite}` with `n_out` classes
+| Model Type                                  | Prediction type | `scitype(X) <: _`                                   | `scitype(y) <: _`                               |
+|---------------------------------------------|-----------------|-----------------------------------------------------|-------------------------------------------------|
+| [`NeuralNetworkRegressor`](@ref)            | `Deterministic` | `Table(Continuous)` with `n_in` columns             | `AbstractVector{<:Continuous)` (`n_out = 1`)    |
+| [`MultitargetNeuralNetworkRegressor`](@ref) | `Deterministic` | `Table(Continuous)` with `n_in` columns             | `<: Table(Continuous)` with `n_out` columns     |
+| [`NeuralNetworkClassifier`](@ref)           | `Probabilistic` | `<:Table(Continuous)` with `n_in` columns           | `AbstractVector{<:Finite}` with `n_out` classes |
+| [`NeuralNetworkBinaryClassifier`](@ref)     | `Probabilistic` | `<:Table(Continuous)` with `n_in` columns           | `AbstractVector{<:Finite{2}}` (`n_out = 2`)     |
+| [`ImageClassifier`](@ref)                   | `Probabilistic` | `AbstractVector(<:Image{W,H})` with `n_in = (W, H)` | `AbstractVector{<:Finite}` with `n_out` classes |
 
 
 ```@raw html
-<details><summary><b>See definition of "model"</b></summary>
+<details><summary><b>What exactly is a "model"?</b></summary>
 ```
 In MLJ a *model* is a mutable struct storing hyper-parameters for some
 learning algorithm indicated by the model name, and that's all. In
 particular, an MLJ model does not store learned parameters.
 
 !!! warning "Difference in Definition"
-    In Flux the term "model" has another meaning. However, as all
-    Flux "models" used in MLJFLux are `Flux.Chain` objects, we call them
-    *chains*, and restrict use of "model" to models in the MLJ sense.
+	In Flux the term "model" has another meaning. However, as all
+	Flux "models" used in MLJFLux are `Flux.Chain` objects, we call them
+	*chains*, and restrict use of "model" to models in the MLJ sense.
 
 ```@raw html
 </details>
@@ -67,12 +67,10 @@ models, `fit!(mach)` will use a warm restart if:
 
 Here `model=mach.model` is the associated MLJ model.
 
-The warm restart feature makes it possible to apply early stopping
-criteria, as defined in
-[EarlyStopping.jl](https://github.com/ablaom/EarlyStopping.jl). For an
-example, see [/examples/mnist/](/examples/mnist/). (Eventually, this
-will be handled by an MLJ model wrapper for controlling arbitrary
-iterative models.)
+The warm restart feature makes it possible to externally control iteration. See, for
+example, [Early Stopping with MLJFlux](@ref) and [Using MLJ to classifiy the MNIST image
+dataset](@ref).
+
 ```@raw html
 </details>
 ```
@@ -81,35 +79,37 @@ iterative models.)
 
 ## Model Hyperparameters.
 
-All models share the following hyper-parameters:
+All models share the following hyper-parameters. See individual model docstrings for a full list.
 
-| Hyper-parameter                        | Description                                                                                                                                                                                                                          | Default                                                                                                   |
-|----------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------|
-| `builder`                              | Default builder for models.                                                                                                                                                                                                          | `MLJFlux.Linear(σ=Flux.relu)` (regressors) or `MLJFlux.Short(n_hidden=0, dropout=0.5, σ=Flux.σ)` (classifiers) |
-| `optimiser`                            | The optimiser to use for training.                                                                                                                                                                                                   | `Flux.ADAM()`                                                                                              |
-| `loss`                                 | The loss function used for training.                                                                                                                                                                                                 | `Flux.mse` (regressors) and `Flux.crossentropy` (classifiers)                                             |
-| `n_epochs`                             | Number of epochs to train for.                                                                                                                                                                                                       | `10`                                                                                                       |
-| `batch_size`                           | The batch size for the data.                                                                                                                                                                                                         | `1`                                                                                                        |
-| `lambda`                               | The regularization strength. Range = [0, ∞).                                                                                                                                                                                         | `0`                                                                                                        |
-| `alpha`                                | The L2/L1 mix of regularization. Range = [0, 1].                                                                                                                                                                                     | `0`                                                                                                        |
-| `rng`                                  | The random number generator (RNG) passed to builders, for weight initialization, for example. Can be any `AbstractRNG` or the seed (integer) for a `MersenneTwister` that is reset on every cold restart of model (machine) training. | `GLOBAL_RNG`                                                                                               |
-| `acceleration`                         | Use `CUDALibs()` for training on GPU; default is `CPU1()`.                                                                                                                                                                            | `CPU1()`                                                                                                   |
-| `optimiser_changes_trigger_retraining` | True if fitting an associated machine should trigger retraining from scratch whenever the optimiser changes.                                                                                                                          | `false`                                                                                                    |
+| Hyper-parameter                        | Description                                                                                                                                                                                                                           | Default                                                                                                        |
+|----------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------|
+| `builder`                              | Default builder for models.                                                                                                                                                                                                           | `MLJFlux.Linear(σ=Flux.relu)` (regressors) or `MLJFlux.Short(n_hidden=0, dropout=0.5, σ=Flux.σ)` (classifiers) |
+| `optimiser`                            | The optimiser to use for training.                                                                                                                                                                                                    | `Optimiser.Adam()`                                                                                                  |
+| `loss`                                 | The loss function used for training.                                                                                                                                                                                                  | `Flux.mse` (regressors) and `Flux.crossentropy` (classifiers)                                                  |
+| `n_epochs`                             | Number of epochs to train for.                                                                                                                                                                                                        | `10`                                                                                                           |
+| `batch_size`                           | The batch size for the data.                                                                                                                                                                                                          | `1`                                                                                                            |
+| `lambda`                               | The regularization strength. Range = [0, ∞).                                                                                                                                                                                          | `0`                                                                                                            |
+| `alpha`                                | The L2/L1 mix of regularization. Range = [0, 1].                                                                                                                                                                                      | `0`                                                                                                            |
+| `rng`                                  | The random number generator (RNG) passed to builders, for weight initialization, for example. Can be any `AbstractRNG` or the seed (integer) for a `Xoshirio` that is reset on every cold restart of model (machine) training. | `GLOBAL_RNG`                                                                                                   |
+| `acceleration`                         | Use `CUDALibs()` for training on GPU; default is `CPU1()`.                                                                                                                                                                            | `CPU1()`                                                                                                       |
+| `optimiser_changes_trigger_retraining` | True if fitting an associated machine should trigger retraining from scratch whenever the optimiser changes.                                                                                                                          | `false`                                                                                                        |
 
 
-The classifiers have an additional hyperparameter `finaliser` (default
-= `Flux.softmax`) which is the operation applied to the unnormalized
-output of the final layer to obtain probabilities (outputs summing to
-one). Default = `Flux.softmax`. It should return a vector of the same
-length as its input.
+The classifiers have an additional hyperparameter `finaliser` (default is `Flux.softmax`,
+or `Flux.σ` in the binary case) which is the operation applied to the unnormalized output
+of the final layer to obtain probabilities (outputs summing to one). It should return a
+vector of the same length as its input.
 
 !!! note "Loss Functions"
-    Currently, the loss function specified by `loss=...` is applied
-    internally by Flux and needs to conform to the Flux API. You cannot,
-    for example, supply one of MLJ's probabilistic loss functions, such as
-    `MLJ.cross_entropy` to one of the classifier constructors. 
 
-That said, you can only use MLJ loss functions or metrics in evaluation meta-algorithms (such as cross validation) and they will work even if the underlying model comes from `MLJFlux`.
+	Currently, the loss function specified by `loss=...` is applied
+	internally by Flux and needs to conform to the Flux API. You cannot,
+	for example, supply one of MLJ's probabilistic loss functions, such as
+	`MLJ.cross_entropy` to one of the classifier constructors.
+
+That said, you can only use MLJ loss functions or metrics in evaluation meta-algorithms
+(such as cross validation) and they will work even if the underlying model comes from
+`MLJFlux`.
 
 ```@raw html
 <details closed><summary><b>More on accelerated training with GPUs</b></summary>
@@ -134,14 +134,12 @@ CPU at then conclusion of `fit!`, and made available as
 ```
 
 
-## Built-in builders
+## Builders
 
-As for the `builder` argument, the following builders are provided out-of-the-box:
-
-|Builder                   | Description                                          |
-|:-------------------------|:-----------------------------------------------------|
-| `MLJFlux.MLP(hidden=(10,))`  | General multi-layer perceptron |
-| `MLJFlux.Short(n_hidden=0, dropout=0.5, σ=sigmoid)` | Fully connected network with one hidden layer and dropout|
-| `MLJFlux.Linear(σ=relu)` | Vanilla linear network with no hidden layers and activation function `σ` |
-
-See the following sections to learn more about the interface for the builders and models.
+| Builder                                                       | Description                                                              |
+|:--------------------------------------------------------------|:-------------------------------------------------------------------------|
+| [`MLJFlux.MLP`](@ref)`(hidden=(10,))`                         | General multi-layer perceptron                                           |
+| [`MLJFlux.Short`](@ref)`(n_hidden=0, dropout=0.5, σ=sigmoid)` | Fully connected network with one hidden layer and dropout                |
+| [`MLJFlux.Linear`](@ref)`(σ=relu)`                            | Vanilla linear network with no hidden layers and activation function `σ` |
+| [`MLJFlux.@builder`](@ref)                                            | Macro for customized builders                                            |
+|                                                               |                                                                          |

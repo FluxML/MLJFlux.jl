@@ -10,21 +10,27 @@ A Julia package integrating deep learning Flux models with [MLJ](https://juliaai
 
 - Make it easier to apply machine learning techniques provided by MLJ, including: out-of-sample performance evaluation, hyper-parameter optimization, iteration control, and more, to deep learning models
 
-!!! note "MLJFlux Coverage"
-    MLJFlux support is focused on fundamental and widely used deep learning models.  Sophisticated architectures or techniques such as online learning, reinforcement learning, and adversarial networks are currently beyond its scope. 
+!!! note "MLJFlux Scope" 
 
-Also note that MLJFlux is limited to training models only when all training data fits into memory, though it still supports automatic batching of data.
+    MLJFlux support is focused on fundamental deep learning models for common
+    supervised learning tasks. Sophisticated architectures and approaches, such as online
+    learning, reinforcement learning, and adversarial networks, are currently outside its
+    scope. Also, MLJFlux is limited to tasks where all (batches of) training data 
+	fits into memory.
 
 ## Installation
 
 ```julia
 import Pkg
 Pkg.activate("my_environment", shared=true)
-Pkg.add(["MLJ", "MLJFlux", "Flux"])
+Pkg.add(["MLJ", "MLJFlux", "Optimisers", "Flux"])
 ```
-You only need `Flux` if you need to build a custom architecture or experiment with different optimizers, loss functions and activations.
+You only need `Flux` if you need to build a custom architecture, or experiment with different loss or activation functions. Since MLJFlux 0.5, you must use optimisers from Optimisers.jl, as native Flux.jl optimisers are no longer supported. 
 
 ## Quick Start
+
+For the following demo, you will need to additionally run `Pkg.add("RDatasets")`.
+
 ```@example
 using MLJ, Flux, MLJFlux
 import RDatasets
@@ -51,20 +57,23 @@ mach = machine(clf, X, y)
 cv=CV(nfolds=5)
 evaluate!(mach, resampling=cv, measure=accuracy) 
 ```
-As you can see we were able to use MLJ functionality (i.e., cross validation) with a Flux deep learning model. All arguments provided also have defaults.
+As you can see we are able to use MLJ meta-functionality (i.e., cross validation) with a Flux deep learning model. All arguments provided have defaults.
 
-Notice that we were also able to define the neural network in a high-level fashion by only specifying the number of neurons in each hidden layer and the activation function. Meanwhile, `MLJFlux` was able to infer the input and output layer as well as use a suitable default for the loss function and output activation given the classification task. Notice as well that we did not need to implement a training or prediction loop as in `Flux`.
+Notice that we are also able to define the neural network in a high-level fashion by only
+specifying the number of neurons in each hidden layer and the activation
+function. Meanwhile, `MLJFlux` is able to infer the input and output layer as well as use
+a suitable default for the loss function and output activation given the classification
+task. Notice as well that we did not need to manually implement a training or prediction
+loop.
 
-## Basic idea
+## Basic idea: "builders" for data-dependent architecture
 
-As in the example above, any MLJFlux model has a `builder` hyperparameter, an object encoding
-instructions for creating a neural network given the data that the
-model eventually sees (e.g., the number of classes in a classification
-problem). While each MLJ model has a simple default builder, users
-may need to define custom builders to get optimal results,
-and this will require familiarity with the [Flux
-API](https://fluxml.ai/Flux.jl/stable/) for defining a neural network
-chain.
+As in the example above, any MLJFlux model has a `builder` hyperparameter, an object
+encoding instructions for creating a neural network given the data that the model
+eventually sees (e.g., the number of classes in a classification problem). While each MLJ
+model has a simple default builder, users may need to define custom builders to get
+optimal results, and this will require familiarity with the [Flux
+API](https://fluxml.ai/Flux.jl/stable/) for defining a neural network chain.
 
 
 ## Flux or MLJFlux?

@@ -11,5 +11,5 @@
 
 # Important 
 
-Scripts or notebooks in this folder cannot be reliably exectued without the accompanying
+Scripts or notebooks in this folder cannot be reliably executed without the accompanying
 Manifest.toml and Project.toml files.

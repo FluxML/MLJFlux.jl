@@ -1,9 +1,5 @@
 # Contents
 
-**Important.** This folder was updated in June 2024 but will no longer be updated. 
-
-For the lastest version of this example see [here](/docs/src/full\ tutorials/MNIST).
-
 | file                        | description                                              |
 |:----------------------------|:---------------------------------------------------------|
 | `notebook.ipynb`            | Juptyer notebook (executed)                              |
@@ -15,5 +11,5 @@ For the lastest version of this example see [here](/docs/src/full\ tutorials/MNI
 
 # Important 
 
-Scripts or notebooks in this folder cannot be reliably exectued without the accompanying
+Scripts or notebooks in this folder cannot be reliably executed without the accompanying
 Manifest.toml and Project.toml files.

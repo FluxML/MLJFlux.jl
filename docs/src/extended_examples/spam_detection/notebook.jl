@@ -21,7 +21,6 @@ using Flux
 import Optimisers       # Flux.jl native optimisers no longer supported
 using CSV               # Read data
 using DataFrames        # Read data
-using ScientificTypes   # Type coercion
 using WordTokenizers    # For tokenization
 using Languages         # For stop words
 

@@ -56,7 +56,7 @@ Wrap in "iteration controls":
 ```julia
 stop_conditions = [
     Step(1),            # Apply controls every epoch
-    NumberLimit(1000),   # Don't train for more than 100 steps
+    NumberLimit(1000),   # Don't train for more than 1000 steps
     Patience(4),        # Stop after 5 iterations of deteriation in validation loss
     NumberSinceBest(5), # Or if the best loss occurred 9 iterations ago
     TimeLimit(30/60),   # Or if 30 minutes passed

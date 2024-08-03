@@ -74,3 +74,7 @@ end
 @conditional_testset "integration" begin
     include("integration.jl")
 end
+
+@conditional_testset "entity_embedding.jl" begin
+    include("entity_embedding.jl")
+end

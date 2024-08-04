@@ -5,6 +5,7 @@ export CUDALibs, CPU1
 import Flux
 using MLJModelInterface
 using MLJModelInterface.ScientificTypesBase
+using ScientificTypes: schema, Finite
 import Base.==
 using ProgressMeter
 using CategoricalArrays
@@ -28,6 +29,7 @@ include("classifier.jl")
 include("image.jl")
 include("mlj_model_interface.jl")
 include("entity_embedding.jl")
+include("ordinal_encoder.jl")
 
 export NeuralNetworkRegressor, MultitargetNeuralNetworkRegressor
 export NeuralNetworkClassifier, NeuralNetworkBinaryClassifier, ImageClassifier
@@ -37,4 +39,4 @@ export CategoricalEmbedder
 include("deprecated.jl")
 
 
-end #module
+end

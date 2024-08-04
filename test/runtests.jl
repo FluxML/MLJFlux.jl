@@ -3,6 +3,7 @@ using Tables
 using MLJBase
 import MLJFlux
 using CategoricalArrays
+using ScientificTypes: coerce, Multiclass, OrderedFactor
 using ColorTypes
 using Flux
 import Random
@@ -77,4 +78,8 @@ end
 
 @conditional_testset "entity_embedding.jl" begin
     include("entity_embedding.jl")
+end
+
+@conditional_testset "ordinal_encoder.jl" begin
+    include("ordinal_encoder.jl")
 end

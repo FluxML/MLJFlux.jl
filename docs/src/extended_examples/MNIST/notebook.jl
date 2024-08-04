@@ -3,12 +3,18 @@
 # This tutorial is available as a Jupyter notebook or julia script
 # [here](https://github.com/FluxML/MLJFlux.jl/tree/dev/docs/src/extended_examples/MNIST).
 
-using Pkg #!md
-const DIR = @__DIR__ #!md
-Pkg.activate(DIR) #!md
-Pkg.instantiate() #!md
+# The following code block assumes the current directory contains `Manifest.toml` and
+# `Project.toml` files tested for this demonstration, available
+# [here](https://github.com/FluxML/MLJFlux.jl/tree/dev/docs/src/extended_examples/MNIST).
+# Otherwise, you can try running `using Pkg; Pkg.activate(temp=true)` instead, and
+# manually add the relevant packages to the temporary environment created.
 
-# **Julia version** is assumed to be 1.10.*
+using Pkg
+const DIR = @__DIR__
+Pkg.activate(DIR)
+Pkg.instantiate()
+
+# **Julia version** is assumed to be ≥ 1.10**
 
 using MLJ
 using Flux

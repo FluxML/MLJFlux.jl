@@ -1190,16 +1190,14 @@ With the learning rate fixed, we can now compute a CV estimate of the performanc
 all data bound to `mach`) and compare this with performance on the test set:
 
 ```julia
-# custom MLJ loss:
-multi_loss(yhat, y) = l2(MLJ.matrix(yhat), MLJ.matrix(y))
 
 # CV estimate, based on `(X, y)`:
-evaluate!(mach, resampling=CV(nfolds=5), measure=multi_loss)
+evaluate!(mach, resampling=CV(nfolds=5), measure=multitarget_l2)
 
 # loss for `(Xtest, test)`:
 fit!(mach) # trains on all data `(X, y)`
 yhat = predict(mach, Xtest)
-multi_loss(yhat, ytest)
+multitarget_l2(yhat, ytest)
 ```
 
 See also

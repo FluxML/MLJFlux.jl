@@ -1,7 +1,7 @@
 module MLJFlux
 
 export CUDALibs, CPU1
-
+import Flux
 using MLJModelInterface
 using MLJModelInterface.ScientificTypesBase
 using ScientificTypes: schema, Finite
@@ -13,6 +13,8 @@ using Statistics
 using ColorTypes
 using ComputationalResources
 using Random
+import Metalhead
+import Optimisers
 
 include("utilities.jl")
 const MMI = MLJModelInterface

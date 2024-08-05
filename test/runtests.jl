@@ -76,10 +76,8 @@ end
     include("integration.jl")
 end
 
-@conditional_testset "entity_embedding.jl" begin
+@conditional_testset "entity embedding" begin
     include("entity_embedding.jl")
-end
-
-@conditional_testset "ordinal_encoder.jl" begin
-    include("ordinal_encoder.jl")
+    include("entity_embedding_utils.jl")
+    include("encoders.jl")
 end

@@ -8,8 +8,8 @@ MLJModelInterface.deep_properties(::Type{<:MLJFluxModel}) =
 # # CLEAN METHOD
 
 const ERR_BAD_OPTIMISER = ArgumentError(
-    "Flux.jl optimiser detected. Only optimisers from Optimisers.jl are supported. "*
-    "For example, use `optimiser=Optimisers.Momentum()` after `import Optimisers`. "
+    "Flux.jl optimiser detected. Only optimisers from Optimisers.jl are supported. " *
+    "For example, use `optimiser=Optimisers.Momentum()` after `import Optimisers`. ",
 )
 
 function MLJModelInterface.clean!(model::MLJFluxModel)
@@ -19,8 +19,8 @@ function MLJModelInterface.clean!(model::MLJFluxModel)
         model.lambda = 0
     end
     if model.alpha < 0 || model.alpha > 1
-        warning *= "Need alpha in the interval `[0, 1]`. "*
-            "Resetting `alpha = 0`. "
+        warning *= "Need alpha in the interval `[0, 1]`. " *
+                   "Resetting `alpha = 0`. "
         model.alpha = 0
     end
     if model.epochs < 0
@@ -32,7 +32,8 @@ function MLJModelInterface.clean!(model::MLJFluxModel)
         model.batch_size = 1
     end
     if model.acceleration isa CUDALibs && gpu_isdead()
-        warning *= "`acceleration isa CUDALibs` "*
+        warning *=
+            "`acceleration isa CUDALibs` " *
             "but no CUDA device (GPU) currently live. "
     end
     if !(model.acceleration isa CUDALibs || model.acceleration isa CPU1)
@@ -40,9 +41,10 @@ function MLJModelInterface.clean!(model::MLJFluxModel)
         model.acceleration = CPU1()
     end
     if model.acceleration isa CUDALibs && model.rng isa Integer
-        warning *= "Specifying an RNG seed when "*
-            "`acceleration isa CUDALibs()` may fail for layers depending "*
-            "on an RNG during training, such as `Dropout`. Consider using "*
+        warning *=
+            "Specifying an RNG seed when " *
+            "`acceleration isa CUDALibs()` may fail for layers depending " *
+            "on an RNG during training, such as `Dropout`. Consider using " *
             " `Random.default_rng()` instead. `"
     end
     # TODO: This could be removed in next breaking release (0.6.0):
@@ -53,74 +55,61 @@ end
 
 
 # # FIT AND  UPDATE
+include("fit_utils.jl")
+include("entity_embedding_utils.jl")
 
-const ERR_BUILDER =
-    "Builder does not appear to build an architecture compatible with supplied data. "
+const ERR_BUILDER = "Builder does not appear to build an architecture compatible with supplied data. "
 
 true_rng(model) = model.rng isa Integer ? Random.Xoshiro(model.rng) : model.rng
 
-# Models implement L1/L2 regularization by chaining the chosen optimiser with weight/sign
-# decay.  Note that the weight/sign decay must be scaled down by the number of batches to
-# ensure penalization over an epoch does not scale with the choice of batch size; see
-# https://github.com/FluxML/MLJFlux.jl/issues/213.
-
-function regularized_optimiser(model, nbatches)
-    model.lambda == 0 && return model.optimiser
-    λ_L1 = model.alpha*model.lambda
-    λ_L2 = (1 - model.alpha)*model.lambda
-    λ_sign = λ_L1/nbatches
-    λ_weight = 2*λ_L2/nbatches
-
-    # recall components in an optimiser chain are executed from left to right:
-    if model.alpha == 0
-        return Optimisers.OptimiserChain(
-            Optimisers.WeightDecay(λ_weight),
-            model.optimiser,
-        )
-    elseif model.alpha == 1
-        return Optimisers.OptimiserChain(
-            Optimisers.SignDecay(λ_sign),
-            model.optimiser,
-        )
-   else  return Optimisers.OptimiserChain(
-        Optimisers.SignDecay(λ_sign),
-        Optimisers.WeightDecay(λ_weight),
-        model.optimiser,
-        )
-    end
-end
 
 function MLJModelInterface.fit(model::MLJFluxModel,
-                               verbosity,
-                               X,
-                               y)
-
+    verbosity,
+    X,
+    y)
+    # GPU and rng related variables
     move = Mover(model.acceleration)
-
     rng = true_rng(model)
+
+    # Get input properties
     shape = MLJFlux.shape(model, X, y)
+    cat_inds = get_cat_inds(X)
+    pure_continuous_input = (length(cat_inds) == 0)
 
-    chain = try
-        build(model, rng, shape) |> move
-    catch ex
-        @error ERR_BUILDER
-        rethrow()
+    # Decide whether to enable entity embeddings (e.g., ImageClassifier won't)
+    enable_entity_embs = is_embedding_enabled_type(typeof(model)) && !pure_continuous_input
+
+    # Prepare entity embeddings inputs and encode X if entity embeddings enabled
+    if enable_entity_embs
+        X = convert_to_table(X)
+        featnames = Tables.schema(X).names
+        entityprops, entityemb_output_dim =
+            prepare_entityembs(X, featnames, cat_inds, model.embedding_dims)
+        X, ordinal_mappings = ordinal_encoder_fit_transform(X; featinds = cat_inds)
     end
 
+    ## Construct model chain
+    chain =
+        (!enable_entity_embs) ? construct_model_chain(model, rng, shape, move) :
+        construct_model_chain_with_entityembs(
+            model,
+            rng,
+            shape,
+            move,
+            entityprops,
+            entityemb_output_dim,
+        )
+
+    # Format data as needed by Flux and move to GPU 
     data = move.(collate(model, X, y))
+
+    # Test chain works (as it may be custom)
     x = data[1][1]
+    test_chain_works(x, chain)
 
-    try
-        chain(x)
-    catch ex
-        @error ERR_BUILDER
-        throw(ex)
-    end
-
-    nbatches = length(data[2])
-    regularized_optimiser = MLJFlux.regularized_optimiser(model, nbatches)
-    optimiser_state = Optimisers.setup(regularized_optimiser, chain)
-
+    # Train model with Flux
+    regularized_optimiser, optimiser_state =
+        prepare_optimiser(data, model, chain)
     chain, optimiser_state, history = train(
         model,
         chain,
@@ -132,6 +121,7 @@ function MLJModelInterface.fit(model::MLJFluxModel,
         data[2],
     )
 
+    # Prepare cache for potential warm restarts
     cache = (
         deepcopy(model),
         data,
@@ -142,30 +132,62 @@ function MLJModelInterface.fit(model::MLJFluxModel,
         deepcopy(rng),
         move,
     )
-    fitresult = MLJFlux.fitresult(model, Flux.cpu(chain), y)
 
-    report = (training_losses=history, )
+    # Extract embedding matrices
+    enable_entity_embs &&
+        (embedding_matrices = get_embedding_matrices(chain, cat_inds, featnames))
+
+    # Prepare fitresult 
+    fitresult_args = (model, Flux.cpu(chain), y)
+
+    # Prepare report
+    report = (training_losses = history,)
+
+    # Modify cache and fitresult if entity embeddings enabled
+    if enable_entity_embs
+        cache = (cache..., entityprops, entityemb_output_dim, ordinal_mappings, featnames)
+        fitresult =
+            MLJFlux.fitresult(fitresult_args..., ordinal_mappings, embedding_matrices)
+    else
+        fitresult = MLJFlux.fitresult(fitresult_args...,)
+    end
 
     return fitresult, cache, report
 end
 
 function MLJModelInterface.update(model::MLJFluxModel,
-                                  verbosity,
-                                  old_fitresult,
-                                  old_cache,
-                                  X,
-                                  y)
+    verbosity,
+    old_fitresult,
+    old_cache,
+    X,
+    y)
+    # Decide whether to enable entity embeddings (e.g., ImageClassifier won't)
+    cat_inds = get_cat_inds(X)
+    pure_continuous_input = (length(cat_inds) == 0)
+    enable_entity_embs = is_embedding_enabled_type(typeof(model)) && !pure_continuous_input
 
-    old_model, data, old_history, shape, regularized_optimiser,
-        optimiser_state, rng, move = old_cache
+    # Unpack cache from previous fit
+    old_model, data, old_history, shape, regularized_optimiser, optimiser_state, rng, move =
+        old_cache[1:8]
+    if enable_entity_embs
+        entityprops, entityemb_output_dim, ordinal_mappings, featnames = old_cache[9:12]
+        cat_inds = [prop.index for prop in entityprops]
+    end
+
+    # Extract chain
     old_chain = old_fitresult[1]
 
-    optimiser_flag = model.optimiser_changes_trigger_retraining &&
+    # Decide whether optimiser should trigger retraining from scratch
+    optimiser_flag =
+        model.optimiser_changes_trigger_retraining &&
         model.optimiser != old_model.optimiser
 
-    keep_chain = !optimiser_flag && model.epochs >= old_model.epochs &&
+    # Decide whether to retrain from scratch
+    keep_chain =
+        !optimiser_flag && model.epochs >= old_model.epochs &&
         MLJModelInterface.is_same_except(model, old_model, :optimiser, :epochs)
 
+    # Use old chain if not retraining from scratch or reconstruct and prepare to retrain
     if keep_chain
         chain = move(old_chain)
         epochs = model.epochs - old_model.epochs
@@ -173,15 +195,29 @@ function MLJModelInterface.update(model::MLJFluxModel,
     else
         move = Mover(model.acceleration)
         rng = true_rng(model)
-        chain = build(model, rng, shape) |> move
+        if enable_entity_embs
+            chain =
+                construct_model_chain_with_entityembs(
+                    model,
+                    rng,
+                    shape,
+                    move,
+                    entityprops,
+                    entityemb_output_dim,
+                )
+            X = convert_to_table(X)
+            X = ordinal_encoder_transform(X, ordinal_mappings)
+        else
+            chain = construct_model_chain(model, rng, shape, move)
+        end
         # reset `optimiser_state`:
         data = move.(collate(model, X, y))
-        nbatches = length(data[2])
-        regularized_optimiser = MLJFlux.regularized_optimiser(model, nbatches)
-        optimiser_state = Optimisers.setup(regularized_optimiser, chain)
+        regularized_optimiser, optimiser_state =
+            prepare_optimiser(data, model, chain)
         epochs = model.epochs
     end
 
+    # Train model with Flux
     chain, optimiser_state, history = train(
         model,
         chain,
@@ -192,12 +228,18 @@ function MLJModelInterface.update(model::MLJFluxModel,
         data[1],
         data[2],
     )
+
+    # Properly set history
     if keep_chain
         # note: history[1] = old_history[end]
         history = vcat(old_history[1:end-1], history)
     end
 
-    fitresult = MLJFlux.fitresult(model, Flux.cpu(chain), y)
+    # Extract embedding matrices
+    enable_entity_embs &&
+        (embedding_matrices = get_embedding_matrices(chain, cat_inds, featnames))
+
+    # Prepare cache, fitresult, and report
     cache = (
         deepcopy(model),
         data,
@@ -208,14 +250,24 @@ function MLJModelInterface.update(model::MLJFluxModel,
         deepcopy(rng),
         move,
     )
-    report = (training_losses=history, )
+
+    fitresult_args = (model, Flux.cpu(chain), y)
+    if enable_entity_embs
+        cache = (cache..., entityprops, entityemb_output_dim, ordinal_mappings, featnames)
+        fitresult =
+            MLJFlux.fitresult(fitresult_args..., ordinal_mappings, embedding_matrices)
+    else
+        fitresult = MLJFlux.fitresult(fitresult_args...)
+    end
+
+    report = (training_losses = history,)
 
     return fitresult, cache, report
 
 end
 
 MLJModelInterface.fitted_params(::MLJFluxModel, fitresult) =
-    (chain=fitresult[1],)
+    (chain = fitresult[1],)
 
 
 # # SUPPORT FOR MLJ ITERATION API

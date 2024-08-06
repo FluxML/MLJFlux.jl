@@ -22,7 +22,7 @@ function ordinal_encoder_fit(X; featinds)
         (Set(1:length(feat_levels)) == Set(feat_levels)) && continue
         # Compute the dict using the given feature_mapper function
         mapping_matrix[i] =
-            Dict{Any, Integer}(value => index for (index, value) in enumerate(feat_levels))
+            Dict{Any, Integer}(value => float(index) for (index, value) in enumerate(feat_levels))
     end
     return mapping_matrix
 end
@@ -127,7 +127,7 @@ function embedding_transform(X, mapping_matrices)
         # Create the transformation function for each column
         if feat_name in keys(mapping_matrices)
             level2vector = mapping_matrices[feat_name]
-            new_multi_col = map(x -> level2vector[:, unwrap(x)], col)
+            new_multi_col = map(x -> level2vector[:, Int.(unwrap(x))], col)
             new_multi_col = [col for col in eachrow(hcat(new_multi_col...))]
             push!(new_cols, new_multi_col...)
             feat_names_with_inds = generate_new_feat_names(

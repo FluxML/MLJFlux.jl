@@ -37,7 +37,11 @@ end
     featnames = [:a, :b, :c]
     cat_inds = [1, 3]
     specified_featinds = [1, 2, 3]
-    @test_throws ArgumentError MLJFlux.check_mismatch_in_cat_feats(featnames, cat_inds, specified_featinds)
+    @test_throws ArgumentError MLJFlux.check_mismatch_in_cat_feats(
+        featnames,
+        cat_inds,
+        specified_featinds,
+    )
 
     # Test with empty specified_featinds
     featnames = [:a, :b, :c]
@@ -49,7 +53,11 @@ end
     featnames = [:a, :b, :c]
     cat_inds = []
     specified_featinds = [1, 2]
-    @test_throws ArgumentError MLJFlux.check_mismatch_in_cat_feats(featnames, cat_inds, specified_featinds)
+    @test_throws ArgumentError MLJFlux.check_mismatch_in_cat_feats(
+        featnames,
+        cat_inds,
+        specified_featinds,
+    )
 end
 
 @testset "Testing set_new_embedding_dims" begin
@@ -58,7 +66,7 @@ end
     cat_inds = [1, 2]
     num_levels = [3, 5]
     embedding_dims = Dict("color" => 0.5, "size" => 2)
-    
+
     result = MLJFlux.set_new_embedding_dims(featnames, cat_inds, num_levels, embedding_dims)
     @test result == [2, 2]  # Expected to be ceil(1.5) = 2 for "color", and exact 2 for "size"
 
@@ -70,12 +78,15 @@ end
     # Test case 3: All embedding dimensions are unspecified, default for all
     embedding_dims = Dict()
     result = MLJFlux.set_new_embedding_dims(featnames, cat_inds, num_levels, embedding_dims)
-    @test result == [MLJFlux.set_default_new_embedding_dim(3), MLJFlux.set_default_new_embedding_dim(5)]  # Default dimensions for both
+    @test result == [
+        MLJFlux.set_default_new_embedding_dim(3),
+        MLJFlux.set_default_new_embedding_dim(5),
+    ]  # Default dimensions for both
 end
 
 @testset "test get_cat_inds" begin
     X = (
-        C1 = [1, 2, 3, 4, 5],
+        C1 = [1.0, 2.0, 3.0, 4.0, 5.0],
         C2 = ['a', 'b', 'c', 'd', 'e'],
         C3 = ["b", "c", "d", "e", "f"],
         C4 = [1.0, 2.0, 3.0, 4.0, 5.0],
@@ -86,7 +97,7 @@ end
 
 @testset "Number of levels" begin
     X = (
-        C1 = [1, 2, 3, 4, 5],
+        C1 = [1.0, 2.0, 3.0, 4.0, 5.0],
         C2 = ['a', 'b', 'c', 'd', 'e'],
         C3 = ["b", "c", "d", "f", "f"],
         C4 = [1.0, 2.0, 3.0, 4.0, 5.0],
@@ -98,7 +109,7 @@ end
 
 @testset "Testing prepare_entityembs" begin
     X = (
-        Column1 = [1, 2, 3, 4, 5],
+        Column1 = [1.0, 2.0, 3.0, 4.0, 5.0],
         Column2 = categorical(['a', 'b', 'c', 'd', 'e']),
         Column3 = categorical(["b", "c", "d"]),
         Column4 = [1.0, 2.0, 3.0, 4.0, 5.0],

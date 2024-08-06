@@ -22,7 +22,7 @@ entityprops = [
         (index = 4, levels = 2, newdim = 2),
     ]
 
-    embedder = EntityEmbedder(entityprops, 4)
+    embedder = MLJFlux.EntityEmbedder(entityprops, 4)
 
     output = embedder(batch)
 
@@ -68,7 +68,7 @@ end
         ]
 
         cat_model = Chain(
-            EntityEmbedder(entityprops, 4),
+            MLJFlux.EntityEmbedder(entityprops, 4),
             Dense(9 => (ind == 1) ? 10 : 1),
             finalizer[ind],
         )
@@ -143,7 +143,7 @@ end
 @testset "Transparent when no categorical variables" begin
     entityprops = []
     numfeats = 4
-    embedder = EntityEmbedder(entityprops, 4)
+    embedder = MLJFlux.EntityEmbedder(entityprops, 4)
     output = embedder(batch)
     @test output == batch
 end
@@ -158,7 +158,7 @@ end
     ]
 
     X = (
-        Column1 = [1, 2, 3, 4, 5],
+        Column1 = [1.0, 2.0, 3.0, 4.0, 5.0],
         Column2 = categorical(['a', 'b', 'c', 'd', 'e']),
         Column3 = categorical(["b", "c", "d", "f", "f"], ordered = true),
         Column4 = [1.0, 2.0, 3.0, 4.0, 5.0],
@@ -230,7 +230,7 @@ end
     ]
     # table case
     X1 = (
-        Column1 = [1, 2, 3, 4, 5],
+        Column1 = [1.0, 2.0, 3.0, 4.0, 5.0],
         Column4 = [1.0, 2.0, 3.0, 4.0, 5.0],
         Column5 = randn(5),
     )
@@ -275,7 +275,7 @@ end
     ]
 
     X = (
-        Column1 = [1, 2, 3, 4, 5],
+        Column1 = [1.0, 2.0, 3.0, 4.0, 5.0],
         Column2 = categorical(['a', 'b', 'c', 'd', 'e']),
         Column3 = [1.0, 2.0, 3.0, 4.0, 5.0],
         Column4 = randn(5),
@@ -337,7 +337,7 @@ end
     ]
 
     X = (
-        Column1 = [1, 2, 3, 4, 5],
+        Column1 = [1.0, 2.0, 3.0, 4.0, 5.0],
         Column2 = categorical(['a', 'b', 'c', 'd', 'e']),
         Column3 = [1.0, 2.0, 3.0, 4.0, 5.0],
         Column4 = randn(5),

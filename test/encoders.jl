@@ -2,7 +2,7 @@
 
 @testset "ordinal encoder" begin
     X = (
-        Column1 = [1, 2, 3, 4, 5],
+        Column1 = [1.0, 2.0, 3.0, 4.0, 5.0],
         Column2 = categorical(['a', 'b', 'c', 'd', 'e']),
         Column3 = categorical(["b", "c", "d"]),
         Column4 = [1.0, 2.0, 3.0, 4.0, 5.0],
@@ -11,8 +11,8 @@
     Xenc = MLJFlux.ordinal_encoder_transform(X, map)
     @test map[2] == Dict('a' => 1, 'b' => 2, 'c' => 3, 'd' => 4, 'e' => 5)
     @test map[3] == Dict("b" => 1, "c" => 2, "d" => 3)
-    @test Xenc.Column1 == [1, 2, 3, 4, 5]
-    @test Xenc.Column2 == [1, 2, 3, 4, 5]
+    @test Xenc.Column1 == [1.0, 2.0, 3.0, 4.0, 5.0]
+    @test Xenc.Column2 == [1.0, 2.0, 3.0, 4.0, 5.0]
     @test Xenc.Column3 == [1, 2, 3]
     @test Xenc.Column4 == [1.0, 2.0, 3.0, 4.0, 5.0]
 
@@ -42,7 +42,7 @@ end
 
 @testset "embedding_transform works" begin
     X = (
-        Column1 = [1, 2, 3, 4, 5],
+        Column1 = [1.0, 2.0, 3.0, 4.0, 5.0],
         Column2 = categorical(['a', 'b', 'c', 'd', 'e']),
         Column3 = categorical(["b", "c", "d", "f", "f"]),
         Column4 = [1.0, 2.0, 3.0, 4.0, 5.0],
@@ -61,7 +61,7 @@ end
     X, _ = MLJFlux.ordinal_encoder_fit_transform(X; featinds = [2, 3])
     Xenc = MLJFlux.embedding_transform(X, mapping_matrices)
     @test Xenc == (
-        Column1 = [1, 2, 3, 4, 5],
+        Column1 = [1.0, 2.0, 3.0, 4.0, 5.0],
         Column2_1 = [1.0, 0.5, 0.7, 4.0, 5.0],
         Column2_2 = [0.4, 2.0, 3.0, 0.9, 0.2],
         Column2_3 = [0.1, 0.6, 0.8, 0.3, 0.4],

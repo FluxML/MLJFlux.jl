@@ -10,9 +10,15 @@
 # **Warning.** This demo includes some non-idiomatic use of MLJ to allow use of the
 # Flux.jl `Embedding` layer. It is not recommended for MLJ beginners.
 
-using Pkg #!md
-Pkg.activate(@__DIR__); #!md
-Pkg.instantiate(); #!md
+# The following code block assumes the current directory contains `Manifest.toml` and
+# `Project.toml` files tested for this demonstration, available
+# [here](https://github.com/FluxML/MLJFlux.jl/tree/dev/docs/src/extended_examples/spam_detection).
+# Otherwise, you can try running `using Pkg; Pkg.activate(temp=true)` instead, and
+# manually add the relevant packages to the temporary environment created.
+
+using Pkg
+Pkg.activate(@__DIR__);
+Pkg.instantiate();
 
 # ### Basic Imports
 using MLJ

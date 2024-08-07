@@ -199,7 +199,9 @@ as described in Entity Embeddings of Categorical Variables by Cheng Guo, Felix B
 
 const XDOC = """
 - `X` is either a `Matrix` or any table of input features (eg, a `DataFrame`) whose columns are of scitype
-  `Finite`; check column scitypes with `schema(X)`. If `X` is a `Matrix`, it is assumed to have columns corresponding to features and rows corresponding to observations. 
+  `Multiclass` or `OrderedFactor`; check column scitypes with `schema(X)`. 
+  If `X` is a `Matrix`, it is assumed to have columns corresponding to features and rows 
+  corresponding to observations. 
   In case any `Multiclass` or `OrderedFactor` columns appear in `X`, the constructed network will use an `EntityEmbedder` layer to transform them into dense vectors.
 """
 

@@ -74,7 +74,7 @@ function MLJModelInterface.fit(model::MLJFluxModel,
     # Get input properties
     shape = MLJFlux.shape(model, X, y)
     cat_inds = get_cat_inds(X)
-    pure_continuous_input = (length(cat_inds) == 0)
+    pure_continuous_input = isempty(cat_inds)
 
     # Decide whether to enable entity embeddings (e.g., ImageClassifier won't)
     enable_entity_embs = is_embedding_enabled_type(typeof(model)) && !pure_continuous_input

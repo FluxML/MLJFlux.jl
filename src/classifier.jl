@@ -47,7 +47,7 @@ end
 
 MLJModelInterface.metadata_model(
     NeuralNetworkClassifier,
-    input_scitype = Union{AbstractMatrix{Continuous}, Table(Finite)},
+    input_scitype = Union{AbstractMatrix{Continuous}, Table(Continuous,Finite)},
     target_scitype = AbstractVector{<:Finite},
     load_path = "MLJFlux.NeuralNetworkClassifier",
 )

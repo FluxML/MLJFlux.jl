@@ -80,6 +80,6 @@ function MLJModelInterface.predict(model::MultitargetNeuralNetworkRegressor,
 end
 
 MLJModelInterface.metadata_model(MultitargetNeuralNetworkRegressor,
-    input = Union{AbstractMatrix{Continuous}, Table(Finite)},
+    input = Union{AbstractMatrix{Continuous}, Table(Continuous,Finite)},
     target = Union{AbstractMatrix{Continuous}, Table(Continuous)},
     path = "MLJFlux.MultitargetNeuralNetworkRegressor")

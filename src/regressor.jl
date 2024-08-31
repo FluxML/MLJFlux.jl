@@ -30,7 +30,7 @@ function MLJModelInterface.predict(model::NeuralNetworkRegressor,
 end
 
 MLJModelInterface.metadata_model(NeuralNetworkRegressor,
-    input = Union{AbstractMatrix{Continuous}, Table(Finite)},
+    input = Union{AbstractMatrix{Continuous}, Table(Continuous,Finite)},
     target = AbstractVector{<:Continuous},
     path = "MLJFlux.NeuralNetworkRegressor")
 

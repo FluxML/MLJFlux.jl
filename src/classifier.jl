@@ -28,8 +28,8 @@ MLJFlux.fitresult(
     model::Union{NeuralNetworkClassifier, NeuralNetworkBinaryClassifier},
     chain,
     y,
-    ordinal_mappings=nothing,
-    embedding_matrices=nothing,
+    ordinal_mappings = nothing,
+    embedding_matrices = nothing,
 ) = (chain, MLJModelInterface.classes(y[1]), ordinal_mappings, embedding_matrices)
 
 function MLJModelInterface.predict(
@@ -47,7 +47,7 @@ end
 
 MLJModelInterface.metadata_model(
     NeuralNetworkClassifier,
-    input_scitype = Union{AbstractMatrix{Continuous}, Table(Continuous,Finite)},
+    input_scitype = Union{AbstractMatrix{Continuous}, Table(Continuous, Finite)},
     target_scitype = AbstractVector{<:Finite},
     load_path = "MLJFlux.NeuralNetworkClassifier",
 )
@@ -74,7 +74,7 @@ end
 
 MLJModelInterface.metadata_model(
     NeuralNetworkBinaryClassifier,
-    input_scitype = Union{AbstractMatrix{Continuous}, Table(Finite)},
+    input_scitype = Union{AbstractMatrix{Continuous}, Table(Continuous, Finite)},
     target_scitype = AbstractVector{<:Finite{2}},
     load_path = "MLJFlux.NeuralNetworkBinaryClassifier",
 )

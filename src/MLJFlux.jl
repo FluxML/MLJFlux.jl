@@ -36,4 +36,4 @@ export CUDALibs, CPU1
 export EntityEmbedder
 
 include("deprecated.jl")
-end
+end # module

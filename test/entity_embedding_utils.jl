@@ -6,14 +6,14 @@
         batch_size = 8,
         epochs = 100,
     )
-    @test MLJFlux.is_embedding_enabled_type(typeof(clf))
+    @test MLJFlux.is_embedding_enabled_type(clf)
 
     clf = MLJFlux.ImageClassifier(
         batch_size = 50,
         epochs = 10,
         rng = 123,
     )
-    @test !MLJFlux.is_embedding_enabled_type(typeof(clf))
+    @test !MLJFlux.is_embedding_enabled_type(clf)
 end
 
 

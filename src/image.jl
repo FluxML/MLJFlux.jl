@@ -10,6 +10,8 @@ function shape(model::ImageClassifier, X, y)
     end
     return (n_input, n_output, n_channels)
 end
+is_embedding_enabled_type(::ImageClassifier) = false
+
 
 build(model::ImageClassifier, rng, shape) =
     Flux.Chain(build(model.builder, rng, shape...),

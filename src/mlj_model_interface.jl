@@ -76,7 +76,7 @@ function MLJModelInterface.fit(model::MLJFluxModel,
     pure_continuous_input = isempty(cat_inds)
 
     # Decide whether to enable entity embeddings (e.g., ImageClassifier won't)
-    enable_entity_embs = is_embedding_enabled_type(typeof(model)) && !pure_continuous_input
+    enable_entity_embs = is_embedding_enabled_type(model) && !pure_continuous_input
 
     # Prepare entity embeddings inputs and encode X if entity embeddings enabled
     if enable_entity_embs
@@ -165,7 +165,7 @@ function MLJModelInterface.update(model::MLJFluxModel,
     # Decide whether to enable entity embeddings (e.g., ImageClassifier won't)
     cat_inds = get_cat_inds(X)
     pure_continuous_input = (length(cat_inds) == 0)
-    enable_entity_embs = is_embedding_enabled_type(typeof(model)) && !pure_continuous_input
+    enable_entity_embs = is_embedding_enabled_type(model) && !pure_continuous_input
 
     # Unpack cache from previous fit
     old_model, data, old_history, shape, regularized_optimiser, optimiser_state, rng, move =

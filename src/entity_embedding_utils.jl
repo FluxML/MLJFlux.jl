@@ -1,21 +1,7 @@
 """
 A file containing functions or constants used in the `fit` and `update` methods in `mlj_model_interface.jl` for setups supporting entity embeddings
 """
-
-EMBEDDING_ENABLED_MODELS = [
-    NeuralNetworkClassifier,
-    NeuralNetworkBinaryClassifier,
-    NeuralNetworkRegressor,
-    MultitargetNeuralNetworkRegressor,
-]
-
-EMBEDDING_ENABLED_MODELS_UNION = Union{EMBEDDING_ENABLED_MODELS...}
-
-
-# A function to check if a model is among those in EMBEDDING_ENABLED_MODELS
-function is_embedding_enabled_type(model_type)
-    return any(model_type <: T for T in EMBEDDING_ENABLED_MODELS)
-end
+is_empty_enabled_type(model) = false
 
 # function to set default new embedding dimension 
 function set_default_new_embedding_dim(numlevels)
@@ -135,10 +121,11 @@ end
 
 # Transformer for entity-enabled models
 function MLJModelInterface.transform(
-    transformer::EMBEDDING_ENABLED_MODELS_UNION,
+    transformer,
     fitresult,
     Xnew,
 )
+    is_embedding_enabled_type(transformer) || return Xnew
     ordinal_mappings, embedding_matrices = fitresult[3:4]
     Xnew = ordinal_encoder_transform(Xnew, ordinal_mappings)
     Xnew_transf = embedding_transform(Xnew, embedding_matrices)

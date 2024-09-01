@@ -16,7 +16,7 @@ function ordinal_encoder_fit(X; featinds)
 
     # 2. Use feature mapper to compute the mapping of each level in each column
     for i in featinds
-        feat_col = Tables.getcolumn(X, i)
+        feat_col = Tables.getcolumn(Tables.columns(X), i)
         feat_levels = levels(feat_col)
         # Check if feat levels is already ordinal encoded in which case we skip
         (Set([float(i) for i in 1:length(feat_levels)]) == Set(feat_levels)) && continue
@@ -59,7 +59,7 @@ function ordinal_encoder_transform(X, mapping_matrix)
     numfeats = length(feat_names)
     new_feats = []
     for ind in 1:numfeats
-        col = Tables.getcolumn(X, ind)
+        col = Tables.getcolumn(Tables.columns(X), ind)
 
         # Create the transformation function for each column
         if ind in keys(mapping_matrix)
@@ -125,7 +125,7 @@ function embedding_transform(X, mapping_matrices)
     new_feat_names = Symbol[]
     new_cols = []
     for feat_name in feat_names
-        col = Tables.getcolumn(X, feat_name)
+        col = Tables.getcolumn(Tables.columns(X), feat_name)
         # Create the transformation function for each column
         if feat_name in keys(mapping_matrices)
             level2vector = mapping_matrices[feat_name]

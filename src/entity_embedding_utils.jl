@@ -77,7 +77,7 @@ Returns the number of levels in each categorical column in the table `X`.
 function get_num_levels(X, cat_inds)
     num_levels = []
     for i in cat_inds
-        num_levels = push!(num_levels, length(levels(Tables.getcolumn(X, i))))
+        num_levels = push!(num_levels, length(levels(Tables.getcolumn(Tables.columns(X), i))))
     end
     return num_levels
 end

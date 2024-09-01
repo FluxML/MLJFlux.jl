@@ -1,7 +1,7 @@
 """
 A file containing functions or constants used in the `fit` and `update` methods in `mlj_model_interface.jl` for setups supporting entity embeddings
 """
-is_empty_enabled_type(model) = false
+is_embedding_enabled(model) = false
 
 # function to set default new embedding dimension 
 function set_default_new_embedding_dim(numlevels)
@@ -50,7 +50,10 @@ Returns the indices of the categorical columns in the table `X`.
 function get_cat_inds(X)
     # if input is a matrix; conclude no categorical columns
     Tables.istable(X) || return Int[]
-    types = [scitype(Tables.getcolumn(X, name)[1]) for name in Tables.schema(Tables.columns(X)).names]
+    types = [
+        scitype(Tables.getcolumn(X, name)[1]) for
+        name in Tables.schema(Tables.columns(X)).names
+    ]
     cat_inds = findall(x -> x <: Finite, types)
     return cat_inds
 end
@@ -123,7 +126,7 @@ end
 
 # Transformer for entity-enabled models
 function MLJModelInterface.transform(
-    transformer,
+    transformer::MLJFluxModel,
     fitresult,
     Xnew,
 )

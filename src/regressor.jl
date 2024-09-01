@@ -11,6 +11,7 @@ function shape(model::NeuralNetworkRegressor, X, y)
     n_ouput = 1
     return (n_input, 1)
 end
+is_embedding_enabled(::NeuralNetworkRegressor) = true
 
 
 build(model::NeuralNetworkRegressor, rng, shape) =
@@ -49,6 +50,7 @@ A private method that returns the shape of the input and output of the model for
 data `X` and `y`.
 """
 shape(model::MultitargetNeuralNetworkRegressor, X, y) = (ncols(X), ncols(y))
+is_embedding_enabled(::MultitargetNeuralNetworkRegressor) = true
 
 build(model::MultitargetNeuralNetworkRegressor, rng, shape) =
     build(model.builder, rng, shape...)

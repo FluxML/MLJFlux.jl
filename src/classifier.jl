@@ -13,6 +13,7 @@ function MLJFlux.shape(model::NeuralNetworkClassifier, X, y)
     n_input = Tables.schema(X).names |> length
     return (n_input, n_output)
 end
+is_embedding_enabled(::NeuralNetworkClassifier) = true
 
 # builds the end-to-end Flux chain needed, given the `model` and `shape`:
 MLJFlux.build(
@@ -59,6 +60,7 @@ function MLJFlux.shape(model::NeuralNetworkBinaryClassifier, X, y)
     n_input = Tables.schema(X).names |> length
     return (n_input, 1) # n_output is always 1 for a binary classifier
 end
+is_embedding_enabled(::NeuralNetworkBinaryClassifier) = true
 
 function MLJModelInterface.predict(
     model::NeuralNetworkBinaryClassifier,

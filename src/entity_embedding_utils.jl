@@ -66,7 +66,7 @@ Returns the indices of the categorical columns in the table `X`.
 function get_cat_inds(X)
     # if input is a matrix; conclude no categorical columns
     Tables.istable(X) || return Int[]
-    types = schema(X).scitypes
+    types = [scitype(Tables.getcolumn(X, name)[1]) for name in Tables.schema(X).names]
     cat_inds = findall(x -> x <: Finite, types)
     return cat_inds
 end

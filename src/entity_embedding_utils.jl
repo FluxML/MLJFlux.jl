@@ -19,10 +19,8 @@ end
 
 # function to set default new embedding dimension 
 function set_default_new_embedding_dim(numlevels)
-    # Either min_ratio or max_ratio of numlevels depending on >= threshold or < threshold
-    min_ratio, max_ratio = 0.2, 0.5
-    threshold = 20
-    return ceil(Int, ((numlevels >= threshold) ? min_ratio : max_ratio) * numlevels)
+    # Set default to the minimum of num_levels-1 and 10
+    return min(numlevels - 1, 10)
 end
 
 MISMATCH_INDS(wrong_feats) =

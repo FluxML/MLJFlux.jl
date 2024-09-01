@@ -210,8 +210,8 @@ const XDOC = """
 const EMBDOC = """
 - `embedding_dims` is a `Dict` whose keys are names of categorical features, given as symbols, and whose values are real numbers representing the desired dimensionality
   of the entity embeddings of such features. An integer value such as `7` would set the embedding dimensionality of such feature to `7`. Meanwhile, a float value such as `0.5` 
-  would set the embedding dimensionality of such column to `ceil(0.5 * number of levels in feature)`. Any unspecified features will by default have their values set to either 0.5
-  or 0.2 depending on whether the number of levels in the column is less than 20 or greater than 20 respectively.
+  would set the embedding dimensionality of such column to `ceil(0.5 * number of levels in feature)`. 
+  Any unspecified features will by default have their values set to min(number of levels - 1, 10).
 """
 
 const TRANSFORMDOC = """

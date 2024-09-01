@@ -18,12 +18,8 @@ end
 
 
 @testset "set_default_new_embedding_dim" begin
-    # <= 20
-    @test MLJFlux.set_default_new_embedding_dim(10) == 5
-    @test MLJFlux.set_default_new_embedding_dim(15) == 8
-    # > 20
-    @test MLJFlux.set_default_new_embedding_dim(25) == 5
-    @test MLJFlux.set_default_new_embedding_dim(30) == 6
+    @test MLJFlux.set_default_new_embedding_dim(15) == 10
+    @test MLJFlux.set_default_new_embedding_dim(9) == 8
 end
 
 @testset "check_mismatch_in_cat_feats" begin
@@ -73,7 +69,7 @@ end
     # Test case 2: Handling of unspecified dimensions with defaults
     embedding_dims = Dict("color" => 0.5)  # "size" is not specified
     result = MLJFlux.set_new_embedding_dims(featnames, cat_inds, num_levels, embedding_dims)
-    @test result == [2, MLJFlux.set_default_new_embedding_dim(5)]  # Expected to be ceil(1.5) = 2 for "color", and default 1 for "size"
+    @test result == [2, MLJFlux.set_default_new_embedding_dim(5)]  
 
     # Test case 3: All embedding dimensions are unspecified, default for all
     embedding_dims = Dict()

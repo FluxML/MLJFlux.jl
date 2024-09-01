@@ -58,7 +58,8 @@ end
 include("fit_utils.jl")
 include("entity_embedding_utils.jl")
 
-const ERR_BUILDER = "Builder does not appear to build an architecture compatible with supplied data. "
+const ERR_BUILDER = 
+    "Builder does not appear to build an architecture compatible with supplied data. "
 
 true_rng(model) = model.rng isa Integer ? Random.Xoshiro(model.rng) : model.rng
 
@@ -83,6 +84,8 @@ function MLJModelInterface.fit(model::MLJFluxModel,
     if enable_entity_embs
         X = convert_to_table(X)
         featnames = Tables.schema(X).names
+        # entityprops is (index = cat_inds[i], levels = num_levels[i], newdim = newdims[i]) 
+        # for each categorical feature
         entityprops, entityemb_output_dim =
             prepare_entityembs(X, featnames, cat_inds, model.embedding_dims)
         X, ordinal_mappings = ordinal_encoder_fit_transform(X; featinds = cat_inds)

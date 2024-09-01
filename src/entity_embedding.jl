@@ -34,10 +34,9 @@ julia> output = embedder(batch)
   0.9        0.1        0.4        0.5           0.8        0.9         1.0        1.1
  -0.847354  -0.847354  -1.66261   -1.66261      -1.66261   -1.66261    -0.847354  -0.847354
 ```
-"""
-
-# 1. Define layer struct to hold parameters
+""" # 1. Define layer struct to hold parameters
 struct EntityEmbedder{A1 <: AbstractVector, A2 <: AbstractVector, I <: Integer}
+    
     embedders::A1
     modifiers::A2       # applied on the input before passing it to the embedder
     numfeats::I

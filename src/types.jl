@@ -192,9 +192,10 @@ MMI.metadata_pkg.(
 )
 
 const MODELSUPPORTDOC = """
-This model supports categorical columns in the input table. If present, such columns are embedded into
+In addition to features with `Continuous` scientific element type, this model supports 
+categorical features in the input table. If present, such features are embedded into
 dense vectors by the use of an additional `EntityEmbedder` layer after the input 
-as described in as described in Entity Embeddings of Categorical Variables by Cheng Guo, Felix Berkhahn, arXiv, 2016.
+as described in Entity Embeddings of Categorical Variables by Cheng Guo, Felix Berkhahn arXiv, 2016.
 """
 
 const XDOC = """
@@ -206,15 +207,15 @@ const XDOC = """
 """
 
 const EMBDOC = """
-- `embedding_dims` is a `Dict` whose keys are column names of categorical columns, given as symbols, and whose values are real numbers representing the desired dimensionality
-  of the entity embeddings of such columns. An integer value such as `7` would set the embedding dimensionality of such columns to `7`. Meanwhile, a float value such as `0.5` 
-  would set the embedding dimensionality of such columns to `ceil(0.5 * number of levels in column)`. Any unspecified columns will by default have their values set to either 0.5
+- `embedding_dims` is a `Dict` whose keys are names of categorical features, given as symbols, and whose values are real numbers representing the desired dimensionality
+  of the entity embeddings of such features. An integer value such as `7` would set the embedding dimensionality of such feature to `7`. Meanwhile, a float value such as `0.5` 
+  would set the embedding dimensionality of such column to `ceil(0.5 * number of levels in feature)`. Any unspecified features will by default have their values set to either 0.5
   or 0.2 depending on whether the number of levels in the column is less than 20 or greater than 20 respectively.
 """
 
 const TRANSFORMDOC = """
-- transform(mach, Xnew): Assumes `Xnew` has the same schema as `X` and transforms the categorical columns of Xnew into dense vectors using the `EntityEmbedder` layer
-  present in the network. Does nothing in case the model was trained on an input `X` that lacks categorical columns.
+- transform(mach, Xnew): Assumes `Xnew` has the same schema as `X` and transforms the categorical features of Xnew into dense vectors using the `EntityEmbedder` layer
+  present in the network. Does nothing in case the model was trained on an input `X` that lacks categorical features.
 """
 # # DOCSTRINGS
 

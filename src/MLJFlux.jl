@@ -33,7 +33,6 @@ include("mlj_model_interface.jl")
 export NeuralNetworkRegressor, MultitargetNeuralNetworkRegressor
 export NeuralNetworkClassifier, NeuralNetworkBinaryClassifier, ImageClassifier
 export CUDALibs, CPU1
-export EntityEmbedder
 
 include("deprecated.jl")
 end # module

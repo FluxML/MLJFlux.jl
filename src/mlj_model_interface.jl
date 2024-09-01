@@ -55,8 +55,6 @@ end
 
 
 # # FIT AND  UPDATE
-include("fit_utils.jl")
-include("entity_embedding_utils.jl")
 
 const ERR_BUILDER = 
     "Builder does not appear to build an architecture compatible with supplied data. "

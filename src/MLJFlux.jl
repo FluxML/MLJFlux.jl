@@ -27,6 +27,8 @@ include("core.jl")
 include("regressor.jl")
 include("classifier.jl")
 include("image.jl")
+include("fit_utils.jl")
+include("entity_embedding_utils.jl")
 include("mlj_model_interface.jl")
 
 export NeuralNetworkRegressor, MultitargetNeuralNetworkRegressor

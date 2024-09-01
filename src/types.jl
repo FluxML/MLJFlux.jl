@@ -194,7 +194,7 @@ MMI.metadata_pkg.(
 const MODELSUPPORTDOC = """
 This model supports categorical columns in the input table. If present, such columns are embedded into
 dense vectors by the use of an additional `EntityEmbedder` layer after the input 
-as described in Entity Embeddings of Categorical Variables by Cheng Guo, Felix Berkhahn.
+as described in as described in Entity Embeddings of Categorical Variables by Cheng Guo, Felix Berkhahn, arXiv, 2016.
 """
 
 const XDOC = """

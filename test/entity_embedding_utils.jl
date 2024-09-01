@@ -1,20 +1,4 @@
 
-@testset "Embedding Enabled Types" begin
-    clf = MLJFlux.NeuralNetworkClassifier(
-        builder = MLJFlux.Short(n_hidden = 5, dropout = 0.2),
-        optimiser = Optimisers.Adam(0.01),
-        batch_size = 8,
-        epochs = 100,
-    )
-    @test MLJFlux.is_embedding_enabled_type(clf)
-
-    clf = MLJFlux.ImageClassifier(
-        batch_size = 50,
-        epochs = 10,
-        rng = 123,
-    )
-    @test !MLJFlux.is_embedding_enabled_type(clf)
-end
 
 
 @testset "set_default_new_embedding_dim" begin

@@ -56,8 +56,7 @@ end
 
 # # FIT AND  UPDATE
 
-const ERR_BUILDER = 
-    "Builder does not appear to build an architecture compatible with supplied data. "
+const ERR_BUILDER = "Builder does not appear to build an architecture compatible with supplied data. "
 
 true_rng(model) = model.rng isa Integer ? Random.Xoshiro(model.rng) : model.rng
 
@@ -76,18 +75,21 @@ function MLJModelInterface.fit(model::MLJFluxModel,
     pure_continuous_input = isempty(cat_inds)
 
     # Decide whether to enable entity embeddings (e.g., ImageClassifier won't)
-    enable_entity_embs = is_embedding_enabled_type(model) && !pure_continuous_input
+    enable_entity_embs = hasproperty(model, :embedding_dims) && !pure_continuous_input
 
     # Prepare entity embeddings inputs and encode X if entity embeddings enabled
+    featnames = []
     if enable_entity_embs
         X = convert_to_table(X)
         featnames = Tables.schema(X).names
-        # entityprops is (index = cat_inds[i], levels = num_levels[i], newdim = newdims[i]) 
-        # for each categorical feature
-        entityprops, entityemb_output_dim =
-            prepare_entityembs(X, featnames, cat_inds, model.embedding_dims)
-        X, ordinal_mappings = ordinal_encoder_fit_transform(X; featinds = cat_inds)
     end
+
+    # entityprops is (index = cat_inds[i], levels = num_levels[i], newdim = newdims[i]) 
+    # for each categorical feature
+    default_embedding_dims = enable_entity_embs ? model.embedding_dims : Dict{Symbol, Real}()
+    entityprops, entityemb_output_dim =
+        prepare_entityembs(X, featnames, cat_inds, default_embedding_dims)
+    X, ordinal_mappings = ordinal_encoder_fit_transform(X; featinds = cat_inds)
 
     ## Construct model chain
     chain =
@@ -122,6 +124,9 @@ function MLJModelInterface.fit(model::MLJFluxModel,
         data[2],
     )
 
+    # Extract embedding matrices
+    embedding_matrices = get_embedding_matrices(chain, cat_inds, featnames)
+
     # Prepare cache for potential warm restarts
     cache = (
         deepcopy(model),
@@ -132,26 +137,18 @@ function MLJModelInterface.fit(model::MLJFluxModel,
         optimiser_state,
         deepcopy(rng),
         move,
+        entityprops,
+        entityemb_output_dim,
+        ordinal_mappings,
+        featnames,
     )
 
-    # Extract embedding matrices
-    enable_entity_embs &&
-        (embedding_matrices = get_embedding_matrices(chain, cat_inds, featnames))
-
     # Prepare fitresult 
-    fitresult_args = (model, Flux.cpu(chain), y)
+    fitresult =
+        MLJFlux.fitresult(model, Flux.cpu(chain), y, ordinal_mappings, embedding_matrices)
 
     # Prepare report
     report = (training_losses = history,)
-
-    # Modify cache and fitresult if entity embeddings enabled
-    if enable_entity_embs
-        cache = (cache..., entityprops, entityemb_output_dim, ordinal_mappings, featnames)
-        fitresult =
-            MLJFlux.fitresult(fitresult_args..., ordinal_mappings, embedding_matrices)
-    else
-        fitresult = MLJFlux.fitresult(fitresult_args...,)
-    end
 
     return fitresult, cache, report
 end
@@ -165,15 +162,22 @@ function MLJModelInterface.update(model::MLJFluxModel,
     # Decide whether to enable entity embeddings (e.g., ImageClassifier won't)
     cat_inds = get_cat_inds(X)
     pure_continuous_input = (length(cat_inds) == 0)
-    enable_entity_embs = is_embedding_enabled_type(model) && !pure_continuous_input
+    enable_entity_embs = hasproperty(model, :embedding_dims) && !pure_continuous_input
 
     # Unpack cache from previous fit
-    old_model, data, old_history, shape, regularized_optimiser, optimiser_state, rng, move =
-        old_cache[1:8]
-    if enable_entity_embs
-        entityprops, entityemb_output_dim, ordinal_mappings, featnames = old_cache[9:12]
-        cat_inds = [prop.index for prop in entityprops]
-    end
+    old_model,
+    data,
+    old_history,
+    shape,
+    regularized_optimiser,
+    optimiser_state,
+    rng,
+    move,
+    entityprops,
+    entityemb_output_dim,
+    ordinal_mappings,
+    featnames = old_cache
+    cat_inds = [prop.index for prop in entityprops]
 
     # Extract chain
     old_chain = old_fitresult[1]
@@ -196,6 +200,8 @@ function MLJModelInterface.update(model::MLJFluxModel,
     else
         move = Mover(model.acceleration)
         rng = true_rng(model)
+        X = convert_to_table(X)
+        X = ordinal_encoder_transform(X, ordinal_mappings)
         if enable_entity_embs
             chain =
                 construct_model_chain_with_entityembs(
@@ -206,8 +212,6 @@ function MLJModelInterface.update(model::MLJFluxModel,
                     entityprops,
                     entityemb_output_dim,
                 )
-            X = convert_to_table(X)
-            X = ordinal_encoder_transform(X, ordinal_mappings)
         else
             chain = construct_model_chain(model, rng, shape, move)
         end
@@ -237,8 +241,7 @@ function MLJModelInterface.update(model::MLJFluxModel,
     end
 
     # Extract embedding matrices
-    enable_entity_embs &&
-        (embedding_matrices = get_embedding_matrices(chain, cat_inds, featnames))
+    embedding_matrices = get_embedding_matrices(chain, cat_inds, featnames)
 
     # Prepare cache, fitresult, and report
     cache = (
@@ -250,17 +253,10 @@ function MLJModelInterface.update(model::MLJFluxModel,
         optimiser_state,
         deepcopy(rng),
         move,
+        entityprops, entityemb_output_dim, ordinal_mappings, featnames,
     )
-
-    fitresult_args = (model, Flux.cpu(chain), y)
-    if enable_entity_embs
-        cache = (cache..., entityprops, entityemb_output_dim, ordinal_mappings, featnames)
-        fitresult =
-            MLJFlux.fitresult(fitresult_args..., ordinal_mappings, embedding_matrices)
-    else
-        fitresult = MLJFlux.fitresult(fitresult_args...)
-    end
-
+    fitresult =
+        MLJFlux.fitresult(model, Flux.cpu(chain), y, ordinal_mappings, embedding_matrices)
     report = (training_losses = history,)
 
     return fitresult, cache, report

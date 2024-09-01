@@ -120,7 +120,7 @@ each level in each categorical columns using the columns of the matrix.
 This is used with the embedding matrices of the entity embedding layer in entity enabled models to implement entity embeddings.
 """
 function embedding_transform(X, mapping_matrices)
-    isnothing(mapping_matrices) && return X
+    (isempty(mapping_matrices)) && return X
     feat_names = Tables.schema(X).names
     new_feat_names = Symbol[]
     new_cols = []

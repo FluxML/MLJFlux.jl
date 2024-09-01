@@ -63,7 +63,8 @@ Returns the number of levels in each categorical column in the table `X`.
 function get_num_levels(X, cat_inds)
     num_levels = []
     for i in cat_inds
-        num_levels = push!(num_levels, length(levels(Tables.getcolumn(Tables.columns(X), i))))
+        num_levels =
+            push!(num_levels, length(levels(Tables.getcolumn(Tables.columns(X), i))))
     end
     return num_levels
 end
@@ -79,7 +80,8 @@ function prepare_entityembs(X, featnames, cat_inds, embedding_dims)
         i in eachindex(cat_inds)
     ]
     # 2. Compute entityemb_output_dim
-    entityemb_output_dim = sum(newdims) + numfeats - length(cat_inds)
+    sum_newdims = length(newdims) == 0 ? 0 : sum(newdims)
+    entityemb_output_dim = sum_newdims + numfeats - length(cat_inds)
     return entityprops, entityemb_output_dim
 end
 
@@ -125,7 +127,8 @@ function MLJModelInterface.transform(
     fitresult,
     Xnew,
 )
-    is_embedding_enabled_type(transformer) || return Xnew
+    # if it doesn't have the property its not an entity-enabled model
+    hasproperty(transformer, :embedding_dims) || return Xnew
     ordinal_mappings, embedding_matrices = fitresult[3:4]
     Xnew = ordinal_encoder_transform(Xnew, ordinal_mappings)
     Xnew_transf = embedding_transform(Xnew, embedding_matrices)

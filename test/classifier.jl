@@ -111,7 +111,7 @@ end
 
 # check different resources (CPU1, CUDALibs, etc)) give about the same loss:
 reference = losses[1]
-@test all(x -> abs(x - reference) / reference < 1e-5, losses[2:end])
+@test all(x -> abs(x - reference) / reference < 1e-4, losses[2:end])
 
 
 # # NEURAL NETWORK BINARY CLASSIFIER

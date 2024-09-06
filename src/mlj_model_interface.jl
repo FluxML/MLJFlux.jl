@@ -107,7 +107,7 @@ function MLJModelInterface.fit(model::MLJFluxModel,
         rethrow()
     end
 
-    data = move.(collate(model, X, y))
+    data = move.(collate(model, X, y, verbosity))
     x = data[1][1]
 
     try

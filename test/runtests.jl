@@ -3,7 +3,7 @@ using Tables
 using MLJBase
 import MLJFlux
 using CategoricalArrays
-using ScientificTypes: coerce, Multiclass, OrderedFactor
+using MLJBase
 using ColorTypes
 using Flux
 import Random

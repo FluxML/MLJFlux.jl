@@ -263,6 +263,21 @@ function MLJModelInterface.update(model::MLJFluxModel,
 
 end
 
+
+# Transformer for entity-enabled models
+function MLJModelInterface.transform(
+    transformer::MLJFluxModel,
+    fitresult,
+    Xnew,
+)
+    # if it doesn't have the property its not an entity-enabled model
+    is_embedding_enabled(transformer) || return Xnew
+    ordinal_mappings, embedding_matrices = fitresult[3:4]
+    Xnew = ordinal_encoder_transform(Xnew, ordinal_mappings)
+    Xnew_transf = embedding_transform(Xnew, embedding_matrices)
+    return Xnew_transf
+end
+
 MLJModelInterface.fitted_params(::MLJFluxModel, fitresult) =
     (chain = fitresult[1],)
 

@@ -155,4 +155,170 @@ end
     )
 end
 
+
+@testset "layer does not exist for continuous input and transform does nothing" begin
+    models = [
+        MLJFlux.NeuralNetworkBinaryClassifier,
+        MLJFlux.NeuralNetworkClassifier,
+        MLJFlux.NeuralNetworkRegressor,
+        MLJFlux.MultitargetNeuralNetworkRegressor,
+    ]
+    # table case
+    X1 = (
+        Column1 = [1.0, 2.0, 3.0, 4.0, 5.0],
+        Column4 = [1.0, 2.0, 3.0, 4.0, 5.0],
+        Column5 = randn(5),
+    )
+    # matrix case
+    X2 = rand(5, 5)
+    Xs = [X1, X2]
+
+    y = categorical([0, 1, 0, 1, 1])
+    yreg = [0.1, -0.3, 0.2, 0.8, 0.9]
+    ys = [y, y, yreg, yreg]
+    for j in eachindex(Xs)
+        for i in eachindex(models)
+            clf = models[1](
+                builder = MLJFlux.Short(n_hidden = 5, dropout = 0.2, σ = relu),
+                optimiser = Optimisers.Adam(0.01),
+                batch_size = 8,
+                epochs = 100,
+                acceleration = CUDALibs(),
+                optimiser_changes_trigger_retraining = true,
+            )
+
+            mach = machine(clf, Xs[j], ys[1])
+
+            fit!(mach, verbosity = 0)
+
+            @test typeof(fitted_params(mach).chain.layers[1][1]) ==
+                  typeof(Dense(3 => 5, relu))
+
+            @test transform(mach, Xs[j]) == Xs[j]
+        end
+    end
+end
+
+@testset "transform works properly" begin
+    # In this test we assumed that get_embedding_weights works
+    # properly which has been tested.
+    models = [
+        MLJFlux.NeuralNetworkBinaryClassifier,
+        MLJFlux.NeuralNetworkClassifier,
+        MLJFlux.NeuralNetworkRegressor,
+        MLJFlux.MultitargetNeuralNetworkRegressor,
+    ]
+
+    X = (
+        Column1 = [1.0, 2.0, 3.0, 4.0, 5.0],
+        Column2 = categorical(['a', 'b', 'c', 'd', 'e']),
+        Column3 = [1.0, 2.0, 3.0, 4.0, 5.0],
+        Column4 = randn(5),
+        Column5 = categorical(["group1", "group1", "group2", "group2", "group3"]),
+    )
+
+    y = categorical([0, 1, 0, 1, 1])
+    yreg = [0.1, -0.3, 0.2, 0.8, 0.9]
+    ys = [y, y, yreg, yreg]
+
+    for i in eachindex(models)
+        clf = models[1](
+            builder = MLJFlux.Short(n_hidden = 5, dropout = 0.2),
+            optimiser = Optimisers.Adam(0.01),
+            batch_size = 8,
+            epochs = 100,
+            acceleration = CUDALibs(),
+            optimiser_changes_trigger_retraining = true,
+            embedding_dims = Dict(:Column2 => 4, :Column5 => 2),
+        )
+
+        mach = machine(clf, X, ys[1])
+        fit!(mach, verbosity = 0)
+        Xenc = transform(mach, X)
+        mat_col2 =
+            hcat(
+                [
+                    collect(Xenc.Column2_1),
+                    collect(Xenc.Column2_2),
+                    collect(Xenc.Column2_3),
+                    collect(Xenc.Column2_4),
+                ]...,
+            )'
+        mat_col5 = hcat(
+            [
+                collect(Xenc.Column5_1),
+                collect(Xenc.Column5_2),
+            ]...,
+        )'[:, [1, 3, 5]]
+
+        mapping_matrices = MLJFlux.get_embedding_matrices(
+            fitted_params(mach).chain,
+            [2, 5],
+            [:Column1, :Column2, :Column3, :Column4, :Column5],
+        )
+        mat_col2_golden = mapping_matrices[:Column2]
+        mat_col5_golden = mapping_matrices[:Column5]
+        @test mat_col2 == mat_col2_golden
+        @test mat_col5 == mat_col5_golden
+    end
+end
+
+@testset "fit, refit and predict work tests" begin
+    models = [
+        MLJFlux.NeuralNetworkBinaryClassifier,
+        MLJFlux.NeuralNetworkClassifier,
+        MLJFlux.NeuralNetworkRegressor,
+        MLJFlux.MultitargetNeuralNetworkRegressor,
+    ]
+
+    X = (
+        Column1 = [1.0, 2.0, 3.0, 4.0, 5.0],
+        Column2 = categorical(['a', 'b', 'c', 'd', 'e']),
+        Column3 = [1.0, 2.0, 3.0, 4.0, 5.0],
+        Column4 = randn(5),
+        Column5 = categorical(["group1", "group1", "group2", "group2", "group3"]),
+    )
+
+    y = categorical([0, 1, 0, 1, 1])
+    yreg = [0.1, -0.3, 0.2, 0.8, 0.9]
+    ys = [y, y, yreg, yreg]
+
+    for i in eachindex(models)
+        clf = models[1](
+            builder = MLJFlux.Short(n_hidden = 5, dropout = 0.2),
+            optimiser = Optimisers.Adam(0.01),
+            batch_size = 8,
+            epochs = 2,
+            acceleration = CUDALibs(),
+            optimiser_changes_trigger_retraining = true,
+            embedding_dims = Dict(:Column2 => 4, :Column5 => 2),
+        )
+
+        mach = machine(clf, X, ys[1])
+        @test_throws MLJBase.NotTrainedError mapping_matrices =
+            MLJFlux.get_embedding_matrices(
+                fitted_params(mach).chain,
+                [2, 5],
+                [:Column1, :Column2, :Column3, :Column4, :Column5],
+            )
+        fit!(mach, verbosity = 0)
+        mapping_matrices_fit = MLJFlux.get_embedding_matrices(
+            fitted_params(mach).chain,
+            [2, 5],
+            [:Column1, :Column2, :Column3, :Column4, :Column5],
+        )
+        clf.epochs = clf.epochs + 3
+        clf.optimiser = Optimisers.Adam(clf.optimiser.eta / 2)
+        fit!(mach, verbosity = 0)
+        mapping_matrices_double_fit = MLJFlux.get_embedding_matrices(
+            fitted_params(mach).chain,
+            [2, 5],
+            [:Column1, :Column2, :Column3, :Column4, :Column5],
+        )
+        @test mapping_matrices_fit != mapping_matrices_double_fit
+        # Try model prediction 
+        Xpred = predict(mach, X)
+    end
+end
+
 true

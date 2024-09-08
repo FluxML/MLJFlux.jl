@@ -50,9 +50,10 @@ Returns the indices of the categorical columns in the table `X`.
 function get_cat_inds(X)
     # if input is a matrix; conclude no categorical columns
     Tables.istable(X) || return Int[]
+    Xcol = Tables.columns(X)
     types = [
-        scitype(Tables.getcolumn(X, name)[1]) for
-        name in Tables.schema(Tables.columns(X)).names
+        scitype(Tables.getcolumn(Xcol, name)[1]) for
+        name in Tables.schema(Xcol).names
     ]
     cat_inds = findall(x -> x <: Finite, types)
     return cat_inds
@@ -123,17 +124,3 @@ function get_embedding_matrices(chain, cat_inds, featnames)
 end
 
 
-
-# Transformer for entity-enabled models
-function MLJModelInterface.transform(
-    transformer::MLJFluxModel,
-    fitresult,
-    Xnew,
-)
-    # if it doesn't have the property its not an entity-enabled model
-    hasproperty(transformer, :embedding_dims) || return Xnew
-    ordinal_mappings, embedding_matrices = fitresult[3:4]
-    Xnew = ordinal_encoder_transform(Xnew, ordinal_mappings)
-    Xnew_transf = embedding_transform(Xnew, embedding_matrices)
-    return Xnew_transf
-end

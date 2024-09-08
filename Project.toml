@@ -40,7 +40,6 @@ StatisticalMeasures = "a19d573c-0a75-4610-95b3-7071388c7541"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 cuDNN = "02a925ec-e4fe-4b08-9a7e-0d78e3d38ccd"
-ScientificTypes = "321657f4-b219-11e9-178b-2701a2544e81"
 
 [targets]
-test = ["CUDA", "cuDNN", "LinearAlgebra", "MLJBase", "Random", "StableRNGs", "StatisticalMeasures", "StatsBase", "ScientificTypes", "Test"]
+test = ["CUDA", "cuDNN", "LinearAlgebra", "MLJBase", "Random", "StableRNGs", "StatisticalMeasures", "StatsBase", "Test"]

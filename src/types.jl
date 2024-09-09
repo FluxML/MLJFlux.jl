@@ -1,142 +1,230 @@
 abstract type MLJFluxProbabilistic <: MLJModelInterface.Probabilistic end
 abstract type MLJFluxDeterministic <: MLJModelInterface.Deterministic end
 
-const MLJFluxModel = Union{MLJFluxProbabilistic,MLJFluxDeterministic}
+const MLJFluxModel = Union{MLJFluxProbabilistic, MLJFluxDeterministic}
 
-for Model in [:NeuralNetworkClassifier, :NeuralNetworkBinaryClassifier, :ImageClassifier]
+for Model in [:NeuralNetworkClassifier, :NeuralNetworkBinaryClassifier]
 
-  # default settings that are not equal across models
-  default_builder_ex =
-    Model == :ImageClassifier ? :(image_builder(VGGHack)) : Short()
-  default_finaliser =
-    Model == :NeuralNetworkBinaryClassifier ? Flux.σ : Flux.softmax
-  default_loss =
-    Model == :NeuralNetworkBinaryClassifier ? Flux.binarycrossentropy : Flux.crossentropy
+    # default settings that are not equal across models
+    default_finaliser =
+        Model == :NeuralNetworkBinaryClassifier ? Flux.σ : Flux.softmax
+    default_loss =
+        Model == :NeuralNetworkBinaryClassifier ? Flux.binarycrossentropy :
+        Flux.crossentropy
 
-  quote
-      mutable struct $Model{B,F,O,L} <: MLJFluxProbabilistic
-          builder::B
-          finaliser::F
-          optimiser::O   # mutable struct from Flux/src/optimise/optimisers.jl
-          loss::L        # can be called as in `loss(yhat, y)`
-          epochs::Int    # number of epochs
-          batch_size::Int  # size of a batch
-          lambda::Float64  # regularization strength
-          alpha::Float64   # regularizaton mix (0 for all l2, 1 for all l1)
-          rng::Union{AbstractRNG,Int64}
-          optimiser_changes_trigger_retraining::Bool
-          acceleration::AbstractResource  # eg, `CPU1()` or `CUDALibs()`
-      end
+    quote
+        mutable struct $Model{B, F, O, L} <: MLJFluxProbabilistic
+            builder::B
+            finaliser::F
+            optimiser::O   # mutable struct from Flux/src/optimise/optimisers.jl
+            loss::L        # can be called as in `loss(yhat, y)`
+            epochs::Int    # number of epochs
+            batch_size::Int  # size of a batch
+            lambda::Float64  # regularization strength
+            alpha::Float64   # regularizaton mix (0 for all l2, 1 for all l1)
+            rng::Union{AbstractRNG, Int64}
+            optimiser_changes_trigger_retraining::Bool
+            acceleration::AbstractResource  # eg, `CPU1()` or `CUDALibs()`
+            embedding_dims::Dict{Symbol, Real}
+        end
 
-      function $Model(
-          ;builder::B=$default_builder_ex,
-          finaliser::F=$default_finaliser,
-          optimiser::O=Optimisers.Adam(),
-          loss::L=$default_loss,
-          epochs=10,
-          batch_size=1,
-          lambda=0,
-          alpha=0,
-          rng=Random.default_rng(),
-          optimiser_changes_trigger_retraining=false,
-          acceleration=CPU1(),
-          ) where {B,F,O,L}
+        function $Model(
+            ; builder::B = Short(),
+            finaliser::F = $default_finaliser,
+            optimiser::O = Optimisers.Adam(),
+            loss::L = $default_loss,
+            epochs = 10,
+            batch_size = 1,
+            lambda = 0,
+            alpha = 0,
+            rng = Random.default_rng(),
+            optimiser_changes_trigger_retraining = false,
+            acceleration = CPU1(),
+            embedding_dims = Dict{Symbol, Real}(),
+        ) where {B, F, O, L}
 
-          model = $Model{B,F,O,L}(
-              builder,
-              finaliser,
-              optimiser,
-              loss,
-              epochs,
-              batch_size,
-              lambda,
-              alpha,
-              rng,
-              optimiser_changes_trigger_retraining,
-              acceleration,
-          )
+            model = $Model{B, F, O, L}(
+                builder,
+                finaliser,
+                optimiser,
+                loss,
+                epochs,
+                batch_size,
+                lambda,
+                alpha,
+                rng,
+                optimiser_changes_trigger_retraining,
+                acceleration,
+                embedding_dims,
+            )
 
-          message = clean!(model)
-          isempty(message) || @warn message
+            message = clean!(model)
+            isempty(message) || @warn message
 
-          return model
-      end
+            return model
+        end
 
-  end |> eval
+    end |> eval
 
 end
 
-
 for Model in [:NeuralNetworkRegressor, :MultitargetNeuralNetworkRegressor]
 
-  quote
-      mutable struct $Model{B,O,L} <: MLJFluxDeterministic
-          builder::B
-          optimiser::O  # mutable struct from Flux/src/optimise/optimisers.jl
-          loss::L       # can be called as in `loss(yhat, y)`
-          epochs::Int   # number of epochs
-          batch_size::Int # size of a batch
-          lambda::Float64 # regularization strength
-          alpha::Float64  # regularizaton mix (0 for all l2, 1 for all l1)
-          rng::Union{AbstractRNG,Integer}
-          optimiser_changes_trigger_retraining::Bool
-          acceleration::AbstractResource  # eg, `CPU1()` or `CUDALibs()`
-      end
+    quote
+        mutable struct $Model{B, O, L} <: MLJFluxDeterministic
+            builder::B
+            optimiser::O  # mutable struct from Flux/src/optimise/optimisers.jl
+            loss::L       # can be called as in `loss(yhat, y)`
+            epochs::Int   # number of epochs
+            batch_size::Int # size of a batch
+            lambda::Float64 # regularization strength
+            alpha::Float64  # regularizaton mix (0 for all l2, 1 for all l1)
+            rng::Union{AbstractRNG, Integer}
+            optimiser_changes_trigger_retraining::Bool
+            acceleration::AbstractResource  # eg, `CPU1()` or `CUDALibs()`
+            embedding_dims::Dict{Symbol, Real}
+        end
 
-      function $Model(
-          ; builder::B=Linear(),
-          optimiser::O=Optimisers.Adam(),
-          loss::L=Flux.mse,
-          epochs=10,
-          batch_size=1,
-          lambda=0,
-          alpha=0,
-          rng=Random.default_rng(),
-          optimiser_changes_trigger_retraining=false,
-          acceleration=CPU1(),
-          ) where {B,O,L}
+        function $Model(
+            ; builder::B = Linear(),
+            optimiser::O = Optimisers.Adam(),
+            loss::L = Flux.mse,
+            epochs = 10,
+            batch_size = 1,
+            lambda = 0,
+            alpha = 0,
+            rng = Random.default_rng(),
+            optimiser_changes_trigger_retraining = false,
+            acceleration = CPU1(),
+            embedding_dims = Dict{Symbol, Real}(),
+        ) where {B, O, L}
 
-          model = $Model{B,O,L}(
-              builder,
-              optimiser,
-              loss,
-              epochs,
-              batch_size,
-              lambda,
-              alpha,
-              rng,
-              optimiser_changes_trigger_retraining,
-              acceleration,
-          )
+            model = $Model{B, O, L}(
+                builder,
+                optimiser,
+                loss,
+                epochs,
+                batch_size,
+                lambda,
+                alpha,
+                rng,
+                optimiser_changes_trigger_retraining,
+                acceleration,
+                embedding_dims,
+            )
 
-          message = clean!(model)
-          isempty(message) || @warn message
+            message = clean!(model)
+            isempty(message) || @warn message
 
-          return model
-      end
+            return model
+        end
 
-  end |> eval
+    end |> eval
 
 end
 
 const Regressor =
-  Union{NeuralNetworkRegressor,MultitargetNeuralNetworkRegressor}
+    Union{NeuralNetworkRegressor, MultitargetNeuralNetworkRegressor}
+
+
+# Separately define the ImageClassifier
+mutable struct ImageClassifier{B, F, O, L} <: MLJFluxProbabilistic
+    builder::B
+    finaliser::F
+    optimiser::O
+    loss::L
+    epochs::Int
+    batch_size::Int
+    lambda::Float64
+    alpha::Float64
+    rng::Union{AbstractRNG, Int64}
+    optimiser_changes_trigger_retraining::Bool
+    acceleration::AbstractResource
+end
+
+function ImageClassifier(
+    ; builder::B = image_builder(VGGHack),
+    finaliser::F = Flux.softmax,
+    optimiser::O = Optimisers.Adam(),
+    loss::L = Flux.crossentropy,
+    epochs = 10,
+    batch_size = 1,
+    lambda = 0,
+    alpha = 0,
+    rng = Random.default_rng(),
+    optimiser_changes_trigger_retraining = false,
+    acceleration = CPU1(),
+) where {B, F, O, L}
+    model = ImageClassifier{B, F, O, L}(
+        builder,
+        finaliser,
+        optimiser,
+        loss,
+        epochs,
+        batch_size,
+        lambda,
+        alpha,
+        rng,
+        optimiser_changes_trigger_retraining,
+        acceleration,
+    )
+
+    message = clean!(model)
+    isempty(message) || @warn message
+
+    return model
+end
+
 
 MMI.metadata_pkg.(
-  (
-      NeuralNetworkRegressor,
-      MultitargetNeuralNetworkRegressor,
-      NeuralNetworkClassifier,
-      ImageClassifier,
-      NeuralNetworkBinaryClassifier,
-  ),
-    name="MLJFlux",
-    uuid="094fc8d1-fd35-5302-93ea-dabda2abf845",
-    url="https://github.com/alan-turing-institute/MLJFlux.jl",
-    julia=true,
-    license="MIT",
+    (
+        NeuralNetworkRegressor,
+        MultitargetNeuralNetworkRegressor,
+        NeuralNetworkClassifier,
+        ImageClassifier,
+        NeuralNetworkBinaryClassifier,
+    ),
+    name = "MLJFlux",
+    uuid = "094fc8d1-fd35-5302-93ea-dabda2abf845",
+    url = "https://github.com/alan-turing-institute/MLJFlux.jl",
+    julia = true,
+    license = "MIT",
 )
 
+const MODELSUPPORTDOC = """
+In addition to features with `Continuous` scientific element type, this model supports
+categorical features in the input table. If present, such features are embedded into dense
+vectors by the use of an additional `EntityEmbedder` layer after the input, as described in
+Entity Embeddings of Categorical Variables by Cheng Guo, Felix Berkhahn arXiv, 2016.
+"""
+
+const XDOC = """
+
+- `X` provides input features and is either: (i) a `Matrix` with `Continuous` element
+  scitype (typically `Float32`); or (ii) a table of input features (eg, a `DataFrame`)
+  whose columns have `Continuous`, `Multiclass` or `OrderedFactor` element scitype; check
+  column scitypes with `schema(X)`.  If any `Multiclass` or `OrderedFactor` features
+  appear, the constructed network will use an `EntityEmbedder` layer to transform
+  them into dense vectors. If `X` is a `Matrix`, it is assumed that columns correspond to
+  features and rows corresponding to observations.
+
+"""
+
+const EMBDOC = """
+- `embedding_dims`: a `Dict` whose keys are names of categorical features, given as
+  symbols, and whose values are numbers representing the desired dimensionality of the
+  entity embeddings of such features: an integer value of `7`, say, sets the embedding
+  dimensionality to `7`; a float value of `0.5`, say, sets the embedding dimensionality to
+  `ceil(0.5 * c)`, where `c` is the number of feature levels.  Unspecified feature
+  dimensionality defaults to `min(c - 1, 10)`.
+"""
+
+const TRANSFORMDOC = """
+- `transform(mach, Xnew)`: Assuming `Xnew` has the same schema as `X`, transform the
+  categorical features of `Xnew` into dense `Continuous` vectors using the
+  `MLJFlux.EntityEmbedder` layer present in the network. Does nothing in case the model
+  was trained on an input `X` that lacks categorical features.
+"""
 
 # # DOCSTRINGS
 
@@ -149,6 +237,8 @@ given a table of `Continuous` features. Users provide a recipe for constructing
  the network, based on properties of the data that is encountered, by specifying
  an appropriate `builder`. See MLJFlux documentation for more on builders.
 
+$MODELSUPPORTDOC
+
 # Training data
 
 In MLJ or MLJBase, bind an instance `model` to data with
@@ -157,8 +247,7 @@ In MLJ or MLJBase, bind an instance `model` to data with
 
 Here:
 
-- `X` is either a `Matrix` or any table of input features (eg, a `DataFrame`) whose columns are of scitype
-  `Continuous`; check column scitypes with `schema(X)`. If `X` is a `Matrix`, it is assumed to have columns corresponding to features and rows corresponding to observations.
+$XDOC
 
 - `y` is the target, which can be any `AbstractVector` whose element scitype is `Multiclass`
   or `OrderedFactor`; check the scitype with `scitype(y)`
@@ -227,6 +316,7 @@ Train the machine with `fit!(mach, rows=...)`.
 - `finaliser=Flux.softmax`: The final activation function of the neural network (applied
   after the network defined by `builder`). Defaults to `Flux.softmax`.
 
+$EMBDOC
 
 # Operations
 
@@ -236,6 +326,7 @@ Train the machine with `fit!(mach, rows=...)`.
 - `predict_mode(mach, Xnew)`: Return the modes of the probabilistic predictions returned
   above.
 
+$TRANSFORMDOC
 
 # Fitted parameters
 
@@ -338,6 +429,8 @@ given a table of `Continuous` features. Users provide a recipe for constructing
  the network, based on properties of the data that is encountered, by specifying
  an appropriate `builder`. See MLJFlux documentation for more on builders.
 
+$MODELSUPPORTDOC
+
 # Training data
 
 In MLJ or MLJBase, bind an instance `model` to data with
@@ -346,9 +439,7 @@ In MLJ or MLJBase, bind an instance `model` to data with
 
 Here:
 
-- `X` is either a `Matrix` or any table of input features (eg, a `DataFrame`) whose columns are of scitype
-  `Continuous`; check column scitypes with `schema(X)`. If `X` is a `Matrix`,
-  it is assumed to have columns corresponding to features and rows corresponding to observations.
+$XDOC
 
 - `y` is the target, which can be any `AbstractVector` whose element scitype is `Multiclass{2}`
   or `OrderedFactor{2}`; check the scitype with `scitype(y)`
@@ -418,6 +509,7 @@ Train the machine with `fit!(mach, rows=...)`.
 - `finaliser=Flux.σ`: The final activation function of the neural network (applied
   after the network defined by `builder`). Defaults to `Flux.σ`.
 
+$EMBDOC
 
 # Operations
 
@@ -426,6 +518,8 @@ Train the machine with `fit!(mach, rows=...)`.
 
 - `predict_mode(mach, Xnew)`: Return the modes of the probabilistic predictions returned
   above.
+
+$TRANSFORMDOC
 
 
 # Fitted parameters
@@ -791,6 +885,7 @@ predict a `Continuous` target, given a table of `Continuous` features. Users pro
 recipe for constructing the network, based on properties of the data that is encountered,
 by specifying an appropriate `builder`. See MLJFlux documentation for more on builders.
 
+$MODELSUPPORTDOC
 
 # Training data
 
@@ -800,8 +895,8 @@ In MLJ or MLJBase, bind an instance `model` to data with
 
 Here:
 
-- `X` is either a `Matrix` or any table of input features (eg, a `DataFrame`) whose columns are of scitype
-  `Continuous`; check column scitypes with `schema(X)`. If `X` is a `Matrix`, it is assumed to have columns corresponding to features and rows corresponding to observations.
+$XDOC
+
 - `y` is the target, which can be any `AbstractVector` whose element
   scitype is `Continuous`; check the scitype with `scitype(y)`
 
@@ -859,12 +954,14 @@ Train the machine with `fit!(mach, rows=...)`.
 - `acceleration::AbstractResource=CPU1()`: Defines on what hardware training is done. For
   Training on GPU, use `CUDALibs()`.
 
+$EMBDOC
 
 # Operations
 
 - `predict(mach, Xnew)`: return predictions of the target given new features `Xnew`, which
   should have the same scitype as `X` above.
 
+$TRANSFORMDOC
 
 # Fitted parameters
 
@@ -1020,6 +1117,8 @@ table of `Continuous` features. Users provide a recipe for constructing the netw
 on properties of the data that is encountered, by specifying an appropriate `builder`. See
 MLJFlux documentation for more on builders.
 
+$MODELSUPPORTDOC
+
 # Training data
 
 In MLJ or MLJBase, bind an instance `model` to data with
@@ -1028,10 +1127,7 @@ In MLJ or MLJBase, bind an instance `model` to data with
 
 Here:
 
-- `X` is either a `Matrix` or any table of input features (eg, a `DataFrame`) whose
-  columns are of scitype `Continuous`; check column scitypes with `schema(X)`. If `X` is a
-  `Matrix`, it is assumed to have columns corresponding to features and rows corresponding
-  to observations.
+$XDOC
 
 - `y` is the target, which can be any table or matrix of output targets whose element
   scitype is `Continuous`; check column scitypes with `schema(y)`. If `y` is a `Matrix`,
@@ -1090,6 +1186,7 @@ Here:
 - `acceleration::AbstractResource=CPU1()`: Defines on what hardware training is done. For
   Training on GPU, use `CUDALibs()`.
 
+$EMBDOC
 
 # Operations
 
@@ -1097,6 +1194,7 @@ Here:
   features `Xnew` having the same scitype as `X` above. Predictions are
   deterministic.
 
+$TRANSFORMDOC
 
 # Fitted parameters
 

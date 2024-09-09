@@ -24,6 +24,8 @@ end
         y,
     ) -> updated_chain, updated_optimiser_state, training_loss
 
+**Private method.**
+
 Update the parameters of a Flux `chain`, where:
 
 - `model` is typically an `MLJFluxModel` instance, but could be any object such that
@@ -76,6 +78,8 @@ end
         X,
         y,
     ) -> (updated_chain, updated_optimiser_state, history)
+
+**Private method.**
 
 Optimize a Flux model `chain`, where `(yhat, y) -> loss(yhat, y)` is the loss function
 inferred from the `model`. Typically, `model` will be an `MLJFluxModel` instance, but it
@@ -162,6 +166,8 @@ end
 """
     gpu_isdead()
 
+**Private method.**
+
 Returns `true` if `acceleration=CUDALibs()` option is unavailable, and
 false otherwise.
 
@@ -170,6 +176,8 @@ gpu_isdead() = Flux.gpu([1.0,]) isa Array
 
 """
     nrows(X)
+
+**Private method.**
 
 Find the number of rows of `X`, where `X` is an `AbstractVector or
 Tables.jl table.

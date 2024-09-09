@@ -192,32 +192,40 @@ MMI.metadata_pkg.(
 )
 
 const MODELSUPPORTDOC = """
-In addition to features with `Continuous` scientific element type, this model supports 
-categorical features in the input table. If present, such features are embedded into
-dense vectors by the use of an additional `EntityEmbedder` layer after the input 
-as described in Entity Embeddings of Categorical Variables by Cheng Guo, Felix Berkhahn arXiv, 2016.
+In addition to features with `Continuous` scientific element type, this model supports
+categorical features in the input table. If present, such features are embedded into dense
+vectors by the use of an additional `EntityEmbedder` layer after the input, as described in
+Entity Embeddings of Categorical Variables by Cheng Guo, Felix Berkhahn arXiv, 2016.
 """
 
 const XDOC = """
-- `X` is either a `Matrix` or any table of input features (eg, a `DataFrame`) whose columns are of scitype
-  `Continuous` or `Multiclass` or `OrderedFactor`; check column scitypes with `schema(X)`. 
-  If `X` is a `Matrix`, it is assumed to be purely continuous and to have columns corresponding to features and rows 
-  corresponding to observations. 
-  In case any `Multiclass` or `OrderedFactor` columns appear in `X`, the constructed network will use an `EntityEmbedder` layer 
-  to transform them into dense vectors. 
+
+- `X` provides input features and is either: (i) a `Matrix` with `Continuous` element
+  scitype (typically `Float32`); or (ii) a table of input features (eg, a `DataFrame`)
+  whose columns have `Continuous`, `Multiclass` or `OrderedFactor` element scitype; check
+  column scitypes with `schema(X)`.  If any `Multiclass` or `OrderedFactor` features
+  appear, the constructed network will use an `EntityEmbedder` layer to transform
+  them into dense vectors. If `X` is a `Matrix`, it is assumed that columns correspond to
+  features and rows corresponding to observations.
+
 """
 
 const EMBDOC = """
-- `embedding_dims` is a `Dict` whose keys are names of categorical features, given as symbols, and whose values are real numbers representing the desired dimensionality
-  of the entity embeddings of such features. An integer value such as `7` would set the embedding dimensionality of such feature to `7`. Meanwhile, a float value such as `0.5` 
-  would set the embedding dimensionality of such column to `ceil(0.5 * number of levels in feature)`. 
-  Any unspecified features will by default have their values set to min(number of levels - 1, 10).
+- `embedding_dims`: a `Dict` whose keys are names of categorical features, given as
+  symbols, and whose values are numbers representing the desired dimensionality of the
+  entity embeddings of such features: an integer value of `7`, say, sets the embedding
+  dimensionality to `7`; a float value of `0.5`, say, sets the embedding dimensionality to
+  `ceil(0.5 * c)`, where `c` is the number of feature levels.  Unspecified feature
+  dimensionality defaults to `min(c - 1, 10)`.
 """
 
 const TRANSFORMDOC = """
-- transform(mach, Xnew): Assumes `Xnew` has the same schema as `X` and transforms the categorical features of Xnew into dense vectors using the `EntityEmbedder` layer
-  present in the network. Does nothing in case the model was trained on an input `X` that lacks categorical features.
+- `transform(mach, Xnew)`: Assuming `Xnew` has the same schema as `X`, transform the
+  categorical features of `Xnew` into dense `Continuous` vectors using the
+  `MLJFlux.EntityEmbedder` layer present in the network. Does nothing in case the model
+  was trained on an input `X` that lacks categorical features.
 """
+
 # # DOCSTRINGS
 
 """

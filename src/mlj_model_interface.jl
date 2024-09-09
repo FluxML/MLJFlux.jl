@@ -175,7 +175,7 @@ function MLJModelInterface.update(model::MLJFluxModel,
         rng = true_rng(model)
         chain = build(model, rng, shape) |> move
         # reset `optimiser_state`:
-        data = move.(collate(model, X, y))
+        data = move.(collate(model, X, y, verbosity))
         nbatches = length(data[2])
         regularized_optimiser = MLJFlux.regularized_optimiser(model, nbatches)
         optimiser_state = Optimisers.setup(regularized_optimiser, chain)

@@ -25,7 +25,8 @@ clf = NeuralNetworkClassifier(
   alpha = 0.0, 
   rng = 42, 
   optimiser_changes_trigger_retraining = false, 
-  acceleration = CPU1{Nothing}(nothing))</code></pre><p>Now let&#39;s wrap this in an iterated model. We will use a callback that makes a plot for validation losses each iteration.</p><pre><code class="language-julia hljs">stop_conditions = [
+  acceleration = CPU1{Nothing}(nothing), 
+  embedding_dims = Dict{Symbol, Real}())</code></pre><p>Now let&#39;s wrap this in an iterated model. We will use a callback that makes a plot for validation losses each iteration.</p><pre><code class="language-julia hljs">stop_conditions = [
     Step(1),            # Repeatedly train for one iteration
     NumberLimit(100),   # Don&#39;t train for more than 100 iterations
 ]
@@ -59,7 +60,8 @@ iterated_model = IteratedModel(
         alpha = 0.0, 
         rng = 42, 
         optimiser_changes_trigger_retraining = false, 
-        acceleration = CPU1{Nothing}(nothing)), 
+        acceleration = CPU1{Nothing}(nothing), 
+        embedding_dims = Dict{Symbol, Real}()), 
   controls = Any[IterationControl.Step(1), EarlyStopping.NumberLimit(100), IterationControl.WithLossDo{typeof(Main.plot_loss)}(Main.plot_loss, false, nothing)], 
   resampling = Holdout(
         fraction_train = 0.7, 
@@ -76,6 +78,6 @@ iterated_model = IteratedModel(
 fit!(mach, force=true)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">trained Machine; does not cache data
   model: ProbabilisticIteratedModel(model = NeuralNetworkClassifier(builder = MLP(hidden = (5, 4), …), …), …)
   args: 
-    1:	Source @337 ⏎ ScientificTypesBase.Table{AbstractVector{ScientificTypesBase.Continuous}}
-    2:	Source @941 ⏎ AbstractVector{ScientificTypesBase.Multiclass{3}}
-</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../early_stopping/notebook/">« Early Stopping</a><a class="docs-footer-nextpage" href="../../architecture_search/notebook/">Neural Architecture Search »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.5.0 on <span class="colophon-date" title="Tuesday 6 August 2024 04:14">Tuesday 6 August 2024</span>. Using Julia version 1.10.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+    1:	Source @660 ⏎ ScientificTypesBase.Table{AbstractVector{ScientificTypesBase.Continuous}}
+    2:	Source @637 ⏎ AbstractVector{ScientificTypesBase.Multiclass{3}}
+</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../early_stopping/notebook/">« Early Stopping</a><a class="docs-footer-nextpage" href="../../architecture_search/notebook/">Neural Architecture Search »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.7.0 on <span class="colophon-date" title="Monday 9 September 2024 01:03">Monday 9 September 2024</span>. Using Julia version 1.10.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

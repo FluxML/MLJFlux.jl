@@ -281,8 +281,8 @@ function collate(model::NeuralNetworkBinaryClassifier, X, y, verbosity)
     return [_get(Xmatrix, b) for b in row_batches], [_get(yvec, b) for b in row_batches]
 end
 
-_f32(x::AbstractMatrix{Float32}, verbosity) = x
-function _f32(x::AbstractMatrix, verbosity)
+_f32(x::AbstractArray{Float32}, verbosity) = x
+function _f32(x::AbstractArray, verbosity)
     verbosity > 0 && @info "MLJFlux: converting input data to Float32"
     return Float32.(x)
 end

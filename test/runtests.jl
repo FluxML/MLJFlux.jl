@@ -13,6 +13,7 @@ using StableRNGs
 using CUDA, cuDNN
 import StatisticalMeasures
 import Optimisers
+import Logging
 
 using ComputationalResources
 using ComputationalResources: CPU1, CUDALibs

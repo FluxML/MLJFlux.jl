@@ -14,23 +14,28 @@ rowvec(y::Vector) = reshape(y, 1, length(y))
 end
 
 @testset "collate" begin
-    # NeuralNetworRegressor:
-    Xmatrix = broadcast(x->round(x, sigdigits=2), rand(stable_rng, 10, 3))
+    Xmatrix = broadcast(x->round(x, sigdigits=2), rand(stable_rng, Float32, 10, 3))
+    Xmat_f64 = Float64.(Xmatrix)
     # convert to a column table:
     X = MLJBase.table(Xmatrix)
+    X_64 = MLJBase.table(Xmat_f64)
 
+    # NeuralNetworRegressor:
     y = rand(stable_rng, Float32, 10)
     model = MLJFlux.NeuralNetworkRegressor()
     model.batch_size= 3
-    @test MLJFlux.collate(model, X, y) ==
+    @test MLJFlux.collate(model, X, y, 1) == MLJFlux.collate(model, X_64, y, 1) ==
         ([Xmatrix'[:,1:3], Xmatrix'[:,4:6], Xmatrix'[:,7:9], Xmatrix'[:,10:10]],
          rowvec.([y[1:3], y[4:6], y[7:9], y[10:10]]))
+    @test_logs (:info,) MLJFlux.collate(model, X_64, y, 1)
+    @test_logs min_level=Logging.Info MLJFlux.collate(model, X, y, 1)
+    @test_logs min_level=Logging.Info MLJFlux.collate(model, X, y, 0)
 
     # NeuralNetworClassifier:
     y = categorical(['a', 'b', 'a', 'a', 'b', 'a', 'a', 'a', 'b', 'a'])
     model = MLJFlux.NeuralNetworkClassifier()
     model.batch_size = 3
-    data = MLJFlux.collate(model, X, y)
+    data = MLJFlux.collate(model, X, y, 1)
 
     @test data == ([Xmatrix'[:,1:3], Xmatrix'[:,4:6],
                     Xmatrix'[:,7:9], Xmatrix'[:,10:10]],
@@ -42,13 +47,13 @@ end
     y = MLJBase.table(ymatrix) # a rowaccess table
     model = MLJFlux.NeuralNetworkRegressor()
     model.batch_size= 3
-    @test MLJFlux.collate(model, X, y) ==
+    @test MLJFlux.collate(model, X, y, 1) ==
         ([Xmatrix'[:,1:3], Xmatrix'[:,4:6], Xmatrix'[:,7:9], Xmatrix'[:,10:10]],
          rowvec.([ymatrix'[:,1:3], ymatrix'[:,4:6], ymatrix'[:,7:9],
                   ymatrix'[:,10:10]]))
 
     y = Tables.columntable(y) # try a columnaccess table
-    @test MLJFlux.collate(model, X, y) ==
+    @test MLJFlux.collate(model, X, y, 1) ==
         ([Xmatrix'[:,1:3], Xmatrix'[:,4:6], Xmatrix'[:,7:9], Xmatrix'[:,10:10]],
          rowvec.([ymatrix'[:,1:3], ymatrix'[:,4:6],
                   ymatrix'[:,7:9], ymatrix'[:,10:10]]))
@@ -58,7 +63,7 @@ end
     y = categorical(['a', 'b', 'a', 'a', 'b', 'a', 'a', 'a', 'b', 'a'])
     model = MLJFlux.ImageClassifier(batch_size=2)
 
-    data = MLJFlux.collate(model, Xmatrix, y)
+    data = MLJFlux.collate(model, Xmatrix, y, 1)
     @test  first.(data) == (Float32.(cat(Xmatrix[1], Xmatrix[2], dims=4)),
                             rowvec.([1 0;0 1]))
 

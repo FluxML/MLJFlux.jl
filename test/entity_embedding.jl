@@ -145,7 +145,8 @@ end
     numfeats = 4
     embedder = MLJFlux.EntityEmbedder(entityprops, 4)
     output = embedder(batch)
-    @test output == batch
+    @test output ≈ batch
+    @test eltype(output) == Float32
 end
 
 

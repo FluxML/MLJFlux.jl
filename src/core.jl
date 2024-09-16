@@ -276,15 +276,22 @@ input `X` and target `y` in the form required by
 by `model.batch_size`.)
 
 """
-function collate(model, X, y)
+function collate(model, X, y, verbosity)
     row_batches = Base.Iterators.partition(1:nrows(y), model.batch_size)
-    Xmatrix = reformat(X)
+    Xmatrix = _f32(reformat(X), verbosity)
     ymatrix = reformat(y)
     return [_get(Xmatrix, b) for b in row_batches], [_get(ymatrix, b) for b in row_batches]
 end
-function collate(model::NeuralNetworkBinaryClassifier, X, y)
+function collate(model::NeuralNetworkBinaryClassifier, X, y, verbosity)
     row_batches = Base.Iterators.partition(1:nrows(y), model.batch_size)
-    Xmatrix = reformat(X)
+    Xmatrix = _f32(reformat(X), verbosity)
     yvec = (y .== classes(y)[2])' # convert to boolean
     return [_get(Xmatrix, b) for b in row_batches], [_get(yvec, b) for b in row_batches]
 end
+
+_f32(x::AbstractArray{Float32}, verbosity) = x
+function _f32(x::AbstractArray, verbosity)
+    verbosity > 0 && @info "MLJFlux: converting input data to Float32"
+    return Float32.(x)
+end
+

@@ -84,7 +84,7 @@ function MLJModelInterface.fit(model::MLJFluxModel,
         featnames = Tables.schema(X).names
     end
 
-    # entityprops is (index = cat_inds[i], levels = num_levels[i], newdim = newdims[i]) 
+    # entityprops is (index = cat_inds[i], levels = num_levels[i], newdim = newdims[i])
     # for each categorical feature
     default_embedding_dims = enable_entity_embs ? model.embedding_dims : Dict{Symbol, Real}()
     entityprops, entityemb_output_dim =
@@ -103,8 +103,8 @@ function MLJModelInterface.fit(model::MLJFluxModel,
             entityemb_output_dim,
         )
 
-    # Format data as needed by Flux and move to GPU 
-    data = move.(collate(model, X, y))
+    # Format data as needed by Flux and move to GPU
+    data = move.(collate(model, X, y, verbosity))
 
     # Test chain works (as it may be custom)
     x = data[1][1]
@@ -143,7 +143,7 @@ function MLJModelInterface.fit(model::MLJFluxModel,
         featnames,
     )
 
-    # Prepare fitresult 
+    # Prepare fitresult
     fitresult =
         MLJFlux.fitresult(model, Flux.cpu(chain), y, ordinal_mappings, embedding_matrices)
 
@@ -216,7 +216,7 @@ function MLJModelInterface.update(model::MLJFluxModel,
             chain = construct_model_chain(model, rng, shape, move)
         end
         # reset `optimiser_state`:
-        data = move.(collate(model, X, y))
+        data = move.(collate(model, X, y, verbosity))
         regularized_optimiser, optimiser_state =
             prepare_optimiser(data, model, chain)
         epochs = model.epochs

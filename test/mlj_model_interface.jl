@@ -94,7 +94,7 @@ end
         # (2) manually train for one epoch explicitly adding a loss penalty:
         chain = MLJFlux.build(builder, StableRNG(123), 3, 1);
         penalty = Penalizer(lambda, alpha); # defined in test_utils.jl
-        X, y = MLJFlux.collate(model, Xuser, yuser);
+        X, y = MLJFlux.collate(model, Xuser, yuser, 0);
         loss = model.loss;
         n_batches = div(nobservations, batch_size)
         optimiser_state = Optimisers.setup(optimiser, chain);

@@ -43,7 +43,7 @@ end
 
 # 2. Define the forward pass (i.e., calling an instance of the layer)
 (m::EntityEmbedder)(x) =
-    Float32.(vcat([m.embedders[i](m.modifiers[i](x, i)) for i in 1:m.numfeats]...))
+    (vcat([m.embedders[i](m.modifiers[i](x, i)) for i in 1:m.numfeats]...))
 
 # 3. Define the constructor which initializes the parameters and returns the instance
 function EntityEmbedder(entityprops, numfeats; init = Flux.randn32)

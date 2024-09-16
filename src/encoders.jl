@@ -19,11 +19,11 @@ function ordinal_encoder_fit(X; featinds)
         feat_col = Tables.getcolumn(Tables.columns(X), i)
         feat_levels = levels(feat_col)
         # Check if feat levels is already ordinal encoded in which case we skip
-        (Set([float(i) for i in 1:length(feat_levels)]) == Set(feat_levels)) && continue
+        (Set([Float32(i) for i in 1:length(feat_levels)]) == Set(feat_levels)) && continue
         # Compute the dict using the given feature_mapper function
         mapping_matrix[i] =
             Dict{Any, AbstractFloat}(
-                value => float(index) for (index, value) in enumerate(feat_levels)
+                value => Float32(index) for (index, value) in enumerate(feat_levels)
             )
     end
     return mapping_matrix

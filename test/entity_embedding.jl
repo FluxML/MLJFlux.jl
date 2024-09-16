@@ -1,13 +1,13 @@
 """
 See more functional tests in entity_embedding_utils.jl and mlj_model_interface.jl
 """
-
-batch = [
+batch = Float32.([
     0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.1;
-    1 2 3 4 5 6 7 8 9 10;
-    0.9 0.1 0.4 0.5 0.3 0.7 0.8 0.9 1.0 1.1
-    1 1 2 2 1 1 2 2 1 1
-]
+    1   2   3   4   5   6   7   8   9  10;
+    0.9 0.1 0.4 0.5 0.3 0.7 0.8 0.9 1.0 1.1;
+    1   1   2   2   1   1   2   2   1   1
+])
+
 
 entityprops = [
     (index = 2, levels = 10, newdim = 2),

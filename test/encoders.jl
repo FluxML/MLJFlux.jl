@@ -12,8 +12,8 @@
     @test map[2] == Dict('a' => 1, 'b' => 2, 'c' => 3, 'd' => 4, 'e' => 5)
     @test map[3] == Dict("b" => 1, "c" => 2, "d" => 3)
     @test Xenc.Column1 == [1.0, 2.0, 3.0, 4.0, 5.0]
-    @test Xenc.Column2 == [1.0, 2.0, 3.0, 4.0, 5.0]
-    @test Xenc.Column3 == [1, 2, 3]
+    @test Xenc.Column2 == Float32.([1.0, 2.0, 3.0, 4.0, 5.0])
+    @test Xenc.Column3 == Float32.([1, 2, 3])
     @test Xenc.Column4 == [1.0, 2.0, 3.0, 4.0, 5.0]
 
     X = coerce(X, :Column1 => Multiclass)

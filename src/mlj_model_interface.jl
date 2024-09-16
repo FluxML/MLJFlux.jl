@@ -66,21 +66,21 @@ function MLJModelInterface.fit(model::MLJFluxModel,
     X,
     y)
     # GPU and rng related variables
-    move = Mover(model.acceleration)
+    move = MLJFlux.Mover(model.acceleration)
     rng = true_rng(model)
 
     # Get input properties
     shape = MLJFlux.shape(model, X, y)
-    cat_inds = get_cat_inds(X)
+    cat_inds = MLJFlux.get_cat_inds(X)
     pure_continuous_input = isempty(cat_inds)
 
     # Decide whether to enable entity embeddings (e.g., ImageClassifier won't)
-    enable_entity_embs = is_embedding_enabled(model) && !pure_continuous_input
+    enable_entity_embs = MLJFlux.is_embedding_enabled(model) && !pure_continuous_input
 
     # Prepare entity embeddings inputs and encode X if entity embeddings enabled
     featnames = []
     if enable_entity_embs
-        X = convert_to_table(X)
+        X = MLJFlux.convert_to_table(X)
         featnames = Tables.schema(X).names
     end
 
@@ -88,13 +88,13 @@ function MLJModelInterface.fit(model::MLJFluxModel,
     # for each categorical feature
     default_embedding_dims = enable_entity_embs ? model.embedding_dims : Dict{Symbol, Real}()
     entityprops, entityemb_output_dim =
-        prepare_entityembs(X, featnames, cat_inds, default_embedding_dims)
-    X, ordinal_mappings = ordinal_encoder_fit_transform(X; featinds = cat_inds)
+        MLJFlux.prepare_entityembs(X, featnames, cat_inds, default_embedding_dims)
+    X, ordinal_mappings = MLJFlux.ordinal_encoder_fit_transform(X; featinds = cat_inds)
 
     ## Construct model chain
     chain =
         (!enable_entity_embs) ? construct_model_chain(model, rng, shape, move) :
-        construct_model_chain_with_entityembs(
+        MLJFlux.construct_model_chain_with_entityembs(
             model,
             rng,
             shape,
@@ -104,7 +104,7 @@ function MLJModelInterface.fit(model::MLJFluxModel,
         )
 
     # Format data as needed by Flux and move to GPU
-    data = move.(collate(model, X, y, verbosity))
+    data = move.(MLJFlux.collate(model, X, y, verbosity))
 
     # Test chain works (as it may be custom)
     x = data[1][1]

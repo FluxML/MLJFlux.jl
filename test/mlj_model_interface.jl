@@ -76,8 +76,8 @@ end
     nobservations = 12
     Xuser = rand(Float32, nobservations, 3)
     yuser = rand(Float32, nobservations)
-    alpha = rand(rng)
-    lambda = rand(rng)
+    alpha = rand(rng, Float32)
+    lambda = rand(rng, Float32)
     optimiser = Optimisers.Momentum()
     builder = MLJFlux.Linear()
     epochs = 1 # don't change this
@@ -121,6 +121,7 @@ end
     # integration test:
     X, y = MLJBase.make_regression(10)
     X = Float32.(MLJBase.Tables.matrix(X)) |> MLJBase.Tables.table
+    y = Float32.(y)
     mach = MLJBase.machine(model, X, y)
     MLJBase.fit!(mach, verbosity=0)
     losses = MLJBase.training_losses(mach)
@@ -148,7 +149,8 @@ end
         builder = LisasBuilder(10),
     )
 
-    X, y = @load_boston
+    X = Tables.table(rand(Float32, 75, 2))
+    y = rand(Float32, 75)
     @test_logs(
         (:error, MLJFlux.ERR_BUILDER),
         @test_throws UndefVarError(:Chains) MLJBase.fit(model, 0, X, y)
@@ -165,16 +167,16 @@ end
     ]
     # table case
     X1 = (
-        Column1 = [1.0, 2.0, 3.0, 4.0, 5.0],
-        Column4 = [1.0, 2.0, 3.0, 4.0, 5.0],
-        Column5 = randn(5),
+        Column1 = Float32[1.0, 2.0, 3.0, 4.0, 5.0],
+        Column4 = Float32[1.0, 2.0, 3.0, 4.0, 5.0],
+        Column5 = randn(Float32, 5),
     )
     # matrix case
-    X2 = rand(5, 5)
+    X2 = rand(Float32, 5, 5)
     Xs = [X1, X2]
 
     y = categorical([0, 1, 0, 1, 1])
-    yreg = [0.1, -0.3, 0.2, 0.8, 0.9]
+    yreg = Float32[0.1, -0.3, 0.2, 0.8, 0.9]
     ys = [y, y, yreg, yreg]
     for j in eachindex(Xs)
         for i in eachindex(models)
@@ -210,15 +212,15 @@ end
     ]
 
     X = (
-        Column1 = [1.0, 2.0, 3.0, 4.0, 5.0],
+        Column1 = Float32[1.0, 2.0, 3.0, 4.0, 5.0],
         Column2 = categorical(['a', 'b', 'c', 'd', 'e']),
-        Column3 = [1.0, 2.0, 3.0, 4.0, 5.0],
-        Column4 = randn(5),
+        Column3 = Float32[1.0, 2.0, 3.0, 4.0, 5.0],
+        Column4 = randn(Float32, 5),
         Column5 = categorical(["group1", "group1", "group2", "group2", "group3"]),
     )
 
     y = categorical([0, 1, 0, 1, 1])
-    yreg = [0.1, -0.3, 0.2, 0.8, 0.9]
+    yreg = Float32[0.1, -0.3, 0.2, 0.8, 0.9]
     ys = [y, y, yreg, yreg]
 
     for i in eachindex(models)
@@ -272,15 +274,15 @@ end
     ]
 
     X = (
-        Column1 = [1.0, 2.0, 3.0, 4.0, 5.0],
+        Column1 = Float32[1.0, 2.0, 3.0, 4.0, 5.0],
         Column2 = categorical(['a', 'b', 'c', 'd', 'e']),
-        Column3 = [1.0, 2.0, 3.0, 4.0, 5.0],
-        Column4 = randn(5),
+        Column3 = Float32[1.0, 2.0, 3.0, 4.0, 5.0],
+        Column4 = randn(Float32, 5),
         Column5 = categorical(["group1", "group1", "group2", "group2", "group3"]),
     )
 
     y = categorical([0, 1, 0, 1, 1])
-    yreg = [0.1, -0.3, 0.2, 0.8, 0.9]
+    yreg = Float32[0.1, -0.3, 0.2, 0.8, 0.9]
     ys = [y, y, yreg, yreg]
 
     for i in eachindex(models)
@@ -316,7 +318,7 @@ end
             [:Column1, :Column2, :Column3, :Column4, :Column5],
         )
         @test mapping_matrices_fit != mapping_matrices_double_fit
-        # Try model prediction 
+        # Try model prediction
         Xpred = predict(mach, X)
     end
 end

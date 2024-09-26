@@ -67,7 +67,7 @@ function ordinal_encoder_transform(X, mapping_matrix)
             test_levels = levels(col)
             check_unkown_levels(train_levels, test_levels)
             level2scalar = mapping_matrix[ind]
-            new_col = recode(col, level2scalar...)
+            new_col = recode(unwrap.(col), level2scalar...)
             push!(new_feats, new_col)
         else
             push!(new_feats, col)

@@ -22,7 +22,7 @@ function ordinal_encoder_fit(X; featinds)
         (Set([Float32(i) for i in 1:length(feat_levels)]) == Set(feat_levels)) && continue
         # Compute the dict using the given feature_mapper function
         mapping_matrix[i] =
-            Dict{Any, AbstractFloat}(
+            Dict(
                 value => Float32(index) for (index, value) in enumerate(feat_levels)
             )
     end

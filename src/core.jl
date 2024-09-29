@@ -24,6 +24,8 @@ end
         y,
     ) -> updated_chain, updated_optimiser_state, training_loss
 
+**Private method.**
+
 Update the parameters of a Flux `chain`, where:
 
 - `model` is typically an `MLJFluxModel` instance, but could be any object such that
@@ -76,6 +78,8 @@ end
         X,
         y,
     ) -> (updated_chain, updated_optimiser_state, history)
+
+**Private method.**
 
 Optimize a Flux model `chain`, where `(yhat, y) -> loss(yhat, y)` is the loss function
 inferred from the `model`. Typically, `model` will be an `MLJFluxModel` instance, but it
@@ -162,6 +166,8 @@ end
 """
     gpu_isdead()
 
+**Private method.**
+
 Returns `true` if `acceleration=CUDALibs()` option is unavailable, and
 false otherwise.
 
@@ -170,6 +176,8 @@ gpu_isdead() = Flux.gpu([1.0,]) isa Array
 
 """
     nrows(X)
+
+**Private method.**
 
 Find the number of rows of `X`, where `X` is an `AbstractVector or
 Tables.jl table.
@@ -268,15 +276,22 @@ input `X` and target `y` in the form required by
 by `model.batch_size`.)
 
 """
-function collate(model, X, y)
+function collate(model, X, y, verbosity)
     row_batches = Base.Iterators.partition(1:nrows(y), model.batch_size)
-    Xmatrix = reformat(X)
+    Xmatrix = _f32(reformat(X), verbosity)
     ymatrix = reformat(y)
     return [_get(Xmatrix, b) for b in row_batches], [_get(ymatrix, b) for b in row_batches]
 end
-function collate(model::NeuralNetworkBinaryClassifier, X, y)
+function collate(model::NeuralNetworkBinaryClassifier, X, y, verbosity)
     row_batches = Base.Iterators.partition(1:nrows(y), model.batch_size)
-    Xmatrix = reformat(X)
+    Xmatrix = _f32(reformat(X), verbosity)
     yvec = (y .== classes(y)[2])' # convert to boolean
     return [_get(Xmatrix, b) for b in row_batches], [_get(yvec, b) for b in row_batches]
 end
+
+_f32(x::AbstractArray{Float32}, verbosity) = x
+function _f32(x::AbstractArray, verbosity)
+    verbosity > 0 && @info "MLJFlux: converting input data to Float32"
+    return Float32.(x)
+end
+

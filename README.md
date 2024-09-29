@@ -1,8 +1,12 @@
-# MLJFlux
+<div align="left">
+    <img width="490" alt="image" src="https://github.com/FluxML/MLJFlux.jl/assets/49572294/f28300e9-44cb-4d1a-8acf-8a682230be31">
+    
+An interface to the Flux deep learning models for the [MLJ](https://github.com/alan-turing-institute/MLJ.jl) machine learning framework
 
-An interface to the Flux deep learning models for the
-[MLJ](https://github.com/alan-turing-institute/MLJ.jl) machine
-learning framework.
+</div>
+
+[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://fluxml.github.io/MLJFlux.jl/dev/)
+
 
 | Branch   | Julia | CPU CI | GPU CI | Coverage |
 | -------- | ----- | ------ | -----  | -------- |
@@ -21,7 +25,6 @@ learning framework.
 [coveralls-img-dev]: https://coveralls.io/repos/github/alan-turing-institute/MLJFlux.jl/badge.svg?branch=dev "Code Coverage"
 [coveralls-url]: https://github.com/FluxML/MLJFlux.jl/actions/workflows/ci.yml
 
-[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://fluxml.github.io/MLJFlux.jl/dev/)
 
 
 ## Code Snippet
@@ -56,10 +59,10 @@ Wrap in "iteration controls":
 ```julia
 stop_conditions = [
     Step(1),            # Apply controls every epoch
-    NumberLimit(1000),   # Don't train for more than 100 steps
-    Patience(4),        # Stop after 5 iterations of deteriation in validation loss
-    NumberSinceBest(5), # Or if the best loss occurred 9 iterations ago
-    TimeLimit(30/60),   # Or if 30 minutes passed
+    NumberLimit(1000),  # Don't train for more than 1000 steps
+    Patience(4),        # Stop after 4 iterations of deteriation in validation loss
+    NumberSinceBest(5), # Or if the best loss occurred 5 iterations ago
+    TimeLimit(30/60),   # Or if 30 minutes has passed
 ]
 
 validation_losses = []

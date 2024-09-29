@@ -3,6 +3,7 @@ using Tables
 using MLJBase
 import MLJFlux
 using CategoricalArrays
+using MLJBase
 using ColorTypes
 using Flux
 import Random
@@ -13,6 +14,7 @@ using StableRNGs
 using CUDA, cuDNN
 import StatisticalMeasures
 import Optimisers
+import Logging
 
 using ComputationalResources
 using ComputationalResources: CPU1, CUDALibs
@@ -73,4 +75,10 @@ end
 
 @conditional_testset "integration" begin
     include("integration.jl")
+end
+
+@conditional_testset "entity embedding" begin
+    include("entity_embedding.jl")
+    include("entity_embedding_utils.jl")
+    include("encoders.jl")
 end

@@ -10,12 +10,14 @@ function shape(model::ImageClassifier, X, y)
     end
     return (n_input, n_output, n_channels)
 end
+is_embedding_enabled(::ImageClassifier) = false
+
 
 build(model::ImageClassifier, rng, shape) =
     Flux.Chain(build(model.builder, rng, shape...),
                model.finaliser)
 
-fitresult(model::ImageClassifier, chain, y) =
+fitresult(model::ImageClassifier, chain, y, ::Any, ::Any) =
     (chain, MLJModelInterface.classes(y[1]))
 
 function MLJModelInterface.predict(model::ImageClassifier, fitresult, Xnew)

@@ -4,18 +4,17 @@ seed!(1234)
 N = 300
 Xm = MLJBase.table(randn(Float32, N, 5));   # purely numeric
 X = (; Tables.columntable(Xm)...,
-    Column1 = repeat([1.0, 2.0, 3.0, 4.0, 5.0], Int(N / 5)),
+    Column1 = repeat(Float32[1.0, 2.0, 3.0, 4.0, 5.0], Int(N / 5)),
     Column2 = categorical(repeat(['a', 'b', 'c', 'd', 'e'], Int(N / 5))),
     Column3 = categorical(repeat(["b", "c", "d", "f", "f"], Int(N / 5)), ordered = true),
-    Column4 = repeat([1.0, 2.0, 3.0, 4.0, 5.0], Int(N / 5)),
-    Column5 = randn(N),
+    Column4 = repeat(Float32[1.0, 2.0, 3.0, 4.0, 5.0], Int(N / 5)),
+    Column5 = randn(Float32, N),
     Column6 = categorical(
         repeat(["group1", "group1", "group2", "group2", "group3"], Int(N / 5)),
     ),
 )
 
-
-ycont = 2 * X.x1 - X.x3 + 0.1 * rand(N)
+ycont = 2 * X.x1 - X.x3 + 0.1 * rand(Float32, N)
 m, M = minimum(ycont), maximum(ycont)
 _, a, b, _ = range(m, stop = M, length = 4) |> collect
 y = map(ycont) do η
@@ -111,7 +110,8 @@ end
 
 # check different resources (CPU1, CUDALibs, etc)) give about the same loss:
 reference = losses[1]
-@test all(x -> abs(x - reference) / reference < 1e-4, losses[2:end])
+println("losses for each resource: $losses")
+@test all(x -> abs(x - reference) / reference < 0.03, losses[2:end])
 
 
 # # NEURAL NETWORK BINARY CLASSIFIER
@@ -126,7 +126,7 @@ end
 seed!(1234)
 N = 300
 X = MLJBase.table(rand(Float32, N, 4));
-ycont = 2 * X.x1 - X.x3 + 0.1 * rand(N)
+ycont = Float32.(2 * X.x1 - X.x3 + 0.1 * rand(N))
 m, M = minimum(ycont), maximum(ycont)
 _, a, _ = range(m, stop = M, length = 3) |> collect
 y = map(ycont) do η

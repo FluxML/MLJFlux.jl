@@ -3,11 +3,11 @@ Random.seed!(123)
 N = 200
 Xm = MLJBase.table(randn(Float32, N, 5));   # purely numeric
 X = (; Tables.columntable(Xm)...,
-    Column1 = repeat([1.0, 2.0, 3.0, 4.0, 5.0], Int(N / 5)),
+    Column1 = repeat(Float32[1.0, 2.0, 3.0, 4.0, 5.0], Int(N / 5)),
     Column2 = categorical(repeat(['a', 'b', 'c', 'd', 'e'], Int(N / 5))),
     Column3 = categorical(repeat(["b", "c", "d", "f", "f"], Int(N / 5)), ordered = true),
-    Column4 = repeat([1.0, 2.0, 3.0, 4.0, 5.0], Int(N / 5)),
-    Column5 = randn(N),
+    Column4 = repeat(Float32[1.0, 2.0, 3.0, 4.0, 5.0], Int(N / 5)),
+    Column5 = randn(Float32, N),
     Column6 = categorical(
         repeat(["group1", "group1", "group2", "group2", "group3"], Int(N / 5)),
     ),
@@ -17,7 +17,7 @@ builder = MLJFlux.Short(σ = identity)
 optimiser = Optimisers.Adam()
 
 Random.seed!(123)
-y = 1 .+ X.x1 - X.x2 .- 2X.x4 + X.x5
+y = Float32(1) .+ X.x1 - X.x2 .- 2X.x4 + X.x5
 train, test = MLJBase.partition(1:N, 0.7)
 
 @testset_accelerated "NeuralNetworkRegressor" accel begin

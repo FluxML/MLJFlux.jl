@@ -27,7 +27,7 @@ function MLJModelInterface.predict(model::NeuralNetworkRegressor,
     Xnew)
     chain, ordinal_mappings = fitresult[1], fitresult[3]
     Xnew = ordinal_encoder_transform(Xnew, ordinal_mappings)
-    Xnew_ = reformat(Xnew)
+    Xnew_ = _f32(reformat(Xnew), 0)
     return [chain(values.(tomat(Xnew_[:, i])))[1]
             for i in 1:size(Xnew_, 2)]
 end
@@ -74,7 +74,7 @@ function MLJModelInterface.predict(model::MultitargetNeuralNetworkRegressor,
     fitresult, Xnew)
     chain, target_column_names, ordinal_mappings, _ = fitresult
     Xnew = ordinal_encoder_transform(Xnew, ordinal_mappings)
-    X = reformat(Xnew)
+    X = _f32(reformat(Xnew), 0)
     ypred = [chain(values.(tomat(X[:, i])))
              for i in 1:size(X, 2)]
     output =

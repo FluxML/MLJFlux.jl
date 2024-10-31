@@ -40,7 +40,7 @@ function MLJModelInterface.predict(
 )
     chain, levels, ordinal_mappings, _ = fitresult
     Xnew = ordinal_encoder_transform(Xnew, ordinal_mappings)        # what if Xnew is a matrix
-    X = reformat(Xnew)
+    X = _f32(reformat(Xnew), 0)
     probs = vcat([chain(tomat(X[:, i]))' for i in 1:size(X, 2)]...)
     return MLJModelInterface.UnivariateFinite(levels, probs)
 end
@@ -69,7 +69,7 @@ function MLJModelInterface.predict(
 )
     chain, levels, ordinal_mappings, _ = fitresult
     Xnew = ordinal_encoder_transform(Xnew, ordinal_mappings)
-    X = reformat(Xnew)
+    X = _f32(reformat(Xnew), 0)
     probs = vec(chain(X))
     return MLJModelInterface.UnivariateFinite(levels, probs; augment = true)
 end

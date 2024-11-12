@@ -4,10 +4,12 @@ on:
     branches:
       - master
       - dev
+      - fixb
   push:
     branches:
       - master
       - dev
+      - fixb
     tags: '*'
 jobs:
   test:

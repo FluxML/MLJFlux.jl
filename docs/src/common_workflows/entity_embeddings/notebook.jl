@@ -7,7 +7,7 @@
 # It employs a set of embedding layers to map each categorical feature into a dense continuous vector in a similar fashion to how they are employed in NLP architectures.
 
 # In MLJFlux, the `NeuralNetworkClassifier`, `NeuralNetworkRegressor`, and the `MultitargetNeuralNetworkRegressor`` can be trained and evaluated with heterogenous data (i.e., containing categorical features) because they have a built-in entity embedding layer. 
-# Moreover, they now offer a transform which encode the categorical features with the learnt embeddings to be used by an upstream machine learning model.
+# Moreover, they now offer a `transform` method which encodes the categorical features with the learned embeddings to be used by an upstream machine learning model.
 
 # In this notebook, we will explore how to use entity embeddings in MLJFlux models.
 

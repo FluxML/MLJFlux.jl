@@ -25,7 +25,7 @@ entityprops = [
 numfeats = 4
 
 # Run it through the categorical embedding layer
-embedder = EntityEmbedder(entityprops, 4)
+embedder = EntityEmbedderLayer(entityprops, 4)
 julia> output = embedder(batch)
 5×10 Matrix{Float64}:
   0.2        0.3        0.4        0.5       …   0.8        0.9         1.0        1.1
@@ -35,18 +35,18 @@ julia> output = embedder(batch)
  -0.847354  -0.847354  -1.66261   -1.66261      -1.66261   -1.66261    -0.847354  -0.847354
 ```
 """ # 1. Define layer struct to hold parameters
-struct EntityEmbedder{A1 <: AbstractVector, A2 <: AbstractVector, I <: Integer}
+struct EntityEmbedderLayer{A1 <: AbstractVector, A2 <: AbstractVector, I <: Integer}
     embedders::A1
     modifiers::A2       # applied on the input before passing it to the embedder
     numfeats::I
 end
 
 # 2. Define the forward pass (i.e., calling an instance of the layer)
-(m::EntityEmbedder)(x) =
+(m::EntityEmbedderLayer)(x) =
     (vcat([m.embedders[i](m.modifiers[i](x, i)) for i in 1:m.numfeats]...))
 
 # 3. Define the constructor which initializes the parameters and returns the instance
-function EntityEmbedder(entityprops, numfeats; init = Flux.randn32)
+function EntityEmbedderLayer(entityprops, numfeats; init = Flux.randn32)
     embedders = []
     modifiers = []
     # Setup entityprops
@@ -66,8 +66,8 @@ function EntityEmbedder(entityprops, numfeats; init = Flux.randn32)
         end
     end
 
-    EntityEmbedder(embedders, modifiers, numfeats)
+    EntityEmbedderLayer(embedders, modifiers, numfeats)
 end
 
 # 4. Register it as layer with Flux
-Flux.@layer EntityEmbedder
+Flux.@layer EntityEmbedderLayer

@@ -30,9 +30,11 @@ include("image.jl")
 include("fit_utils.jl")
 include("entity_embedding_utils.jl")
 include("mlj_model_interface.jl")
+include("mlj_embedder_interface.jl")
 
 export NeuralNetworkRegressor, MultitargetNeuralNetworkRegressor
 export NeuralNetworkClassifier, NeuralNetworkBinaryClassifier, ImageClassifier
+export EntityEmbedder
 export CUDALibs, CPU1
 
 include("deprecated.jl")

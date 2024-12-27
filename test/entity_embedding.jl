@@ -22,7 +22,7 @@ entityprops = [
         (index = 4, levels = 2, newdim = 2),
     ]
 
-    embedder = MLJFlux.EntityEmbedder(entityprops, 4)
+    embedder = MLJFlux.EntityEmbedderLayer(entityprops, 4)
 
     output = embedder(batch)
 
@@ -68,7 +68,7 @@ end
         ]
 
         cat_model = Chain(
-            MLJFlux.EntityEmbedder(entityprops, 4),
+            MLJFlux.EntityEmbedderLayer(entityprops, 4),
             Dense(9 => (ind == 1) ? 10 : 1),
             finalizer[ind],
         )
@@ -143,7 +143,7 @@ end
 @testset "Transparent when no categorical variables" begin
     entityprops = []
     numfeats = 4
-    embedder = MLJFlux.EntityEmbedder(entityprops, 4)
+    embedder = MLJFlux.EntityEmbedderLayer(entityprops, 4)
     output = embedder(batch)
     @test output ≈ batch
     @test eltype(output) == Float32
@@ -197,11 +197,23 @@ end
                 acceleration = CUDALibs(),
                 optimiser_changes_trigger_retraining = true,
                 embedding_dims = embedding_dims[3],
+                rng=42
             )
-
+            emb = MLJFlux.EntityEmbedder(clf)
+            mach_emb = machine(emb, X, ys[1])
             mach = machine(clf, X, ys[1])
 
             fit!(mach, verbosity = 0)
+            fit!(mach_emb, verbosity = 0)
+            Xnew = transform(mach, X)
+            Xnew_emb = transform(mach_emb, X)
+            @test Xnew == Xnew_emb
+
+            # Pipeline doesn't throw an error
+            pipeline = emb |> clf
+            mach_pipe = machine(pipeline, X, y)
+            fit!(mach_pipe, verbosity = 0)
+            y = predict_mode(mach_pipe, X)
 
             mapping_matrices = MLJFlux.get_embedding_matrices(
                 fitted_params(mach).chain,

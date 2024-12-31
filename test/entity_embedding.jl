@@ -193,7 +193,7 @@ end
         for i in eachindex(models)
             # Without lightweight wrapper
             clf = models[1](
-                builder = MLJFlux.Short(n_hidden = 5, dropout = 0.0),
+                builder = MLJFlux.MLP(hidden=(10, 10)),
                 optimiser = Optimisers.Adam(0.01),
                 batch_size = 8,
                 epochs = 100,

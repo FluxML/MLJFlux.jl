@@ -88,7 +88,6 @@ Train the machine using `fit!(mach)`.
 # Examples
 
 ```julia
-using MLJFlux
 using MLJ
 using CategoricalArrays
 

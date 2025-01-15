@@ -107,6 +107,7 @@ X = (;
 y = categorical([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])           # Classification
 
 # Initiate model
+EntityEmbedder = @load EntityEmbedder pkg=MLJFlux
 NeuralNetworkClassifier = @load NeuralNetworkClassifier pkg=MLJFlux
 
 clf = NeuralNetworkClassifier(embedding_dims=Dict(:Column2 => 2, :Column3 => 2))

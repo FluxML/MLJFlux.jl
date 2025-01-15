@@ -75,7 +75,9 @@ Train the machine using `fit!(mach)`.
 
 # Hyper-parameters
 
-- `model`: The underlying deep learning model to be used for entity embedding. So far this supports `NeuralNetworkClassifier`, `NeuralNetworkRegressor`, and `MultitargetNeuralNetworkRegressor`.
+- `model`: The supervised MLJFlux neural network model to be used for entity embedding. 
+  This must be one of these: `MLJFlux.NeuralNetworkClassifier`,
+  `MLJFlux.NeuralNetworkRegressor`,`MLJFlux.MultitargetNeuralNetworkRegressor`.
 
 # Operations
 

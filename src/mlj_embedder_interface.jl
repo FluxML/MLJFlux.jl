@@ -65,13 +65,11 @@ In MLJ (or MLJBase) bind an instance unsupervised `model` to data with
 Here:
 
 
-- `X` is any table of input features (eg, a `DataFrame`). Features to be transformed must
+- `X` is any table of input features supported by the model being wrapped. Features to be transformed must
    have element scitype `Multiclass` or `OrderedFactor`. Use `schema(X)` to 
    check scitypes. 
 
-- `y` is the target, which can be any `AbstractVector` whose element
-  scitype is `Continuous` or `Count` for regression problems and 
-  `Multiclass` or `OrderedFactor` for classification problems; check the scitype with `schema(y)`
+- `y` is the target, which can be any `AbstractVector` supported by the model being wrapped.
 
 Train the machine using `fit!(mach)`.
 
@@ -127,6 +125,6 @@ Xnew
 ```
 
 See also
-[`TargetEncoder`](@ref)
+[`NeuralNetworkClassifier`, `NeuralNetworkRegressor`](@ref)
 """
 EntityEmbedder

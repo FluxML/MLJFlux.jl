@@ -150,7 +150,7 @@ end
 end
 
 
-@testset "get_embedding_matrices works and has the right dimensions" begin
+@testset "get_embedding_matrices works as well as the light wrapper" begin
     models = [
         MLJFlux.NeuralNetworkBinaryClassifier,
         MLJFlux.NeuralNetworkClassifier,
@@ -208,6 +208,9 @@ end
             # With lightweight wrapper
             clf2 = deepcopy(clf)
             emb = MLJFlux.EntityEmbedder(clf2)
+            @test_throws  MLJFlux.ERR_MODEL_UNSPECIFIED begin
+                MLJFlux.EntityEmbedder()
+            end
             mach_emb = machine(emb, X, ys[1])
             fit!(mach_emb, verbosity = 0)
             Xnew_emb = transform(mach_emb, X)

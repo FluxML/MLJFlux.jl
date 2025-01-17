@@ -6,8 +6,10 @@ mutable struct EntityEmbedder{M <: MLJFluxModel} <: Unsupervised
 end;
 
 
+const ERR_MODEL_UNSPECIFIED = ErrorException("You must specify a suitable MLJFlux supervised model, as in `EntityEmbedder(model=...)`. ")
 # 2. Constructor
-function EntityEmbedder(model;)
+function EntityEmbedder(;model=nothing)
+    model === nothing && throw(ERR_MODEL_UNSPECIFIED)
     return EntityEmbedder(model)
 end;
 

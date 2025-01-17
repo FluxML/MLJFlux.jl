@@ -40,13 +40,38 @@ MMI.metadata_pkg(
 
 MMI.metadata_model(
     EntityEmbedder,
-    input_scitype = Table,
-    output_scitype = Table,
     load_path = "MLJTransforms.EntityEmbedder",
 )
 
 MMI.target_in_fit(::Type{<:EntityEmbedder}) = true
 
+# 9. Forwarding traits
+MMI.is_wrapper(::Type{<:EntityEmbedder}) =true
+MMI.supports_training_losses(::Type{<:EntityEmbedder}) = true
+
+
+for trait in [
+    :input_scitype,
+    :output_scitype,
+    :target_scitype,
+    ]
+
+    quote
+        MMI.$trait(::Type{<:EntityEmbedder{M}}) where M = MMI.$trait(M)
+    end |> eval
+end
+
+# ## Iteration parameter
+prepend(s::Symbol, ::Nothing) = nothing
+prepend(s::Symbol, t::Symbol) = Expr(:(.), s, QuoteNode(t))
+prepend(s::Symbol, ex::Expr) = Expr(:(.), prepend(s, ex.args[1]), ex.args[2])
+quote
+    MMI.iteration_parameter(::Type{<:EntityEmbedder{M}}) where M =
+        prepend(:model, MMI.iteration_parameter(M))
+end |> eval
+
+MMI.training_losses(embedder::EntityEmbedder, report) =
+    MMI.training_losses(embedder.model, report)
 
 
 

@@ -52,7 +52,7 @@ MMI.target_in_fit(::Type{<:EntityEmbedder}) = true
 
 
 """
-$(MMI.doc_header(EntityEmbedder))
+    EntityEmbedder(; model=mljflux_neural_model)
 
 `EntityEmbedder` implements entity embeddings as in the "Entity Embeddings of Categorical Variables" paper by Cheng Guo, Felix Berkhahn.
 
@@ -77,7 +77,8 @@ Train the machine using `fit!(mach)`.
 
 - `model`: The supervised MLJFlux neural network model to be used for entity embedding. 
   This must be one of these: `MLJFlux.NeuralNetworkClassifier`,
-  `MLJFlux.NeuralNetworkRegressor`,`MLJFlux.MultitargetNeuralNetworkRegressor`.
+  `MLJFlux.NeuralNetworkRegressor`,`MLJFlux.MultitargetNeuralNetworkRegressor`. The selected model may have hyperparameters 
+  that may affect embedding performance, the most notable of which could be the `builder` argument.
 
 # Operations
 

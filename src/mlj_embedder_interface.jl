@@ -77,7 +77,9 @@ Train the machine using `fit!(mach)`.
 
 # Hyper-parameters
 
-- `model`: The underlying deep learning model to be used for entity embedding. So far this supports `NeuralNetworkClassifier`, `NeuralNetworkRegressor`, and `MultitargetNeuralNetworkRegressor`.
+- `model`: The supervised MLJFlux neural network model to be used for entity embedding. 
+  This must be one of these: `MLJFlux.NeuralNetworkClassifier`,
+  `MLJFlux.NeuralNetworkRegressor`,`MLJFlux.MultitargetNeuralNetworkRegressor`.
 
 # Operations
 
@@ -88,7 +90,6 @@ Train the machine using `fit!(mach)`.
 # Examples
 
 ```julia
-using MLJFlux
 using MLJ
 using CategoricalArrays
 
@@ -107,6 +108,7 @@ X = (;
 y = categorical([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])           # Classification
 
 # Initiate model
+EntityEmbedder = @load EntityEmbedder pkg=MLJFlux
 NeuralNetworkClassifier = @load NeuralNetworkClassifier pkg=MLJFlux
 
 clf = NeuralNetworkClassifier(embedding_dims=Dict(:Column2 => 2, :Column3 => 2))

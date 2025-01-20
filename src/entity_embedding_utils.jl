@@ -100,7 +100,7 @@ function construct_model_chain_with_entityembs(
 )
     chain = try
         Flux.Chain(
-            EntityEmbedder(entityprops, shape[1]; init = Flux.glorot_uniform(rng)),
+            EntityEmbedderLayer(entityprops, shape[1]; init = Flux.glorot_uniform(rng)),
             build(model, rng, (entityemb_output_dim, shape[2])),
         ) |> move
     catch ex

@@ -133,6 +133,13 @@ mutable struct LisasBuilder
   n1::Int
 end
 
+# UndefVarError accepts two inputs from julia > v"1.9"
+_UndefVarError(var, scope) = @static if VERSION < v"1.10"
+    UndefVarError(var)
+else
+    UndefVarError(var, scope)
+end
+
 @testset "builder errors and issue #237" begin
     # create a builder with an intentional flaw;
     # `Chains` is undefined - it should be `Chain`
@@ -153,7 +160,7 @@ end
     y = rand(Float32, 75)
     @test_logs(
         (:error, MLJFlux.ERR_BUILDER),
-        @test_throws UndefVarError(:Chains) MLJBase.fit(model, 0, X, y)
+        @test_throws _UndefVarError(:Chains, Flux) MLJBase.fit(model, 0, X, y)
     )
 end
 

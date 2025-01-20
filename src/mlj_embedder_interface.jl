@@ -101,7 +101,7 @@ Train the machine using `fit!(mach)`.
 # Hyper-parameters
 
 - `model`: The supervised MLJFlux neural network model to be used for entity embedding. 
-  This must be one of these: `MLJFlux.NeuralNetworkClassifier`,
+  This must be one of these: `MLJFlux.NeuralNetworkClassifier`, `NeuralNetworkBinaryClassifier`
   `MLJFlux.NeuralNetworkRegressor`,`MLJFlux.MultitargetNeuralNetworkRegressor`. The selected model may have hyperparameters 
   that may affect embedding performance, the most notable of which could be the `builder` argument.
 

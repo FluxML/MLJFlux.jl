@@ -22,7 +22,7 @@ entityprops = [
         (index = 4, levels = 2, newdim = 2),
     ]
 
-    embedder = MLJFlux.EntityEmbedder(entityprops, 4)
+    embedder = MLJFlux.EntityEmbedderLayer(entityprops, 4)
 
     output = embedder(batch)
 
@@ -68,7 +68,7 @@ end
         ]
 
         cat_model = Chain(
-            MLJFlux.EntityEmbedder(entityprops, 4),
+            MLJFlux.EntityEmbedderLayer(entityprops, 4),
             Dense(9 => (ind == 1) ? 10 : 1),
             finalizer[ind],
         )
@@ -143,14 +143,14 @@ end
 @testset "Transparent when no categorical variables" begin
     entityprops = []
     numfeats = 4
-    embedder = MLJFlux.EntityEmbedder(entityprops, 4)
+    embedder = MLJFlux.EntityEmbedderLayer(entityprops, 4)
     output = embedder(batch)
     @test output ≈ batch
     @test eltype(output) == Float32
 end
 
 
-@testset "get_embedding_matrices works and has the right dimensions" begin
+@testset "get_embedding_matrices works as well as the light wrapper" begin
     models = [
         MLJFlux.NeuralNetworkBinaryClassifier,
         MLJFlux.NeuralNetworkClassifier,
@@ -187,21 +187,40 @@ end
         3 4
     ])
 
+    stable_rng=StableRNG(123)
+
     for j in eachindex(embedding_dims)
         for i in eachindex(models)
+            # Without lightweight wrapper
             clf = models[1](
-                builder = MLJFlux.Short(n_hidden = 5, dropout = 0.2),
+                builder = MLJFlux.MLP(hidden=(10, 10)),
                 optimiser = Optimisers.Adam(0.01),
                 batch_size = 8,
                 epochs = 100,
                 acceleration = CUDALibs(),
                 optimiser_changes_trigger_retraining = true,
                 embedding_dims = embedding_dims[3],
+                rng=42
             )
-
             mach = machine(clf, X, ys[1])
-
             fit!(mach, verbosity = 0)
+            Xnew = transform(mach, X)
+            # With lightweight wrapper
+            clf2 = deepcopy(clf)
+            emb = MLJFlux.EntityEmbedder(clf2)
+            @test_throws  MLJFlux.ERR_MODEL_UNSPECIFIED begin
+                MLJFlux.EntityEmbedder()
+            end
+            mach_emb = machine(emb, X, ys[1])
+            fit!(mach_emb, verbosity = 0)
+            Xnew_emb = transform(mach_emb, X)
+            @test Xnew == Xnew_emb
+
+            # Pipeline doesn't throw an error
+            pipeline = emb |> clf
+            mach_pipe = machine(pipeline, X, y)
+            fit!(mach_pipe, verbosity = 0)
+            y = predict_mode(mach_pipe, X)
 
             mapping_matrices = MLJFlux.get_embedding_matrices(
                 fitted_params(mach).chain,

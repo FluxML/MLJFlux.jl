@@ -36,6 +36,7 @@ MMI.metadata_pkg(
     package_uuid = "23777cdb-d90c-4eb0-a694-7c2b83d5c1d6",
     package_url = "https://github.com/JuliaAI/MLJTransforms.jl",
     is_pure_julia = true,
+    is_wrapper = true
 )
 
 MMI.metadata_model(
@@ -46,7 +47,6 @@ MMI.metadata_model(
 MMI.target_in_fit(::Type{<:EntityEmbedder}) = true
 
 # 9. Forwarding traits
-MMI.is_wrapper(::Type{<:EntityEmbedder}) =true
 MMI.supports_training_losses(::Type{<:EntityEmbedder}) = true
 
 

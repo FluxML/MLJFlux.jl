@@ -35,8 +35,8 @@ clf = NeuralNetworkClassifier(
 fit!(mach)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">trained Machine; caches model-specific representations of data
   model: NeuralNetworkClassifier(builder = MLP(hidden = (5, 4), …), …)
   args: 
-    1:	Source @911 ⏎ ScientificTypesBase.Table{AbstractVector{ScientificTypesBase.Continuous}}
-    2:	Source @488 ⏎ AbstractVector{ScientificTypesBase.Multiclass{3}}
+    1:	Source @950 ⏎ ScientificTypesBase.Table{AbstractVector{ScientificTypesBase.Continuous}}
+    2:	Source @196 ⏎ AbstractVector{ScientificTypesBase.Multiclass{3}}
 </code></pre><p>Let&#39;s evaluate the training loss and validation accuracy</p><pre><code class="language-julia hljs">training_loss = cross_entropy(predict(mach, X_train), y_train)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">0.4392339631006042</code></pre><pre><code class="language-julia hljs">val_acc = accuracy(predict_mode(mach, X_test), y_test)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">0.9</code></pre><p>Poor performance it seems.</p><h3 id="Incremental-Training"><a class="docs-heading-anchor" href="#Incremental-Training">Incremental Training</a><a id="Incremental-Training-1"></a><a class="docs-heading-anchor-permalink" href="#Incremental-Training" title="Permalink"></a></h3><p>Now let&#39;s train it for another 30 epochs at half the original learning rate. All we need to do is changes these hyperparameters and call fit again. It won&#39;t reset the model parameters before training.</p><pre><code class="language-julia hljs">clf.optimiser = Optimisers.Adam(clf.optimiser.eta/2)
 clf.epochs = clf.epochs + 30
 fit!(mach, verbosity=2);</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[ Info: Updating machine(NeuralNetworkClassifier(builder = MLP(hidden = (5, 4), …), …), …).

@@ -150,7 +150,7 @@ end
 end
 
 
-@testset "get_embedding_matrices works as well as the light wrapper" begin
+@testset_accelerated  "embedding_matrices work as well as the light wrapper"  accel begin
     models = [
         MLJFlux.NeuralNetworkBinaryClassifier,
         MLJFlux.NeuralNetworkClassifier,
@@ -197,7 +197,7 @@ end
                 optimiser = Optimisers.Adam(0.01),
                 batch_size = 8,
                 epochs = 100,
-                acceleration = CUDALibs(),
+                acceleration = accel,
                 optimiser_changes_trigger_retraining = true,
                 embedding_dims = embedding_dims[3],
                 rng=42

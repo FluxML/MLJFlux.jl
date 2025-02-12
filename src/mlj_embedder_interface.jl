@@ -32,16 +32,16 @@ end
 # 8. Extra metadata
 MMI.metadata_pkg(
     EntityEmbedder,
-    package_name = "MLJTransforms",
-    package_uuid = "23777cdb-d90c-4eb0-a694-7c2b83d5c1d6",
-    package_url = "https://github.com/JuliaAI/MLJTransforms.jl",
+    package_name = "MLJFlux",
+    package_uuid = "094fc8d1-fd35-5302-93ea-dabda2abf845",
+    package_url = "https://github.com/FluxML/MLJFlux.jl",
     is_pure_julia = true,
     is_wrapper = true
 )
 
 MMI.metadata_model(
     EntityEmbedder,
-    load_path = "MLJTransforms.EntityEmbedder",
+    load_path = "MLJFlux.EntityEmbedder",
 )
 
 MMI.target_in_fit(::Type{<:EntityEmbedder}) = true

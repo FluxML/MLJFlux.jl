@@ -42,7 +42,7 @@ end
 @testset_accelerated "Short" accel begin
     builder = MLJFlux.Short(n_hidden=4, σ=Flux.relu, dropout=0.5)
     chain = MLJFlux.build(builder, StableRNGs.StableRNG(123), 5, 3)
-    ps = Flux.params(chain)
+    ps = Flux.trainables(chain)
     @test size.(ps) == [(4, 5), (4,), (3, 4), (3,)]
 
     # reproducibility:
@@ -59,7 +59,7 @@ end
     ), Flux.Dense(4, n_out)))
     rng = StableRNGs.StableRNG(123)
     chain = MLJFlux.build(builder, rng, 5, 3)
-    ps = Flux.params(chain)
+    ps = Flux.trainables(chain)
     @test size.(ps) == [(4, 5), (4,), (3, 4), (3,)]
 
     chain2 = MLJFlux.build(builder, StableRNGs.StableRNG(1), 5, 3)
@@ -75,7 +75,7 @@ end
     end
 
     chain4 = MLJFlux.build(conv_builder, nothing, (5, 5), 3, 2)
-    ps4 = Flux.params(chain4)
+    ps4 = Flux.trainables(chain4)
     @test size.(ps4) == [(3, 3, 2, 16), (16,), (3, 144), (3,)]
 end
 

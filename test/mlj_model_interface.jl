@@ -36,7 +36,7 @@ end
         @test model.acceleration == CUDALibs()
     end
 
-    @test_throws MLJFlux.ERR_BAD_OPTIMISER NeuralNetworkClassifier(
+    @test_throws MLJFlux.ERR_BAD_OPTIMISER MLJFlux.NeuralNetworkClassifier(
         optimiser=Flux.Optimise.Adam(),
     )
 end
@@ -150,7 +150,7 @@ end
         )
     end
 
-    model = NeuralNetworkRegressor(
+    model = MLJFlux.NeuralNetworkRegressor(
         epochs = 2,
         batch_size = 32,
         builder = LisasBuilder(10),
@@ -164,51 +164,55 @@ end
     )
 end
 
+# test layer does not exist for continuous input and transform does nothing:
+@testset_accelerated(
+    "get no-op behaviour when categoricals absent",
+    accel,
+    begin
+        models = [
+            MLJFlux.NeuralNetworkBinaryClassifier,
+            MLJFlux.NeuralNetworkClassifier,
+            MLJFlux.NeuralNetworkRegressor,
+            MLJFlux.MultitargetNeuralNetworkRegressor,
+        ]
+        # table case
+        X1 = (
+            Column1 = Float32[1.0, 2.0, 3.0, 4.0, 5.0],
+            Column4 = Float32[1.0, 2.0, 3.0, 4.0, 5.0],
+            Column5 = randn(Float32, 5),
+        )
+        # matrix case
+        X2 = rand(Float32, 5, 5)
+        Xs = [X1, X2]
 
-@testset "layer does not exist for continuous input and transform does nothing" begin
-    models = [
-        MLJFlux.NeuralNetworkBinaryClassifier,
-        MLJFlux.NeuralNetworkClassifier,
-        MLJFlux.NeuralNetworkRegressor,
-        MLJFlux.MultitargetNeuralNetworkRegressor,
-    ]
-    # table case
-    X1 = (
-        Column1 = Float32[1.0, 2.0, 3.0, 4.0, 5.0],
-        Column4 = Float32[1.0, 2.0, 3.0, 4.0, 5.0],
-        Column5 = randn(Float32, 5),
-    )
-    # matrix case
-    X2 = rand(Float32, 5, 5)
-    Xs = [X1, X2]
+        y = categorical([0, 1, 0, 1, 1])
+        yreg = Float32[0.1, -0.3, 0.2, 0.8, 0.9]
+        ys = [y, y, yreg, yreg]
+        for j in eachindex(Xs)
+            for i in eachindex(models)
+                clf = models[1](
+                    ; builder = MLJFlux.Short(n_hidden = 5, dropout = 0.2, σ = relu),
+                    optimiser = Optimisers.Adam(0.01),
+                    batch_size = 8,
+                    epochs = 100,
+                    acceleration = accel,
+                    optimiser_changes_trigger_retraining = true,
+                )
 
-    y = categorical([0, 1, 0, 1, 1])
-    yreg = Float32[0.1, -0.3, 0.2, 0.8, 0.9]
-    ys = [y, y, yreg, yreg]
-    for j in eachindex(Xs)
-        for i in eachindex(models)
-            clf = models[1](
-                builder = MLJFlux.Short(n_hidden = 5, dropout = 0.2, σ = relu),
-                optimiser = Optimisers.Adam(0.01),
-                batch_size = 8,
-                epochs = 100,
-                acceleration = CUDALibs(),
-                optimiser_changes_trigger_retraining = true,
-            )
+                mach = machine(clf, Xs[j], ys[1])
 
-            mach = machine(clf, Xs[j], ys[1])
+                fit!(mach, verbosity = 0)
 
-            fit!(mach, verbosity = 0)
+                @test typeof(fitted_params(mach).chain.layers[1][1]) ==
+                    typeof(Dense(3 => 5, relu))
 
-            @test typeof(fitted_params(mach).chain.layers[1][1]) ==
-                  typeof(Dense(3 => 5, relu))
-
-            @test transform(mach, Xs[j]) == Xs[j]
+                @test transform(mach, Xs[j]) == Xs[j]
+            end
         end
     end
-end
+)
 
-@testset "transform works properly" begin
+@testset_accelerated "transform works properly" accel begin
     # In this test we assumed that get_embedding_weights works
     # properly which has been tested.
     models = [
@@ -236,7 +240,7 @@ end
             optimiser = Optimisers.Adam(0.01),
             batch_size = 8,
             epochs = 100,
-            acceleration = CUDALibs(),
+            acceleration = accel,
             optimiser_changes_trigger_retraining = true,
             embedding_dims = Dict(:Column2 => 4, :Column5 => 2),
         )
@@ -272,7 +276,7 @@ end
     end
 end
 
-@testset "fit, refit and predict work tests" begin
+@testset_accelerated "fit, refit and predict work tests" accel begin
     models = [
         MLJFlux.NeuralNetworkBinaryClassifier,
         MLJFlux.NeuralNetworkClassifier,
@@ -298,7 +302,7 @@ end
             optimiser = Optimisers.Adam(0.01),
             batch_size = 8,
             epochs = 2,
-            acceleration = CUDALibs(),
+            acceleration = accel,
             optimiser_changes_trigger_retraining = true,
             embedding_dims = Dict(:Column2 => 4, :Column5 => 2),
         )

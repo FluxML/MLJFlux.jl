@@ -53,8 +53,8 @@ end
     # )
     # chain =
     #    MLJFlux.build(builder, StableRNGs.StableRNG(123), imsize, nclasses, inchannels)
-    # @test length.(MLJFlux.Flux.params(ref_chain)) ==
-    #    length.(MLJFlux.Flux.params(chain))
+    # @test length.(MLJFlux.Flux.trainables(ref_chain)) ==
+    #    length.(MLJFlux.Flux.trainables(chain))
 end
 
 true

@@ -117,7 +117,7 @@ function get_embedding_matrices(chain, cat_inds, featnames)
     embedding_matrices = Dict{Symbol, Matrix{Float32}}()
     for cat_ind in cat_inds
         featname = featnames[cat_ind]
-        matrix = Flux.params(embedder_layer.embedders[cat_ind])[1]
+        matrix = Flux.trainables(embedder_layer.embedders[cat_ind])[1]
         embedding_matrices[featname] = matrix
     end
     return embedding_matrices

@@ -33,8 +33,8 @@ entityprops = [
     z4 = Int.(batch[4, :])
 
     # extract matrices from categorical embedder
-    EE1 = Flux.params(embedder.embedders[2])[1]         # (newdim, levels) = (5, 10)
-    EE2 = Flux.params(embedder.embedders[4])[1]         # (newdim, levels) = (2, 2)
+    EE1 = Flux.trainables(embedder.embedders[2])[1]         # (newdim, levels) = (5, 10)
+    EE2 = Flux.trainables(embedder.embedders[4])[1]         # (newdim, levels) = (2, 2)
 
     ## One-hot encoding 
     z2_hot = Flux.onehotbatch(z2, levels(z2))
@@ -73,9 +73,9 @@ end
             finalizer[ind],
         )
 
-        EE1_before = Flux.params(cat_model.layers[1].embedders[2])[1]
-        EE2_before = Flux.params(cat_model.layers[1].embedders[4])[1]
-        W_before = Flux.params(cat_model.layers[2])[1]
+        EE1_before = Flux.trainables(cat_model.layers[1].embedders[2])[1]
+        EE2_before = Flux.trainables(cat_model.layers[1].embedders[4])[1]
+        W_before = Flux.trainables(cat_model.layers[2])[1]
 
         ### Test with obvious equivalent feedforward
         x1 = batch[1:1, :]
@@ -118,9 +118,9 @@ end
         optim = Flux.setup(Flux.Adam(10), cat_model)
         new_params = Flux.update!(optim, cat_model, grads[1])
 
-        EE1_after = Flux.params(new_params[1].layers[1].embedders[2].weight)[1]
-        EE2_after = Flux.params(new_params[1].layers[1].embedders[4].weight)[1]
-        W_after = Flux.params(new_params[1].layers[2].weight)[1]
+        EE1_after = Flux.trainables(new_params[1].layers[1].embedders[2].weight)[1]
+        EE2_after = Flux.trainables(new_params[1].layers[1].embedders[4].weight)[1]
+        W_after = Flux.trainables(new_params[1].layers[2].weight)[1]
 
         ## Option 2: Backward with ObviousNetwork
         loss, grads = Flux.withgradient(net) do m
@@ -130,9 +130,9 @@ end
 
         optim = Flux.setup(Flux.Adam(10), net)
         z = Flux.update!(optim, net, grads[1])
-        EE1_after_cp = Flux.params(z[1].EE1)[1]
-        EE2_after_cp = Flux.params(z[1].EE2)[1]
-        W_after_cp = Flux.params(z[1].W)[1]
+        EE1_after_cp = Flux.trainables(z[1].EE1)[1]
+        EE2_after_cp = Flux.trainables(z[1].EE2)[1]
+        W_after_cp = Flux.trainables(z[1].W)[1]
         @test EE1_after_cp ≈ EE1_after
         @test EE2_after_cp ≈ EE2_after
         @test W_after_cp ≈ W_after
@@ -230,9 +230,12 @@ end
 
             embedder_layer = fitted_params(mach).chain.layers[1]
             # get_embedding_matrices work
-            @test mapping_matrices[:Column2] == Flux.params(embedder_layer.embedders[2])[1]
-            @test mapping_matrices[:Column3] == Flux.params(embedder_layer.embedders[3])[1]
-            @test mapping_matrices[:Column6] == Flux.params(embedder_layer.embedders[6])[1]
+            @test mapping_matrices[:Column2] ==
+                Flux.trainables(embedder_layer.embedders[2])[1]
+            @test mapping_matrices[:Column3] ==
+                Flux.trainables(embedder_layer.embedders[3])[1]
+            @test mapping_matrices[:Column6] ==
+                Flux.trainables(embedder_layer.embedders[6])[1]
             # dimensionalities are correct
             @test size(mapping_matrices[:Column2]) == expected_dims[3][1]
             @test size(mapping_matrices[:Column3]) == expected_dims[3][2]

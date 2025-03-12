@@ -53,21 +53,21 @@ end
     model = MLJFlux.NeuralNetworkRegressor(; alpha=0, lambda=0.3, optimiser)
     chain = MLJFlux.regularized_optimiser(model, 1)
     @test chain isa Optimisers.OptimiserChain{
-        Tuple{Optimisers.WeightDecay, Optimisers.Momentum}
+        <:Tuple{Optimisers.WeightDecay, Optimisers.Momentum}
     }
 
     # alpha = 1:
     model = MLJFlux.NeuralNetworkRegressor(; alpha=1, lambda=0.3, optimiser)
     chain = MLJFlux.regularized_optimiser(model, 1)
     @test chain isa Optimisers.OptimiserChain{
-        Tuple{Optimisers.SignDecay, Optimisers.Momentum}
+        <:Tuple{Optimisers.SignDecay, Optimisers.Momentum}
     }
 
     # general case:
     model = MLJFlux.NeuralNetworkRegressor(; alpha=0.4, lambda=0.3, optimiser)
     chain = MLJFlux.regularized_optimiser(model, 1)
     @test chain isa Optimisers.OptimiserChain{
-        Tuple{Optimisers.SignDecay, Optimisers.WeightDecay, Optimisers.Momentum}
+        <:Tuple{Optimisers.SignDecay, Optimisers.WeightDecay, Optimisers.Momentum}
     }
 end
 
@@ -133,8 +133,8 @@ mutable struct LisasBuilder
   n1::Int
 end
 
-# UndefVarError accepts two inputs from julia > v"1.9"
-_UndefVarError(var, scope) = @static if VERSION < v"1.10"
+# UndefVarError accepts two inputs from julia > v"1.10"
+_UndefVarError(var, scope) = @static if VERSION < v"1.11"
     UndefVarError(var)
 else
     UndefVarError(var, scope)

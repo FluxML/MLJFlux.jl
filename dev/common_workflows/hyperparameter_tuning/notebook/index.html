@@ -17,7 +17,7 @@ clf = NeuralNetworkClassifier(
         hidden = (5, 4), 
         σ = NNlib.relu), 
   finaliser = NNlib.softmax, 
-  optimiser = Adam(0.01, (0.9, 0.999), 1.0e-8), 
+  optimiser = Adam(eta=0.01, beta=(0.9, 0.999), epsilon=1.0e-8), 
   loss = Flux.Losses.crossentropy, 
   epochs = 10, 
   batch_size = 8, 
@@ -29,7 +29,7 @@ clf = NeuralNetworkClassifier(
   embedding_dims = Dict{Symbol, Real}())</code></pre><h3 id="Hyperparameter-Tuning-Example"><a class="docs-heading-anchor" href="#Hyperparameter-Tuning-Example">Hyperparameter Tuning Example</a><a id="Hyperparameter-Tuning-Example-1"></a><a class="docs-heading-anchor-permalink" href="#Hyperparameter-Tuning-Example" title="Permalink"></a></h3><p>Let&#39;s tune the batch size and the learning rate. We will use grid search and 5-fold cross-validation.</p><p>We start by defining the hyperparameter ranges</p><pre><code class="language-julia hljs">r1 = range(clf, :batch_size, lower=1, upper=64)
 etas = [10^x for x in range(-4, stop=0, length=4)]
 optimisers = [Optimisers.Adam(eta) for eta in etas]
-r2 = range(clf, :optimiser, values=optimisers)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">NominalRange(optimiser = Adam(0.0001, (0.9, 0.999), 1.0e-8), Adam(0.00215443, (0.9, 0.999), 1.0e-8), Adam(0.0464159, (0.9, 0.999), 1.0e-8), ...)</code></pre><p>Then passing the ranges along with the model and other arguments to the <code>TunedModel</code> constructor.</p><pre><code class="language-julia hljs">tuned_model = TunedModel(
+r2 = range(clf, :optimiser, values=optimisers)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">NominalRange(optimiser = Adam(eta=0.0001, beta=(0.9, 0.999), epsilon=1.0e-8), Adam(eta=0.0021544346900318843, beta=(0.9, 0.999), epsilon=1.0e-8), Adam(eta=0.046415888336127795, beta=(0.9, 0.999), epsilon=1.0e-8), ...)</code></pre><p>Then passing the ranges along with the model and other arguments to the <code>TunedModel</code> constructor.</p><pre><code class="language-julia hljs">tuned_model = TunedModel(
     model=clf,
     tuning=Grid(goal=25),
     resampling=CV(nfolds=5, rng=42),
@@ -41,7 +41,7 @@ fit!(mach, verbosity=0);</code></pre><p>Let&#39;s check out the best performing 
         hidden = (5, 4), 
         σ = NNlib.relu), 
   finaliser = NNlib.softmax, 
-  optimiser = Adam(0.0464159, (0.9, 0.999), 1.0e-8), 
+  optimiser = Adam(eta=0.046415888336127795, beta=(0.9, 0.999), epsilon=1.0e-8), 
   loss = Flux.Losses.crossentropy, 
   epochs = 10, 
   batch_size = 1, 
@@ -67,4 +67,4 @@ curve = learning_curve(
     xlab=curve.parameter_name,
     xscale=curve.parameter_scale,
     ylab = &quot;Cross Entropy&quot;,
-)</code></pre><img src="25c24a14.svg" alt="Example block output"/><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../entity_embeddings/notebook/">« Entity Embeddings</a><a class="docs-footer-nextpage" href="../../composition/notebook/">Model Composition »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.1 on <span class="colophon-date" title="Wednesday 12 February 2025 19:42">Wednesday 12 February 2025</span>. Using Julia version 1.10.8.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+)</code></pre><img src="46cb14dd.svg" alt="Example block output"/><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../entity_embeddings/notebook/">« Entity Embeddings</a><a class="docs-footer-nextpage" href="../../composition/notebook/">Model Composition »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.1 on <span class="colophon-date" title="Wednesday 12 March 2025 21:54">Wednesday 12 March 2025</span>. Using Julia version 1.10.9.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

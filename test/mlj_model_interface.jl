@@ -53,21 +53,21 @@ end
     model = MLJFlux.NeuralNetworkRegressor(; alpha=0, lambda=0.3, optimiser)
     chain = MLJFlux.regularized_optimiser(model, 1)
     @test chain isa Optimisers.OptimiserChain{
-        Tuple{Optimisers.WeightDecay, Optimisers.Momentum}
+        <:Tuple{Optimisers.WeightDecay, Optimisers.Momentum}
     }
 
     # alpha = 1:
     model = MLJFlux.NeuralNetworkRegressor(; alpha=1, lambda=0.3, optimiser)
     chain = MLJFlux.regularized_optimiser(model, 1)
     @test chain isa Optimisers.OptimiserChain{
-        Tuple{Optimisers.SignDecay, Optimisers.Momentum}
+        <:Tuple{Optimisers.SignDecay, Optimisers.Momentum}
     }
 
     # general case:
     model = MLJFlux.NeuralNetworkRegressor(; alpha=0.4, lambda=0.3, optimiser)
     chain = MLJFlux.regularized_optimiser(model, 1)
     @test chain isa Optimisers.OptimiserChain{
-        Tuple{Optimisers.SignDecay, Optimisers.WeightDecay, Optimisers.Momentum}
+        <:Tuple{Optimisers.SignDecay, Optimisers.WeightDecay, Optimisers.Momentum}
     }
 end
 

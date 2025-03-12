@@ -133,8 +133,8 @@ mutable struct LisasBuilder
   n1::Int
 end
 
-# UndefVarError accepts two inputs from julia > v"1.9"
-_UndefVarError(var, scope) = @static if VERSION < v"1.10"
+# UndefVarError accepts two inputs from julia > v"1.10"
+_UndefVarError(var, scope) = @static if VERSION < v"1.11"
     UndefVarError(var)
 else
     UndefVarError(var, scope)

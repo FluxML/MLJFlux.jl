@@ -33,7 +33,7 @@ makedocs(
             "Regression"=>"interface/Regression.md",
             "Multi-Target Regression"=>"interface/Multitarget Regression.md",
             "Image Classification"=>"interface/Image Classification.md",
-            "Entity Embdedding"=>"interface/entity_embedder.md",
+            "Entity Embdedding"=>"interface/entity_embedding.md",
         ],
         "Common Workflows" => Any[
             "Incremental Training"=>"common_workflows/incremental_training/notebook.md",
@@ -47,7 +47,6 @@ makedocs(
         ],
         "Extended Examples" => Any[
             "MNIST Images"=>"extended_examples/MNIST/notebook.md",
-            "Spam Detection with RNNs"=>"extended_examples/spam_detection/notebook.md",
         ],
         "Contributing" => "contributing.md"],
     doctest = false,

@@ -31,8 +31,7 @@
     @test all(scs .== Continuous)
     
     # 2) all types must be a concrete subtype of AbstractFloat (i.e. <: AbstractFloat, but ≠ AbstractFloat itself)
-    all(t -> t <: AbstractFloat && isconcretetype(t), ts)  ||
-        error("Some types are not strict concrete subtypes of AbstractFloat")
+    @test all(t -> t <: AbstractFloat && isconcretetype(t), ts)
 end
 
 @testset "Generate New feature names Function Tests" begin

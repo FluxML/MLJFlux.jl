@@ -28,7 +28,7 @@
     ts  = schema(Xenc).types
     
     # 1) all scitypes must be exactly Continuous
-    all(scs .== Continuous)  || error("Not all scitypes are Continuous")
+    @test all(scs .== Continuous)
     
     # 2) all types must be a concrete subtype of AbstractFloat (i.e. <: AbstractFloat, but ≠ AbstractFloat itself)
     all(t -> t <: AbstractFloat && isconcretetype(t), ts)  ||

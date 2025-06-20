@@ -85,10 +85,13 @@ MMI.training_losses(embedder::EntityEmbedder, report) =
 
 In MLJ (or MLJBase) bind an instance unsupervised `model` to data with
 
-    mach = machine(model, X, y)
+    mach = machine(embed_model, X, y)
 
 Here:
 
+- `embed_model` is an instance of `EntityEmbedder`, which wraps a supervised MLJFlux model. 
+  The supervised model must be one of these: `MLJFlux.NeuralNetworkClassifier`, `NeuralNetworkBinaryClassifier`,
+  `MLJFlux.NeuralNetworkRegressor`,`MLJFlux.MultitargetNeuralNetworkRegressor`.
 
 - `X` is any table of input features supported by the model being wrapped. Features to be transformed must
    have element scitype `Multiclass` or `OrderedFactor`. Use `schema(X)` to 
@@ -116,6 +119,7 @@ Train the machine using `fit!(mach)`.
 ```julia
 using MLJ
 using CategoricalArrays
+import Pkg; Pkg.add("MLJLIBSVMInterface")       # For SVC
 
 # Setup some data
 N = 200
@@ -129,25 +133,56 @@ X = (;
         repeat(["group1", "group1", "group2", "group2", "group3"], Int(N / 5)),
     ),
 )
-y = categorical([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])           # Classification
+y = categorical(repeat(["class1", "class2", "class3", "class4", "class5"], Int(N / 5)))
 
-# Initiate model
-EntityEmbedder = @load EntityEmbedder pkg=MLJFlux
+# Load the entity embedder, it's neural network backbone and the SVC which inherently supports
+# only continuous features
+EntityEmbedder = @load EntityEmbedder pkg=MLJFlux   
 NeuralNetworkClassifier = @load NeuralNetworkClassifier pkg=MLJFlux
+SVC = @load SVC pkg=LIBSVM              
 
-clf = NeuralNetworkClassifier(embedding_dims=Dict(:Column2 => 2, :Column3 => 2))
 
-emb = EntityEmbedder(clf)
+
+emb = EntityEmbedder(NeuralNetworkClassifier(embedding_dims=Dict(:Column2 => 2, :Column3 => 2)))
+clf = SVC(cost = 1.0)
+
+julia> pipeline = emb |> clf
+DeterministicPipeline(
+  entity_embedder = EntityEmbedder(
+        model = NeuralNetworkClassifier(builder = Short(n_hidden = 0, …), …)), 
+  svc = SVC(
+        kernel = LIBSVM.Kernel.RadialBasis, 
+        gamma = 0.0, 
+        cost = 1.0, 
+        cachesize = 200.0, 
+        degree = 3, 
+        coef0 = 0.0, 
+        tolerance = 0.001, 
+        shrinking = true), 
+  cache = true)
 
 # Construct machine
-mach = machine(emb, X, y)
+mach = machine(pipeline, X, y)
 
 # Train model
 fit!(mach)
 
+# Predict
+yhat = predict(mach, X)
+
 # Transform data using model to encode categorical columns
-Xnew = transform(mach, X)
-Xnew
+machy = machine(emb, X, y)
+fit!(machy)
+julia> Xnew = transform(machy, X)
+(Column1 = Float32[1.0, 2.0, 3.0, 4.0, 5.0, 1.0, … ],
+ Column2_1 = Float32[1.285769, 0.08033762, -0.09961729, -0.2812789, 0.94185555, 1.285769,  … ],
+ Column2_2 = Float32[-0.8712612, -0.34193662, -0.8327084, 1.6905315, 0.75170106, -0.8712612,  …],
+ Column3_1 = Float32[-0.00044717162, 1.5679433, -0.48835647, -0.9364795, -0.9364795, -0.00044717162, …],
+ Column3_2 = Float32[-1.086054, 1.1133554, -1.5444189, 0.2760421, 0.2760421, -1.086054,  … ],
+ Column4 = Float32[1.0, 2.0, 3.0, 4.0, 5.0, 1.0, … ],
+ Column5 = Float32[0.27364022, 0.12229505, -0.60269946, 1.5815768, -0.6342952, -0.12323896, … ],
+ Column6_1 = Float32[-0.99640805, -0.99640805, 0.8055623, 0.8055623, 0.34632754, -0.99640805, … ],
+ Column6_2 = Float32[-1.0043539, -1.0043539, 0.19345926, 0.19345926, 1.7287723, -1.0043539, … ])
 ```
 
 See also

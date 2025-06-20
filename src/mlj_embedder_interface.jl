@@ -144,20 +144,7 @@ SVC = @load SVC pkg=LIBSVM
 emb = EntityEmbedder(NeuralNetworkClassifier(embedding_dims=Dict(:Column2 => 2, :Column3 => 2)))
 clf = SVC(cost = 1.0)
 
-julia> pipeline = emb |> clf
-DeterministicPipeline(
-  entity_embedder = EntityEmbedder(
-        model = NeuralNetworkClassifier(builder = Short(n_hidden = 0, …), …)), 
-  svc = SVC(
-        kernel = LIBSVM.Kernel.RadialBasis, 
-        gamma = 0.0, 
-        cost = 1.0, 
-        cachesize = 200.0, 
-        degree = 3, 
-        coef0 = 0.0, 
-        tolerance = 0.001, 
-        shrinking = true), 
-  cache = true)
+pipeline = emb |> clf
 
 # Construct machine
 mach = machine(pipeline, X, y)

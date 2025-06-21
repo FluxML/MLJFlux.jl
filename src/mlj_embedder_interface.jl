@@ -85,10 +85,13 @@ MMI.training_losses(embedder::EntityEmbedder, report) =
 
 In MLJ (or MLJBase) bind an instance unsupervised `model` to data with
 
-    mach = machine(model, X, y)
+    mach = machine(embed_model, X, y)
 
 Here:
 
+- `embed_model` is an instance of `EntityEmbedder`, which wraps a supervised MLJFlux model. 
+  The supervised model must be one of these: `MLJFlux.NeuralNetworkClassifier`, `NeuralNetworkBinaryClassifier`,
+  `MLJFlux.NeuralNetworkRegressor`,`MLJFlux.MultitargetNeuralNetworkRegressor`.
 
 - `X` is any table of input features supported by the model being wrapped. Features to be transformed must
    have element scitype `Multiclass` or `OrderedFactor`. Use `schema(X)` to 
@@ -129,25 +132,42 @@ X = (;
         repeat(["group1", "group1", "group2", "group2", "group3"], Int(N / 5)),
     ),
 )
-y = categorical([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])           # Classification
+y = categorical(repeat(["class1", "class2", "class3", "class4", "class5"], Int(N / 5)))
 
-# Initiate model
-EntityEmbedder = @load EntityEmbedder pkg=MLJFlux
+# Load the entity embedder, it's neural network backbone and the SVC which inherently supports
+# only continuous features
+EntityEmbedder = @load EntityEmbedder pkg=MLJFlux   
 NeuralNetworkClassifier = @load NeuralNetworkClassifier pkg=MLJFlux
+SVC = @load SVC pkg=LIBSVM              
 
-clf = NeuralNetworkClassifier(embedding_dims=Dict(:Column2 => 2, :Column3 => 2))
 
-emb = EntityEmbedder(clf)
+emb = EntityEmbedder(NeuralNetworkClassifier(embedding_dims=Dict(:Column2 => 2, :Column3 => 2)))
+clf = SVC(cost = 1.0)
+
+pipeline = emb |> clf
 
 # Construct machine
-mach = machine(emb, X, y)
+mach = machine(pipeline, X, y)
 
 # Train model
 fit!(mach)
 
+# Predict
+yhat = predict(mach, X)
+
 # Transform data using model to encode categorical columns
-Xnew = transform(mach, X)
-Xnew
+machy = machine(emb, X, y)
+fit!(machy)
+julia> Xnew = transform(machy, X)
+(Column1 = Float32[1.0, 2.0, 3.0, … ],
+ Column2_1 = Float32[1.2, 0.08, -0.09, -0.2, 0.94, 1.2,  … ],
+ Column2_2 = Float32[-0.87, -0.34, -0.8, 1.6, 0.75, -0.87,  …],
+ Column3_1 = Float32[-0.0, 1.56, -0.48, -0.9, -0.9, -0.0, …],
+ Column3_2 = Float32[-1.0, 1.1, -1.54, 0.2, 0.2, -1.0,  … ],
+ Column4 = Float32[1.0, 2.0, 3.0, 4.0, 5.0, 1.0, … ],
+ Column5 = Float32[0.27, 0.12, -0.60, 1.5, -0.6, -0.123, … ],
+ Column6_1 = Float32[-0.99, -0.99, 0.8, 0.8, 0.34, -0.99, … ],
+ Column6_2 = Float32[-1.00, -1.0, 0.19, 0.19, 1.7, -1.00, … ])
 ```
 
 See also

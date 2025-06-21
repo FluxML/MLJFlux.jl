@@ -33,6 +33,7 @@ makedocs(
             "Regression"=>"interface/Regression.md",
             "Multi-Target Regression"=>"interface/Multitarget Regression.md",
             "Image Classification"=>"interface/Image Classification.md",
+            "Entity Embeddings"=>"interface/Entity Embeddings.md",
         ],
         "Common Workflows" => Any[
             "Incremental Training"=>"common_workflows/incremental_training/notebook.md",

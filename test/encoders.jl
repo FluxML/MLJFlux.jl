@@ -7,6 +7,7 @@
         Column3 = categorical(["b", "c", "d"]),
         Column4 = [1.0, 2.0, 3.0, 4.0, 5.0],
     )
+    # Test Encoding Functionality
     map = MLJFlux.ordinal_encoder_fit(X; featinds = [2, 3])
     Xenc = MLJFlux.ordinal_encoder_transform(X, map)
     @test map[2] == Dict('a' => 1, 'b' => 2, 'c' => 3, 'd' => 4, 'e' => 5)
@@ -21,6 +22,16 @@
     @test !haskey(map, 1)   # already encoded
 
     @test Xenc == MLJFlux.ordinal_encoder_fit_transform(X; featinds = [2, 3])[1]
+
+    # Test Consistency with Types
+    scs = schema(Xenc).scitypes
+    ts  = schema(Xenc).types
+    
+    # 1) all scitypes must be exactly Continuous
+    @test all(scs .== Continuous)
+    
+    # 2) all types must be a concrete subtype of AbstractFloat (i.e. <: AbstractFloat, but ≠ AbstractFloat itself)
+    @test all(t -> t <: AbstractFloat && isconcretetype(t), ts)
 end
 
 @testset "Generate New feature names Function Tests" begin

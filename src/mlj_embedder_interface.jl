@@ -82,14 +82,27 @@ are still presented a target variable in training, but they behave as transforme
 pipelines. They are entity embedding transformers, in the sense of the article, "Entity
 Embeddings of Categorical Variables" by Cheng Guo, Felix Berkhahn.
 
-The atomic `model` must be an instance of `MLJFlux.NeuralNetworkClassifier`,
-`MLJFlux.NeuralNetworkBinaryClassifier`, `MLJFlux.NeuralNetworkRegressor`, or
-`MLJFlux.MultitargetNeuralNetworkRegressor`. Hyperparameters of the atomic model, in
-particular `builder` and `embedding_dims`, will effect embedding performance.
+# Training data
 
-The wrapped model is bound to a machine and trained exactly as the wrapped supervised
-`model`, and supports the same form of training data. In particular, a training target
-must be supplied.
+In MLJ (or MLJBase) bind an instance unsupervised `model` to data with
+
+    mach = machine(embed_model, X, y)
+
+Here:
+
+- `embed_model` is an instance of `EntityEmbedder`, which wraps a supervised MLJFlux
+  model, `model`, which must be an instance of one of these:
+  `MLJFlux.NeuralNetworkClassifier`, `NeuralNetworkBinaryClassifier`,
+  `MLJFlux.NeuralNetworkRegressor`,`MLJFlux.MultitargetNeuralNetworkRegressor`.
+
+- `X` is any table of input features supported by the model being wrapped. Features to be
+  transformed must have element scitype `Multiclass` or `OrderedFactor`. Use `schema(X)`
+  to check scitypes.
+
+- `y` is the target, which can be any `AbstractVector` supported by the model being
+  wrapped.
+
+Train the machine using `fit!(mach)`.
 
 # Examples
 
@@ -107,6 +120,7 @@ X = (
   b = categorical(rand("abcde", N)),
   c = categorical(rand("ABCDEFGHIJ", N), ordered = true),
 )
+
 y = categorical(rand("YN", N));
 
 # Initiate model

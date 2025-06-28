@@ -74,12 +74,13 @@ MMI.training_losses(embedder::EntityEmbedder, report) =
     MMI.training_losses(embedder.model, report)
 
 
-
-
 """
-    EntityEmbedder(; model=mljflux_neural_model)
+    EntityEmbedder(; model=supervised_mljflux_model)
 
-`EntityEmbedder` implements entity embeddings as in the "Entity Embeddings of Categorical Variables" paper by Cheng Guo, Felix Berkhahn.
+Wrapper for a MLJFlux supervised model, to convert it to a transformer. Such transformers
+are still presented a target variable in training, but they behave as transformers in MLJ
+pipelines. They are entity embedding transformers, in the sense of the article, "Entity
+Embeddings of Categorical Variables" by Cheng Guo, Felix Berkhahn.
 
 # Training data
 
@@ -89,86 +90,73 @@ In MLJ (or MLJBase) bind an instance unsupervised `model` to data with
 
 Here:
 
-- `embed_model` is an instance of `EntityEmbedder`, which wraps a supervised MLJFlux model. 
-  The supervised model must be one of these: `MLJFlux.NeuralNetworkClassifier`, `NeuralNetworkBinaryClassifier`,
+- `embed_model` is an instance of `EntityEmbedder`, which wraps a supervised MLJFlux
+  model, `model`, which must be an instance of one of these:
+  `MLJFlux.NeuralNetworkClassifier`, `NeuralNetworkBinaryClassifier`,
   `MLJFlux.NeuralNetworkRegressor`,`MLJFlux.MultitargetNeuralNetworkRegressor`.
 
-- `X` is any table of input features supported by the model being wrapped. Features to be transformed must
-   have element scitype `Multiclass` or `OrderedFactor`. Use `schema(X)` to 
-   check scitypes. 
+- `X` is any table of input features supported by the model being wrapped. Features to be
+  transformed must have element scitype `Multiclass` or `OrderedFactor`. Use `schema(X)`
+  to check scitypes.
 
-- `y` is the target, which can be any `AbstractVector` supported by the model being wrapped.
+- `y` is the target, which can be any `AbstractVector` supported by the model being
+  wrapped.
 
 Train the machine using `fit!(mach)`.
 
-# Hyper-parameters
-
-- `model`: The supervised MLJFlux neural network model to be used for entity embedding. 
-  This must be one of these: `MLJFlux.NeuralNetworkClassifier`, `NeuralNetworkBinaryClassifier`,
-  `MLJFlux.NeuralNetworkRegressor`,`MLJFlux.MultitargetNeuralNetworkRegressor`. The selected model may have hyperparameters 
-  that may affect embedding performance, the most notable of which could be the `builder` argument.
-
-# Operations
-
-- `transform(mach, Xnew)`: Transform the categorical features of `Xnew` into dense `Continuous` vectors using the trained `MLJFlux.EntityEmbedderLayer` layer present in the network.
-    Check relevant documentation [here](https://fluxml.ai/MLJFlux.jl/dev/) and in particular, the `embedding_dims` hyperparameter.
-
-
 # Examples
+
+In the following example we wrap a `NeuralNetworkClassifier` as an `EntityEmbedder`, so
+that it can be used to supply continuously encoded features to a nearest neighbor model,
+which does not support categorical features.
 
 ```julia
 using MLJ
-using CategoricalArrays
 
 # Setup some data
-N = 200
-X = (;
-    Column1 = repeat(Float32[1.0, 2.0, 3.0, 4.0, 5.0], Int(N / 5)),
-    Column2 = categorical(repeat(['a', 'b', 'c', 'd', 'e'], Int(N / 5))),
-    Column3 = categorical(repeat(["b", "c", "d", "f", "f"], Int(N / 5)), ordered = true),
-    Column4 = repeat(Float32[1.0, 2.0, 3.0, 4.0, 5.0], Int(N / 5)),
-    Column5 = randn(Float32, N),
-    Column6 = categorical(
-        repeat(["group1", "group1", "group2", "group2", "group3"], Int(N / 5)),
-    ),
+N = 400
+X = (
+  a = rand(Float32, N),
+  b = categorical(rand("abcde", N)),
+  c = categorical(rand("ABCDEFGHIJ", N), ordered = true),
 )
-y = categorical(repeat(["class1", "class2", "class3", "class4", "class5"], Int(N / 5)))
 
-# Load the entity embedder, it's neural network backbone and the SVC which inherently supports
-# only continuous features
-EntityEmbedder = @load EntityEmbedder pkg=MLJFlux   
+y = categorical(rand("YN", N));
+
+# Initiate model
+EntityEmbedder = @load EntityEmbedder pkg=MLJFlux
+
+# Flux model to do learn the entity embeddings:
 NeuralNetworkClassifier = @load NeuralNetworkClassifier pkg=MLJFlux
-SVC = @load SVC pkg=LIBSVM              
 
+# Other supervised model type, requiring `Continuous` features:
+KNNClassifier = @load KNNClassifier pkg=NearestNeighborModels
 
-emb = EntityEmbedder(NeuralNetworkClassifier(embedding_dims=Dict(:Column2 => 2, :Column3 => 2)))
-clf = SVC(cost = 1.0)
+# Instantiate the models:
+clf = NeuralNetworkClassifier(embedding_dims=Dict(:b => 2, :c => 3))
+emb = EntityEmbedder(clf)
 
-pipeline = emb |> clf
-
-# Construct machine
-mach = machine(pipeline, X, y)
-
-# Train model
+# For illustrative purposes, train the embedder on its own:
+mach = machine(emb, X, y)
 fit!(mach)
+Xnew = transform(mach, X)
 
-# Predict
-yhat = predict(mach, X)
+# And compare feature scitypes:
+schema(X)
+schema(Xnew)
 
-# Transform data using model to encode categorical columns
-machy = machine(emb, X, y)
-fit!(machy)
-julia> Xnew = transform(machy, X)
-(Column1 = Float32[1.0, 2.0, 3.0, … ],
- Column2_1 = Float32[1.2, 0.08, -0.09, -0.2, 0.94, 1.2,  … ],
- Column2_2 = Float32[-0.87, -0.34, -0.8, 1.6, 0.75, -0.87,  …],
- Column3_1 = Float32[-0.0, 1.56, -0.48, -0.9, -0.9, -0.0, …],
- Column3_2 = Float32[-1.0, 1.1, -1.54, 0.2, 0.2, -1.0,  … ],
- Column4 = Float32[1.0, 2.0, 3.0, 4.0, 5.0, 1.0, … ],
- Column5 = Float32[0.27, 0.12, -0.60, 1.5, -0.6, -0.123, … ],
- Column6_1 = Float32[-0.99, -0.99, 0.8, 0.8, 0.34, -0.99, … ],
- Column6_2 = Float32[-1.00, -1.0, 0.19, 0.19, 1.7, -1.00, … ])
+# Now construct the pipeline:
+pipe = emb |> KNNClassifier()
+
+# And train it to make predictions:
+mach = machine(pipe, X, y)
+fit!(mach)
+predict(mach, X)[1:3]
 ```
+
+It is to be emphasized that the `NeuralNertworkClassifier` is only being used to
+learn entity embeddings, not to make predictions, which here are made by
+`KNNClassifier()`.
 
 See also
 [`NeuralNetworkClassifier`, `NeuralNetworkRegressor`](@ref)

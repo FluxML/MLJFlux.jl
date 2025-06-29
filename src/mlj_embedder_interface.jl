@@ -110,6 +110,41 @@ In the following example we wrap a `NeuralNetworkClassifier` as an `EntityEmbedd
 that it can be used to supply continuously encoded features to a nearest neighbor model,
 which does not support categorical features.
 
+## Simple Example
+```julia
+using MLJ
+
+# Setup some data
+N = 400
+X = (
+  a = rand(Float32, N),
+  b = categorical(rand("abcde", N)),
+  c = categorical(rand("ABCDEFGHIJ", N), ordered = true),
+)
+
+y = categorical(rand("YN", N));
+
+# Initiate model
+EntityEmbedder = @load EntityEmbedder pkg=MLJFlux
+
+# Flux model to do learn the entity embeddings:
+NeuralNetworkClassifier = @load NeuralNetworkClassifier pkg=MLJFlux
+
+# Instantiate the models:
+clf = NeuralNetworkClassifier(embedding_dims=Dict(:b => 2, :c => 3))
+emb = EntityEmbedder(clf)
+
+# Train and transform the data using the embedder:
+mach = machine(emb, X, y)
+fit!(mach)
+Xnew = transform(mach, X)
+
+# Compare schemas before and after transformation
+schema(X)
+schema(Xnew)
+```
+
+## Using with Downstream Models (Pipeline)
 ```julia
 using MLJ
 
@@ -135,15 +170,6 @@ KNNClassifier = @load KNNClassifier pkg=NearestNeighborModels
 # Instantiate the models:
 clf = NeuralNetworkClassifier(embedding_dims=Dict(:b => 2, :c => 3))
 emb = EntityEmbedder(clf)
-
-# For illustrative purposes, train the embedder on its own:
-mach = machine(emb, X, y)
-fit!(mach)
-Xnew = transform(mach, X)
-
-# And compare feature scitypes:
-schema(X)
-schema(Xnew)
 
 # Now construct the pipeline:
 pipe = emb |> KNNClassifier()

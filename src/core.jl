@@ -253,7 +253,7 @@ tomat(y::Vector) = reshape(y, size(y, 1), 1)
 reformat(y, ::Type{<:AbstractVector{<:Union{Continuous,Count}}}) =
     reshape(y, 1, length(y))
 function reformat(y, ::Type{<:AbstractVector{<:Finite}})
-    levels = y |> first |> MLJModelInterface.classes
+    levels = y |> first |> CategoricalArrays.levels
     return Flux.onehotbatch(y, levels)
 end
 
@@ -285,7 +285,7 @@ end
 function collate(model::NeuralNetworkBinaryClassifier, X, y, verbosity)
     row_batches = Base.Iterators.partition(1:nrows(y), model.batch_size)
     Xmatrix = _f32(reformat(X), verbosity)
-    yvec = (y .== classes(y)[2])' # convert to boolean
+    yvec = (y .== levels(y)[2])' # convert to boolean
     return [_get(Xmatrix, b) for b in row_batches], [_get(yvec, b) for b in row_batches]
 end
 
@@ -294,4 +294,3 @@ function _f32(x::AbstractArray, verbosity)
     verbosity > 0 && @info "MLJFlux: converting input data to Float32"
     return Float32.(x)
 end
-

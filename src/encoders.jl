@@ -17,7 +17,7 @@ function ordinal_encoder_fit(X; featinds)
     # 2. Use feature mapper to compute the mapping of each level in each column
     for i in featinds
         feat_col = Tables.getcolumn(Tables.columns(X), i)
-        feat_levels = levels(feat_col)
+        feat_levels = CategoricalArrays.unwrap.(levels(feat_col))
         # Check if feat levels is already ordinal encoded in which case we skip
         (Set([Float32(i) for i in 1:length(feat_levels)]) == Set(feat_levels)) && continue
         # Compute the dict using the given feature_mapper function
@@ -64,10 +64,10 @@ function ordinal_encoder_transform(X, mapping_matrix)
         # Create the transformation function for each column
         if ind in keys(mapping_matrix)
             train_levels = keys(mapping_matrix[ind])
-            test_levels = levels(col)
+            test_levels = CategoricalArrays.unwrap.(levels(col))
             check_unkown_levels(train_levels, test_levels)
             level2scalar = mapping_matrix[ind]
-            new_col = unwrap.(recode(col, level2scalar...))
+            new_col = CategoricalArrays.unwrap.(recode(col, level2scalar...))
             push!(new_feats, new_col)
         else
             push!(new_feats, col)

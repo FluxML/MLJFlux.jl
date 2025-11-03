@@ -36,7 +36,7 @@ entityprops = [
     EE1 = Flux.trainables(embedder.embedders[2])[1]         # (newdim, levels) = (5, 10)
     EE2 = Flux.trainables(embedder.embedders[4])[1]         # (newdim, levels) = (2, 2)
 
-    ## One-hot encoding 
+    ## One-hot encoding
     z2_hot = Flux.onehotbatch(z2, levels(z2))
     z4_hot = Flux.onehotbatch(z4, levels(z4))
 

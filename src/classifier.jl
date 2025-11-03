@@ -8,7 +8,7 @@ data `X` and `y`.
 """
 function MLJFlux.shape(model::NeuralNetworkClassifier, X, y)
     X = X isa Matrix ? Tables.table(X) : X
-    levels = MLJModelInterface.classes(y[1])
+    levels = CategoricalArrays.levels(y[1])
     n_output = length(levels)
     n_input = Tables.schema(X).names |> length
     return (n_input, n_output)
@@ -31,7 +31,7 @@ MLJFlux.fitresult(
     y,
     ordinal_mappings = nothing,
     embedding_matrices = nothing,
-) = (chain, MLJModelInterface.classes(y[1]), ordinal_mappings, embedding_matrices)
+) = (chain, levels(y[1]), ordinal_mappings, embedding_matrices)
 
 function MLJModelInterface.predict(
     model::NeuralNetworkClassifier,

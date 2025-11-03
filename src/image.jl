@@ -1,5 +1,5 @@
 function shape(model::ImageClassifier, X, y)
-    levels = MLJModelInterface.classes(y[1])
+    levels = CategoricalArrays.levels(y)
     n_output = length(levels)
     n_input = size(X[1])
 
@@ -18,7 +18,7 @@ build(model::ImageClassifier, rng, shape) =
                model.finaliser)
 
 fitresult(model::ImageClassifier, chain, y, ::Any, ::Any) =
-    (chain, MLJModelInterface.classes(y[1]))
+    (chain, levels(y))
 
 function MLJModelInterface.predict(model::ImageClassifier, fitresult, Xnew)
     chain, levels = fitresult

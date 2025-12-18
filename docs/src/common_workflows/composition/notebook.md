@@ -11,7 +11,11 @@ In this workflow example, we see how MLJFlux enables composing MLJ models with M
 models. We will assume a class imbalance setting and wrap an oversampler with a deep
 learning model from MLJFlux.
 
-**Julia version** is assumed to be 1.10.*
+````@example composition
+PKG_ENV = joinpath(@__DIR__, "..", "..", "..")
+````
+
+**This script tested using Julia 1.10**
 
 ### Basic Imports
 
@@ -21,17 +25,18 @@ using Flux              # For more flexibility
 import Random           # To create imbalance
 import Imbalance        # To solve the imbalance
 import Optimisers       # native Flux.jl optimisers no longer supported
-using StableRNGs        # for reproducability
-using CategoricalArrays
+using StableRNGs        # for reproducibility across Julia versions
+import CategoricalArrays.unwrap
+
+stable_rng() = StableRNGs.StableRNG(123)
 ````
 
 ### Loading and Splitting the Data
 
 ````@example composition
 iris = load_iris() # a named-tuple of vectors
-species, X = unpack(iris, ==(:target), rng=StableRNG(123))
-X = Flux.fmap(column-> Float32.(column), X) # Flux prefers Float32 data
-nothing #hide
+y, X = unpack(iris, ==(:target), rng=stable_rng())
+X = fmap(column-> Float32.(column), X) # Flux prefers Float32 data
 ````
 
 The iris dataset has a target with uniformly distributed values, `"versicolor"`,
@@ -44,7 +49,7 @@ y = coerce(
             species == "virginica" ? unwrap(species) : "colosa"
         end,
         Multiclass,
-)
+);
 Imbalance.checkbalance(y)
 ````
 
@@ -67,7 +72,7 @@ clf = NeuralNetworkClassifier(
     optimiser=Optimisers.Adam(0.01),
     batch_size=8,
     epochs=50,
-    rng=StableRNG(123),
+    rng=stable_rng(),
 )
 ````
 
@@ -76,7 +81,7 @@ construct. This comes from `MLJBalancing` And allows combining resampling method
 MLJ models in a sequential pipeline.
 
 ````@example composition
-oversampler = BorderlineSMOTE1(k=5, ratios=1.0, rng=42)
+oversampler = BorderlineSMOTE1(k=5, ratios=1.0, rng=stable_rng())
 balanced_model = BalancedModel(model=clf, balancer1=oversampler)
 standarizer = Standardizer()
 ````
@@ -89,7 +94,7 @@ pipeline = standarizer |> balanced_model
 
 By this, any training data will be standardized then oversampled then passed to the
 model. Meanwhile, for inference, the standardizer will automatically use the training
-set's mean and std and the oversampler will play no role.
+set's mean and std and the oversampler will be play no role.
 
 ### Training the Composed Model
 
@@ -97,10 +102,12 @@ The pipeline model can be evaluated like any other model:
 
 ````@example composition
 mach = machine(pipeline, X, y)
-cv=CV(nfolds=6)
-evaluate!(mach, resampling=cv, measure=accuracy, verbosity=0)
+fit!(mach)
+cv=CV(nfolds=5)
+evaluate!(mach, resampling=cv, measure=accuracy)
 ````
 
 ---
 
 *This page was generated using [Literate.jl](https://github.com/fredrikekre/Literate.jl).*
+

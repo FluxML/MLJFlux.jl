@@ -12,4 +12,4 @@
 # Important 
 
 Scripts or notebooks in this folder cannot be reliably executed without the accompanying
-Manifest.toml and Project.toml files.
+Manifest.toml and Project.toml files, which live at [/docs/](../../../).

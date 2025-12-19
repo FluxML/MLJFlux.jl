@@ -2,7 +2,6 @@
 
 | file                        | description                                              |
 |:----------------------------|:---------------------------------------------------------|
-| `notebook.ipynb`            | Juptyer notebook (executed)                              |
 | `notebook.unexecuted.ipynb` | Jupyter notebook (unexecuted)                            |
 | `notebook.md`               | static markdown (included in MLJFlux.jl docs)            |
 | `notebook.jl`               | executable Julia script annotated with comments          |
@@ -12,4 +11,4 @@
 # Important 
 
 Scripts or notebooks in this folder cannot be reliably executed without the accompanying
-Manifest.toml and Project.toml files.
+Manifest.toml and Project.toml files, which live at [/docs/](../../../).

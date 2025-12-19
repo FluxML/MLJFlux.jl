@@ -7,27 +7,27 @@
 # models with emphasis on training hyperparameters.
 
 using Pkg     #!md
-Pkg.activate(@__DIR__);     #!md
+PKG_ENV = joinpath(@__DIR__, "..", "..", "..")
+Pkg.activate(PKG_ENV);     #!md
 Pkg.instantiate();     #!md
 
-# **Julia version** is assumed to be 1.10.*
-
+# **This script tested using Julia 1.10**
 
 # ### Basic Imports
 
 using MLJ               # Has MLJFlux models
 using Flux              # For more flexibility
-import RDatasets        # Dataset source
 using Plots             # To plot tuning results
 import Optimisers       # native Flux.jl optimisers no longer supported
+using StableRNGs        # for reproducibility across Julia versions
+
+stable_rng() = StableRNGs.StableRNG(123)
 
 # ### Loading and Splitting the Data
 
-iris = RDatasets.dataset("datasets", "iris");
-y, X = unpack(iris, ==(:Species), rng=123);
-X = Float32.(X);      # To be compatible with type of network network parameters
-
-
+iris = load_iris() # a named-tuple of vectors
+y, X = unpack(iris, ==(:target), rng=stable_rng())
+X = fmap(column-> Float32.(column), X) # Flux prefers Float32 data
 
 # ### Instantiating the model
 
@@ -40,7 +40,7 @@ clf = NeuralNetworkClassifier(
     optimiser=Optimisers.Adam(0.01),
     batch_size=8,
     epochs=10,
-    rng=42,
+    rng=stable_rng(),
 )
 
 # ### Hyperparameter Tuning Example
@@ -60,15 +60,18 @@ r2 = range(clf, :optimiser, values=optimisers)
 tuned_model = TunedModel(
     model=clf,
     tuning=Grid(goal=25),
-    resampling=CV(nfolds=5, rng=42),
+    resampling=CV(nfolds=5, rng=stable_rng()),
     range=[r1, r2],
     measure=cross_entropy,
 );
 
 # Then wrapping our tuned model in a machine and fitting it.
+
 mach = machine(tuned_model, X, y);
 fit!(mach, verbosity=0);
+
 # Let's check out the best performing model:
+
 fitted_params(mach).best_model
 
 
@@ -84,7 +87,7 @@ curve = learning_curve(
     X,
     y,
     range=r,
-    resampling=CV(nfolds=4, rng=42),
+    resampling=CV(nfolds=4, rng=stable_rng()),
     measure=cross_entropy,
 )
 

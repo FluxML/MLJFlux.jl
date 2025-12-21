@@ -7,7 +7,11 @@ EditURL = "notebook.jl"
 This tutorial is available as a Jupyter notebook or julia script
 [here](https://github.com/FluxML/MLJFlux.jl/tree/dev/docs/src/extended_examples/MNIST).
 
-**Julia version** is assumed to be 1.10.*
+````@example MNIST
+PKG_ENV = joinpath(@__DIR__, "..", "..", "..")
+````
+
+**This script tested using Julia 1.10**
 
 ````@example MNIST
 using MLJ
@@ -179,11 +183,13 @@ cross_entropy(predicted_labels, labels[test])
 Or to fit and predict, in one line:
 
 ````@example MNIST
-evaluate!(mach,
-          resampling=Holdout(fraction_train=0.5),
-          measure=cross_entropy,
-          rows=1:1000,
-          verbosity=0)
+evaluate!(
+    mach,
+    resampling=Holdout(fraction_train=0.5),
+    measure=cross_entropy,
+    rows=1:1000,
+    verbosity=0,
+)
 ````
 
 ## Wrapping the MLJFlux model with iteration controls
@@ -325,16 +331,9 @@ savefig(joinpath(tempdir(), "weights.png"))
 
 ### Retrieving a snapshot for a prediction:
 
-````julia
+````@example MNIST
 mach2 = machine(joinpath(tempdir(), "mnist3.jls"))
 predict_mode(mach2, images[501:503])
-````
-
-````
-3-element CategoricalArrays.CategoricalArray{Int64,1,UInt32}:
- 7
- 9
- 5
 ````
 
 ### Restarting training

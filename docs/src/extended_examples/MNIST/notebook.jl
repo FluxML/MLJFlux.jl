@@ -3,24 +3,21 @@
 # This tutorial is available as a Jupyter notebook or julia script
 # [here](https://github.com/FluxML/MLJFlux.jl/tree/dev/docs/src/extended_examples/MNIST).
 
-# The following code block assumes the current directory contains `Manifest.toml` and
-# `Project.toml` files tested for this demonstration, available
-# [here](https://github.com/FluxML/MLJFlux.jl/tree/dev/docs/src/extended_examples/MNIST).
-# Otherwise, you can try running `using Pkg; Pkg.activate(temp=true)` instead, and
-# manually add the relevant packages to the temporary environment created.
+using Pkg     #!md
+PKG_ENV = joinpath(@__DIR__, "..", "..", "..")
+Pkg.activate(PKG_ENV);     #!md
+Pkg.instantiate();     #!md
 
-using Pkg
-const DIR = @__DIR__
-Pkg.activate(DIR)
-Pkg.instantiate()
-
-# **Julia version** is assumed to be ≥ 1.10**
+# **This script tested using Julia 1.10**
 
 using MLJ
 using Flux
 import MLJFlux
 import MLUtils
 import MLJIteration # for `skip`
+using StableRNGs
+
+stable_rng() = StableRNG(123)
 
 # If running on a GPU, you will also need to `import CUDA` and `import cuDNN`.
 
@@ -102,12 +99,12 @@ end
 
 # We now define the MLJ model.
 
-ImageClassifier = @load ImageClassifier
+ImageClassifier = @load ImageClassifier pkg=MLJFlux
 clf = ImageClassifier(
     builder=MyConvBuilder(3, 16, 32, 32),
     batch_size=50,
     epochs=10,
-    rng=123,
+    rng=stable_rng(),
 )
 
 # You can add Flux options `optimiser=...` and `loss=...` in the above constructor
@@ -144,7 +141,7 @@ Flux.params(chain)[2]
 # Adding 20 more epochs:
 
 clf.epochs = clf.epochs + 20
-fit!(mach, rows=train);
+fit!(mach, rows=train, verbosity=0);
 
 # Computing an out-of-sample estimate of the loss:
 
@@ -161,6 +158,8 @@ evaluate!(
     verbosity=0,
 )
 
+# (We could also have specified `resampling=[(train, test),]` and dropped the `rows`
+# specifi ation.)
 
 # ## Wrapping the MLJFlux model with iteration controls
 
@@ -194,7 +193,7 @@ evaluate!(
 
 # To extract Flux params from an MLJFlux machine
 
-parameters(mach) = vec.(Flux.params(fitted_params(mach)));
+parameters(mach) = vec.(Flux.trainables(fitted_params(mach)))
 
 # To store the traces:
 

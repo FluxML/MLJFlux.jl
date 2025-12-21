@@ -10,10 +10,6 @@ This demonstration is available as a Jupyter notebook or julia script
 In this workflow example, we see how we can compare different machine learning models
 with a neural network from MLJFlux.
 
-````@example comparison
-PKG_ENV = joinpath(@__DIR__, "..", "..", "..")
-````
-
 **This script tested using Julia 1.10**
 
 ### Basic Imports

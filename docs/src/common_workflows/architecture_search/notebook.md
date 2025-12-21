@@ -12,10 +12,6 @@ with tuning model hyperparameters defining the architecture itself. Although it'
 typically performed with sophisticated search algorithms for efficiency, in this example
 we will be using a simple random search.
 
-````@example architecture_search
-PKG_ENV = joinpath(@__DIR__, "..", "..", "..")
-````
-
 **This script tested using Julia 1.10**
 
 ### Basic Imports

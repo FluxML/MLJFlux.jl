@@ -7,10 +7,6 @@ EditURL = "notebook.jl"
 This tutorial is available as a Jupyter notebook or julia script
 [here](https://github.com/FluxML/MLJFlux.jl/tree/dev/docs/src/extended_examples/MNIST).
 
-````@example MNIST
-PKG_ENV = joinpath(@__DIR__, "..", "..", "..")
-````
-
 **This script tested using Julia 1.10**
 
 ````@example MNIST
@@ -19,6 +15,9 @@ using Flux
 import MLJFlux
 import MLUtils
 import MLJIteration # for `skip`
+using StableRNGs
+
+stable_rng() = StableRNG(123)
 ````
 
 If running on a GPU, you will also need to `import CUDA` and `import cuDNN`.
@@ -117,12 +116,12 @@ end
 We now define the MLJ model.
 
 ````@example MNIST
-ImageClassifier = @load ImageClassifier
+ImageClassifier = @load ImageClassifier pkg=MLJFlux
 clf = ImageClassifier(
     builder=MyConvBuilder(3, 16, 32, 32),
     batch_size=50,
     epochs=10,
-    rng=123,
+    rng=stable_rng(),
 )
 ````
 
@@ -169,7 +168,7 @@ Adding 20 more epochs:
 
 ````@example MNIST
 clf.epochs = clf.epochs + 20
-fit!(mach, rows=train);
+fit!(mach, rows=train, verbosity=0);
 nothing #hide
 ````
 
@@ -191,6 +190,9 @@ evaluate!(
     verbosity=0,
 )
 ````
+
+(We could also have specified `resampling=[(train, test),]` and dropped the `rows`
+specifi ation.)
 
 ## Wrapping the MLJFlux model with iteration controls
 
@@ -225,8 +227,7 @@ Some helpers
 To extract Flux params from an MLJFlux machine
 
 ````@example MNIST
-parameters(mach) = vec.(Flux.params(fitted_params(mach)));
-nothing #hide
+parameters(mach) = vec.(Flux.trainables(fitted_params(mach)))
 ````
 
 To store the traces:

@@ -10,10 +10,6 @@ This demonstration is available as a Jupyter notebook or julia script
 In this workflow example, we learn how MLJFlux enables us to easily use early stopping
 when training MLJFlux models.
 
-````@example early_stopping
-PKG_ENV = joinpath(@__DIR__, "..", "..", "..")
-````
-
 **This script tested using Julia 1.10**
 
 ### Basic Imports

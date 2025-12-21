@@ -10,10 +10,6 @@ This demonstration is available as a Jupyter notebook or julia script
 In this workflow example we learn how to tune different hyperparameters of MLJFlux
 models with emphasis on training hyperparameters.
 
-````@example hyperparameter_tuning
-PKG_ENV = joinpath(@__DIR__, "..", "..", "..")
-````
-
 **This script tested using Julia 1.10**
 
 ### Basic Imports

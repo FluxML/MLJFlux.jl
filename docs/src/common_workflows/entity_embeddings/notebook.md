@@ -21,10 +21,6 @@ machine learning models.
 
 In this notebook, we will explore how to use entity embeddings in MLJFlux models.
 
-````@example entity_embeddings
-PKG_ENV = joinpath(@__DIR__, "..", "..", "..")
-````
-
 **This script tested using Julia 1.10**
 
 ### Basic Imports

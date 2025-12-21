@@ -9,10 +9,6 @@ This demonstration is available as a Jupyter notebook or julia script
 
 In this workflow example we explore how to incrementally train MLJFlux models.
 
-````@example incremental_training
-PKG_ENV = joinpath(@__DIR__, "..", "..", "..")
-````
-
 **Julia version** is assumed to be 1.10.*
 
 ### Basic Imports

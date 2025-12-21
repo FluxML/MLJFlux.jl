@@ -8,7 +8,7 @@
 # learning model from MLJFlux.
 
 using Pkg     #!md
-PKG_ENV = joinpath(@__DIR__, "..", "..", "..")
+PKG_ENV = joinpath(@__DIR__, "..", "..", "..") #!md
 Pkg.activate(PKG_ENV);     #!md
 Pkg.instantiate();     #!md
 

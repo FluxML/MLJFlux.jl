@@ -7,10 +7,6 @@ EditURL = "notebook.jl"
 This demonstration is available as a Jupyter notebook or julia script
 [here](https://github.com/FluxML/MLJFlux.jl/tree/dev/docs/src/common_workflows/live_training).
 
-````@example live_training
-PKG_ENV = joinpath(@__DIR__, "..", "..", "..")
-````
-
 **This script tested using Julia 1.10**
 
 ### Basic Imports
@@ -93,7 +89,7 @@ validation_losses
 
 Note that the wrapped model sets aside some data on which to make out-of-sample
 estimates of the loss, which is how `validation_losses` are calculated. But if we use
-`mach` to make predictions on new input features, these are based on retraing the model
+`mach` to make predictions on new input features, these are based on retraining the model
 on *all* provided data.
 
 ````@example live_training

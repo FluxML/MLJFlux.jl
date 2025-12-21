@@ -11,10 +11,6 @@ In this workflow example, we see how MLJFlux enables composing MLJ models with M
 models. We will assume a class imbalance setting and wrap an oversampler with a deep
 learning model from MLJFlux.
 
-````@example composition
-PKG_ENV = joinpath(@__DIR__, "..", "..", "..")
-````
-
 **This script tested using Julia 1.10**
 
 ### Basic Imports

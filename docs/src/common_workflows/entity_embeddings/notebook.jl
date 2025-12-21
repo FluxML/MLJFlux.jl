@@ -18,7 +18,7 @@
 # In this notebook, we will explore how to use entity embeddings in MLJFlux models.
 
 using Pkg     #!md
-PKG_ENV = joinpath(@__DIR__, "..", "..", "..")
+PKG_ENV = joinpath(@__DIR__, "..", "..", "..") #!md
 Pkg.activate(PKG_ENV);     #!md
 Pkg.instantiate();     #!md
 

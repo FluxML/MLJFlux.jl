@@ -4,7 +4,7 @@
 # [here](https://github.com/FluxML/MLJFlux.jl/tree/dev/docs/src/extended_examples/MNIST).
 
 using Pkg     #!md
-PKG_ENV = joinpath(@__DIR__, "..", "..", "..")
+PKG_ENV = joinpath(@__DIR__, "..", "..", "..") #!md
 Pkg.activate(PKG_ENV);     #!md
 Pkg.instantiate();     #!md
 

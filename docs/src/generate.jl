@@ -32,8 +32,7 @@ function generate(dir; execute=true, pluto=false)
         Literate.notebook(INFILE, OUTDIR, execute=false)
         mv("$OUTDIR/notebook.ipynb", "$OUTDIR/notebook.unexecuted.ipynb", force=true)
         Literate.notebook(INFILE, OUTDIR, execute=$execute)
-        $execute || @warn "Not generating a pre-executed Jupyter notebook for $outdir. "*
-            "YOU NEED TO EXECUTE \"notebook.ipynb\" MANUALLY!"
+        $execute || @warn "Not generating a pre-executed Jupyter notebook for $outdir. "
 
     end |> eval
 end

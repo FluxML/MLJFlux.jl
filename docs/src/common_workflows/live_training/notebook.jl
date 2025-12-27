@@ -4,17 +4,20 @@
 # [here](https://github.com/FluxML/MLJFlux.jl/tree/dev/docs/src/common_workflows/live_training).
 
 using Pkg     #!md
-Pkg.activate(@__DIR__);     #!md
+PKG_ENV = joinpath(@__DIR__, "..", "..", "..") #!md
+Pkg.activate(PKG_ENV);     #!md
 Pkg.instantiate();     #!md
 
-# **Julia version** is assumed to be 1.10.*
+# **This script tested using Julia 1.10**
 
 # ### Basic Imports
 
 using MLJ
 using Flux
-import RDatasets
 import Optimisers
+using StableRNGs        # for reproducibility across Julia versions
+
+stable_rng() = StableRNGs.StableRNG(123)
 
 #-
 
@@ -22,10 +25,9 @@ using Plots
 
 # ### Loading and Splitting the Data
 
-iris = RDatasets.dataset("datasets", "iris");
-y, X = unpack(iris, ==(:Species), rng=123);
-X = Float32.(X);      # To be compatible with type of network network parameters
-
+iris = load_iris() # a named-tuple of vectors
+y, X = unpack(iris, ==(:target), rng=stable_rng())
+X = fmap(column-> Float32.(column), X) # Flux prefers Float32 data
 
 # ### Instantiating the model
 
@@ -39,7 +41,7 @@ clf = NeuralNetworkClassifier(
     optimiser=Optimisers.Adam(0.01),
     batch_size=8,
     epochs=50,
-    rng=42,
+    rng=stable_rng(),
 )
 
 
@@ -75,4 +77,19 @@ iterated_model = IteratedModel(
 # Simply fitting the model is all we need
 
 mach = machine(iterated_model, X, y)
-fit!(mach, force=true)
+fit!(mach)
+validation_losses
+
+# Note that the wrapped model sets aside some data on which to make out-of-sample
+# estimates of the loss, which is how `validation_losses` are calculated. But if we use
+# `mach` to make predictions on new input features, these are based on retraining the model
+# on *all* provided data.
+
+Xnew = (
+    sepal_length = Float32[5.8, 5.8, 5.8],
+    sepal_width = Float32[4.0, 2.6, 2.7],
+    petal_length = Float32[1.2, 4.0, 4.1],
+    petal_width = Float32[0.2, 1.2, 1.0],
+)
+
+predict_mode(mach, Xnew)

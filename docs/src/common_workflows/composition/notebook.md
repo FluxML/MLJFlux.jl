@@ -11,34 +11,41 @@ In this workflow example, we see how MLJFlux enables composing MLJ models with M
 models. We will assume a class imbalance setting and wrap an oversampler with a deep
 learning model from MLJFlux.
 
-**Julia version** is assumed to be 1.10.*
+**This script tested using Julia 1.10**
 
 ### Basic Imports
 
 ````@example composition
 using MLJ               # Has MLJFlux models
 using Flux              # For more flexibility
-import RDatasets        # Dataset source
 import Random           # To create imbalance
 import Imbalance        # To solve the imbalance
 import Optimisers       # native Flux.jl optimisers no longer supported
+using StableRNGs        # for reproducibility across Julia versions
+import CategoricalArrays.unwrap
+
+stable_rng() = StableRNGs.StableRNG(123)
 ````
 
 ### Loading and Splitting the Data
 
 ````@example composition
-iris = RDatasets.dataset("datasets", "iris");
-y, X = unpack(iris, ==(:Species), rng=123);
-X = Float32.(X);      # To be compatible with type of network network parameters
-nothing #hide
+iris = load_iris() # a named-tuple of vectors
+y, X = unpack(iris, ==(:target), rng=stable_rng())
+X = fmap(column-> Float32.(column), X) # Flux prefers Float32 data
 ````
 
-To simulate an imbalanced dataset, we will take a random sample:
+The iris dataset has a target with uniformly distributed values, `"versicolor"`,
+`"setosa"`, and `"virginica"`. To manufacture an unbalanced dataset, we'll combine the
+first two into a single classs, `"colosa"`:
 
 ````@example composition
-Random.seed!(803429)
-subset_indices = rand(1:size(X, 1), 100)
-X, y = X[subset_indices, :], y[subset_indices]
+y = coerce(
+        map(y) do species
+            species == "virginica" ? unwrap(species) : "colosa"
+        end,
+        Multiclass,
+);
 Imbalance.checkbalance(y)
 ````
 
@@ -61,7 +68,7 @@ clf = NeuralNetworkClassifier(
     optimiser=Optimisers.Adam(0.01),
     batch_size=8,
     epochs=50,
-    rng=42,
+    rng=stable_rng(),
 )
 ````
 
@@ -70,7 +77,7 @@ construct. This comes from `MLJBalancing` And allows combining resampling method
 MLJ models in a sequential pipeline.
 
 ````@example composition
-oversampler = BorderlineSMOTE1(k=5, ratios=1.0, rng=42)
+oversampler = BorderlineSMOTE1(k=5, ratios=1.0, rng=stable_rng())
 balanced_model = BalancedModel(model=clf, balancer1=oversampler)
 standarizer = Standardizer()
 ````
@@ -83,11 +90,11 @@ pipeline = standarizer |> balanced_model
 
 By this, any training data will be standardized then oversampled then passed to the
 model. Meanwhile, for inference, the standardizer will automatically use the training
-set's mean and std and the oversampler will be transparent.
+set's mean and std and the oversampler will be play no role.
 
 ### Training the Composed Model
 
-It's indistinguishable from training a single model.
+The pipeline model can be evaluated like any other model:
 
 ````@example composition
 mach = machine(pipeline, X, y)

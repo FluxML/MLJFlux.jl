@@ -5,25 +5,30 @@
 
 # In this workflow example, we see how we can compare different machine learning models
 # with a neural network from MLJFlux.
+
 using Pkg     #!md
-Pkg.activate(@__DIR__);     #!md
+PKG_ENV = joinpath(@__DIR__, "..", "..", "..") #!md
+Pkg.activate(PKG_ENV);     #!md
 Pkg.instantiate();     #!md
 
-# **Julia version** is assumed to be 1.10.*
-
+# **This script tested using Julia 1.10**
 
 # ### Basic Imports
 
 using MLJ               # Has MLJFlux models
 using Flux              # For more flexibility
-import RDatasets        # Dataset source
 using DataFrames        # To visualize hyperparameter search results
 import Optimisers       # native Flux.jl optimisers no longer supported
+using Measurements       # to get ± functionality
+import CategoricalArrays.unwrap
+using StableRNGs        # for reproducibility across Julia versions
+
+stable_rng() = StableRNG(123)
 
 # ### Loading and Splitting the Data
 
-iris = RDatasets.dataset("datasets", "iris");
-y, X = unpack(iris, ==(:Species), rng=123);
+iris = load_iris() # a named-tuple of vectors
+y, X = unpack(iris, ==(:target), rng=stable_rng())
 
 
 # ### Instantiating the models Now let's construct our model. This follows a similar setup
@@ -36,7 +41,7 @@ clf1 = NeuralNetworkClassifier(
     optimiser=Optimisers.Adam(0.01),
     batch_size=8,
     epochs=50,
-    rng=42
+    rng=stable_rng(),
     )
 
 # Let's as well load and construct three other classical machine learning models:
@@ -59,7 +64,7 @@ tuned_model_xg = TunedModel(
     model=clf4,
     ranges=[r1],
     tuning=Grid(resolution=10),
-    resampling=CV(nfolds=5, rng=42),
+    resampling=CV(nfolds=5, rng=stable_rng()),
     measure=cross_entropy,
 );
 
@@ -73,9 +78,12 @@ tuned_model_xg = TunedModel(
 tuned_model = TunedModel(
     models=[clf1, clf2, clf3, tuned_model_xg],
     tuning=Explicit(),
-    resampling=CV(nfolds=5, rng=42),
+    resampling=CV(nfolds=2, rng=stable_rng()),
+    repeats=5,
     measure=cross_entropy,
 );
+
+# Notice here we are using 5 x 2 Monte Carlo cross-validation.
 
 # Then wrapping our tuned model in a machine and fitting it.
 
@@ -85,8 +93,11 @@ fit!(mach, verbosity=0);
 # Now let's see the history for more details on the performance for each of the models
 history = report(mach).history
 history_df = DataFrame(
-    mlp = [x[:model] for x in history],
-    measurement = [x[:measurement][1] for x in history],
+    mlp = [x.model for x in history],
+    measurement = [
+        x.evaluation.measurement[1] ±
+            x.evaluation.uncertainty_radius_95[1] for x in history
+                ],
 )
 sort!(history_df, [order(:measurement)])
 

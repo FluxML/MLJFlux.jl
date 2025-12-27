@@ -185,6 +185,6 @@ learn entity embeddings, not to make predictions, which here are made by
 `KNNClassifier()`.
 
 See also
-[`NeuralNetworkClassifier`, `NeuralNetworkRegressor`](@ref)
+[`NeuralNetworkClassifier`](@ref), [`NeuralNetworkRegressor`](@ref)
 """
 EntityEmbedder

@@ -10,13 +10,13 @@ A Julia package integrating deep learning Flux models with [MLJ](https://juliaai
 
 - Make it easier to apply machine learning techniques provided by MLJ, including: out-of-sample performance evaluation, hyper-parameter optimization, iteration control, and more, to deep learning models
 
-!!! note "MLJFlux Scope" 
+!!! note "MLJFlux Scope"
 
     MLJFlux support is focused on fundamental deep learning models for common
     supervised learning tasks. Sophisticated architectures and approaches, such as online
     learning, reinforcement learning, and adversarial networks, are currently outside its
-    scope. Also, MLJFlux is limited to tasks where all (batches of) training data 
-	fits into memory.
+    scope. Also, MLJFlux is limited to tasks where all (batches of) training data
+        fits into memory.
 
 ## Installation
 
@@ -25,39 +25,47 @@ import Pkg
 Pkg.activate("my_environment", shared=true)
 Pkg.add(["MLJ", "MLJFlux", "Optimisers", "Flux"])
 ```
-You only need `Flux` if you need to build a custom architecture, or experiment with different loss or activation functions. Since MLJFlux 0.5, you must use optimisers from Optimisers.jl, as native Flux.jl optimisers are no longer supported. 
 
 ## Quick Start
 
-For the following demo, you will need to additionally run `Pkg.add("RDatasets")`.
-
 ```@example
-using MLJ, Flux, MLJFlux
-import RDatasets
-import Optimisers
+using MLJ, MLJFlux
+import Flux
 
 # 1. Load Data
-iris = RDatasets.dataset("datasets", "iris");
-y, X = unpack(iris, ==(:Species), colname -> true, rng=123);
+iris = load_iris() # a named-tuple of vectors (but most tables work here)
+y, X = unpack(iris, ==(:target), rng=123)
+X = Flux.fmap(column-> Float32.(column), X) # Flux prefers Float32 data
 
 # 2. Load and instantiate model
 NeuralNetworkClassifier = @load NeuralNetworkClassifier pkg="MLJFlux"
 clf = NeuralNetworkClassifier(
     builder=MLJFlux.MLP(; hidden=(5,4), σ=Flux.relu),
-    optimiser=Optimisers.Adam(0.01),
+    optimiser=Flux.Adam(0.01),
     batch_size=8,
-    epochs=100, 
-    acceleration=CUDALibs()         # For GPU support
+    epochs=100,
+    acceleration=CPU1() # the default; use instead `CUDALibs()` for GPU
     )
 
-# 3. Wrap it in a machine 
+# 3. Wrap it in a machine
 mach = machine(clf, X, y)
 
 # 4. Evaluate the model
-cv=CV(nfolds=5)
-evaluate!(mach, resampling=cv, measure=accuracy) 
+evaluate!(mach, resampling=CV(nfolds=3), repeats=2, measure=[brier_loss, accuracy])
+
+# 5. Fit and predict on new data
+fit!(mach)
+Xnew = (
+    sepal_length = [7.2, 4.4, 5.6],
+    sepal_width = [3.0, 2.9, 2.5],
+    petal_length = [5.8, 1.4, 3.9],
+    petal_width = [1.6, 0.2, 1.1],
+)
+predict(mach, Xnew)
 ```
-As you can see we are able to use MLJ meta-functionality (i.e., cross validation) with a Flux deep learning model. All arguments provided have defaults.
+
+As you can see we are able to use MLJ meta-functionality (in this case Monte Carlo
+cross-validation) with a Flux neural network.
 
 Notice that we are also able to define the neural network in a high-level fashion by only
 specifying the number of neurons in each hidden layer and the activation

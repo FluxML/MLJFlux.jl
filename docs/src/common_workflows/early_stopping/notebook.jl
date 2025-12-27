@@ -7,26 +7,27 @@
 # when training MLJFlux models.
 
 using Pkg     #!md
-Pkg.activate(@__DIR__);     #!md
+PKG_ENV = joinpath(@__DIR__, "..", "..", "..") #!md
+Pkg.activate(PKG_ENV);     #!md
 Pkg.instantiate();     #!md
 
-# **Julia version** is assumed to be 1.10.*
-
+# **This script tested using Julia 1.10**
 
 # ### Basic Imports
 
 using MLJ               # Has MLJFlux models
 using Flux              # For more flexibility
-import RDatasets        # Dataset source
 using Plots             # To visualize training
 import Optimisers       # native Flux.jl optimisers no longer supported
+using StableRNGs        # for reproducibility across Julia versions
+
+stable_rng() = StableRNGs.StableRNG(123)
 
 # ### Loading and Splitting the Data
 
-iris = RDatasets.dataset("datasets", "iris");
-y, X = unpack(iris, ==(:Species), rng=123);
-X = Float32.(X);      # To be compatible with type of network network parameters
-
+iris = load_iris() # a named-tuple of vectors
+y, X = unpack(iris, ==(:target), rng=stable_rng())
+X = fmap(column-> Float32.(column), X) # Flux prefers Float32 data
 
 # ### Instantiating the model Now let's construct our model. This follows a similar setup
 # to the one followed in the [Quick Start](../../index.md#Quick-Start).
@@ -38,7 +39,7 @@ clf = NeuralNetworkClassifier(
     optimiser=Optimisers.Adam(0.01),
     batch_size=8,
     epochs=50,
-    rng=42,
+    rng=stable_rng(),
 )
 
 # ### Wrapping it in an IteratedModel
@@ -79,7 +80,7 @@ iterated_model = IteratedModel(
 mach = machine(iterated_model, X, y)
 fit!(mach)
 ## We can get the training losses like so
-training_losses = report(mach)[:model_report].training_losses;
+training_losses = report(mach).model_report.training_losses;
 
 # ### Results
 

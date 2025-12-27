@@ -7,15 +7,17 @@ EditURL = "notebook.jl"
 This demonstration is available as a Jupyter notebook or julia script
 [here](https://github.com/FluxML/MLJFlux.jl/tree/dev/docs/src/common_workflows/live_training).
 
-**Julia version** is assumed to be 1.10.*
+**This script tested using Julia 1.10**
 
 ### Basic Imports
 
 ````@example live_training
 using MLJ
 using Flux
-import RDatasets
 import Optimisers
+using StableRNGs        # for reproducibility across Julia versions
+
+stable_rng() = StableRNGs.StableRNG(123)
 ````
 
 ````@example live_training
@@ -25,10 +27,9 @@ using Plots
 ### Loading and Splitting the Data
 
 ````@example live_training
-iris = RDatasets.dataset("datasets", "iris");
-y, X = unpack(iris, ==(:Species), rng=123);
-X = Float32.(X);      # To be compatible with type of network network parameters
-nothing #hide
+iris = load_iris() # a named-tuple of vectors
+y, X = unpack(iris, ==(:target), rng=stable_rng())
+X = fmap(column-> Float32.(column), X) # Flux prefers Float32 data
 ````
 
 ### Instantiating the model
@@ -44,7 +45,7 @@ clf = NeuralNetworkClassifier(
     optimiser=Optimisers.Adam(0.01),
     batch_size=8,
     epochs=50,
-    rng=42,
+    rng=stable_rng(),
 )
 ````
 
@@ -82,7 +83,24 @@ Simply fitting the model is all we need
 
 ````@example live_training
 mach = machine(iterated_model, X, y)
-fit!(mach, force=true)
+fit!(mach)
+validation_losses
+````
+
+Note that the wrapped model sets aside some data on which to make out-of-sample
+estimates of the loss, which is how `validation_losses` are calculated. But if we use
+`mach` to make predictions on new input features, these are based on retraining the model
+on *all* provided data.
+
+````@example live_training
+Xnew = (
+    sepal_length = Float32[5.8, 5.8, 5.8],
+    sepal_width = Float32[4.0, 2.6, 2.7],
+    petal_length = Float32[1.2, 4.0, 4.1],
+    petal_width = Float32[0.2, 1.2, 1.0],
+)
+
+predict_mode(mach, Xnew)
 ````
 
 ---

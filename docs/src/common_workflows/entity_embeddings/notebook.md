@@ -7,15 +7,21 @@ EditURL = "notebook.jl"
 This demonstration is available as a Jupyter notebook or julia script
 [here](https://github.com/FluxML/MLJFlux.jl/tree/dev/docs/src/common_workflows/entity_embeddings).
 
-Entity embedding is newer deep learning approach for categorical encoding introduced in 2016 by Cheng Guo and Felix Berkhahn.
-It employs a set of embedding layers to map each categorical feature into a dense continuous vector in a similar fashion to how they are employed in NLP architectures.
+Entity embedding is newer deep learning approach for categorical encoding introduced in
+2016 by Cheng Guo and Felix Berkhahn.  It employs a set of embedding layers to map each
+categorical feature into a dense continuous vector in a similar fashion to how they are
+employed in NLP architectures.
 
-In MLJFlux, the `NeuralNetworkClassifier`, `NeuralNetworkRegressor`, and the `MultitargetNeuralNetworkRegressor`` can be trained and evaluated with heterogenous data (i.e., containing categorical features) because they have a built-in entity embedding layer.
-Moreover, they now offer a transform which encode the categorical features with the learnt embeddings to be used by an upstream machine learning model.
+In MLJFlux, the `NeuralNetworkClassifier`, `NeuralNetworkRegressor`, and the
+`MultitargetNeuralNetworkRegressor`` can be trained and evaluated with heterogenous data
+(i.e., containing categorical features) because they have a built-in entity embedding
+layer.  Moreover, they offer a `transform` method which encodes the categorical features
+with the learned embeddings. Such embeddings can then be used as features in downstream
+machine learning models.
 
 In this notebook, we will explore how to use entity embeddings in MLJFlux models.
 
-**Julia version** is assumed to be 1.10.*
+**This script tested using Julia 1.10**
 
 ### Basic Imports
 
@@ -30,12 +36,15 @@ using Tables
 using ProgressMeter
 using Plots
 using ScientificTypes
+using StableRNGs        # for reproducibility across Julia versions
+
+stable_rng() = StableRNGs.StableRNG(246)
 ````
 
 Generate some data
 
 ````@example entity_embeddings
-X, y = make_blobs(1000, 2; centers=2, as_table=true, rng=40)
+X, y = make_blobs(1000, 2; centers=2, as_table=true, rng=stable_rng())
 X = DataFrame(X);
 nothing #hide
 ````
@@ -58,19 +67,20 @@ ylabel!("Feature 2")
 plot(p)
 ````
 
-Let's write a function that creates categorical features C1 and C2 from x1 and x2 in a meaningful way:
+Let's write a function that creates categorical features C1 and C2 from x1 and x2 in a
+meaningful way:
 
 ````@example entity_embeddings
-Random.seed!(40)
-generate_C1(x1) = (x1 > mean(X.x1) ) ? rand(['A', 'B'])  : rand(['C', 'D'])
-generate_C2(x2) = (x2 > mean(X.x2) ) ? rand(['X', 'Y'])  : rand(['Z'])
+rng = stable_rng()
+generate_C1(x1) = (x1 > mean(X.x1) ) ? rand(rng, ['A', 'B'])  : rand(rng, ['C', 'D'])
+generate_C2(x2) = (x2 > mean(X.x2) ) ? rand(rng, ['X', 'Y'])  : rand(rng, ['Z'])
 ````
 
 Generate C1 and C2 columns
 
 ````@example entity_embeddings
-X[!, :C1] = [generate_C1(x) for x in X[!, :x1]]
-X[!, :C2] = [generate_C2(x) for x in X[!, :x2]]
+X[!, :C1] = [generate_C1(x) for x in X[!, :x1]];
+X[!, :C2] = [generate_C2(x) for x in X[!, :x2]];
 X[!, :R3] = rand(1000);  # A random continuous column.
 nothing #hide
 ````
@@ -82,11 +92,12 @@ X = X[!, [:C1, :C2, :R3]];
 nothing #hide
 ````
 
-It's also necessary to cast the categorical columns to the correct scientific type as the embedding layer
-will have an effect on the model if and only if categorical columns exist.
+It's also necessary to cast the categorical columns to the correct scientific type as
+the embedding layer will have an effect on the model if and only if categorical columns
+exist.
 
 ````@example entity_embeddings
-X = coerce(X, :C1 =>Multiclass, :C2 =>Multiclass);
+X = coerce(X, :C1=>Multiclass, :C2=>Multiclass);
 nothing #hide
 ````
 
@@ -94,12 +105,12 @@ Split the data
 
 ````@example entity_embeddings
 (X_train, X_test), (y_train, y_test) = partition(
-	(X, y),
-	0.8,
-	multi = true,
-	shuffle = true,
-	stratify = y,
-	rng = Random.Xoshiro(41)
+        (X, y),
+        0.8,
+        multi = true,
+        shuffle = true,
+        stratify = y,
+        rng = stable_rng(),
 );
 nothing #hide
 ````
@@ -115,14 +126,14 @@ clf = MLJFlux.NeuralNetworkBinaryClassifier(
     optimiser = Optimisers.Adam(0.01),
     batch_size = 2,
     epochs = 100,
-    acceleration = CUDALibs(),
+    acceleration = CPU1(), # use `CUDALibs()` on a GPU
     embedding_dims =  Dict(:C1 => 2, :C2 => 2,),
 );
 nothing #hide
 ````
 
-Notice that we specified to embed each of the columns to 2D columns. By default, it uses `min(numfeats - 1, 10)`
-for the new dimensionality of any categorical feature.
+Notice that we specified to embed each of the columns to 2D columns. By default, it uses
+`min(numfeats - 1, 10)` for the new dimensionality of any categorical feature.
 
 ### Train and evaluate
 
@@ -139,8 +150,8 @@ y_pred = predict_mode(mach, X_test)
 balanced_accuracy(y_pred, y_test)
 ````
 
-Notice how the model has learnt to almost perfectly distinguish the classes and all the information
-has been in the categorical variables.
+Notice how the model has learnt to almost perfectly distinguish the classes and all the
+information has been in the categorical variables.
 
 ### Visualize the embedding space
 
@@ -158,15 +169,19 @@ p1 = scatter(C1_basis[1, :], C1_basis[2, :],
              title = "C1 Basis Columns",
              xlabel = "Column 1",
              ylabel = "Column 2",
-             label = "C1 Columns",
-             legend = :topright)
+             xlim = (-5, 5),
+             ylim = (-5, 5),
+             label = nothing,
+)
 
 p2 = scatter(C2_basis[1, :], C2_basis[2, :],
              title = "C2 Basis Columns",
              xlabel = "Column 1",
              ylabel = "Column 2",
-             label = "C2 Columns",
-             legend = :topright)
+             xlim = (-1.2, 1.0),
+             ylim = (-1.5, 0.25),
+             label = nothing,
+)
 
 c1_cats = ['A', 'B', 'C', 'D']
 for (i, col) in enumerate(eachcol(C1_basis))
@@ -181,17 +196,19 @@ end
 plot(p1, p2, layout = (1, 2), size = (1000, 400))
 ````
 
-As we can see, categories that were generated in a similar pattern were assigned similar vectors. In a dataset,
-where some columns have high cardinality, it's expected that some of the categories will exhibit similar patterns.
+As we can see, categories that were generated in a similar pattern were assigned similar
+vectors. In a dataset, where some columns have high cardinality, it's expected that some
+of the categories will exhibit similar patterns.
 
 ### Transform (embed) data
 
 ````@example entity_embeddings
 X_tr = MLJ.transform(mach, X);
-nothing #hide
+first(X_tr, 5)
 ````
 
-This will transform each categorical value into its corresponding embedding vector. Continuous value will remain intact.
+This will transform each categorical value into its corresponding embedding
+vector. Continuous value will remain intact.
 
 ---
 

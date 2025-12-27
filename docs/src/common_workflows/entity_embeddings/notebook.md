@@ -13,7 +13,7 @@ categorical feature into a dense continuous vector in a similar fashion to how t
 employed in NLP architectures.
 
 In MLJFlux, the `NeuralNetworkClassifier`, `NeuralNetworkRegressor`, and the
-`MultitargetNeuralNetworkRegressor`` can be trained and evaluated with heterogenous data
+`MultitargetNeuralNetworkRegressor` can be trained and evaluated with heterogenous data
 (i.e., containing categorical features) because they have a built-in entity embedding
 layer.  Moreover, they offer a `transform` method which encodes the categorical features
 with the learned embeddings. Such embeddings can then be used as features in downstream

@@ -37,7 +37,7 @@ images, labels = MNIST(split=:train)[:];
 # must force the labels to have the `Multiclass` [scientific
 # type](https://juliaai.github.io/ScientificTypes.jl/dev/). For
 # more on this, see [Working with Categorical
-# Data](https://alan-turing-institute.github.io/MLJ.jl/dev/working_with_categorical_data/).
+# Data](https://juliaai.github.io/MLJ.jl/dev/working_with_categorical_data/).
 
 labels = coerce(labels, Multiclass);
 images = coerce(images, GrayImage);

@@ -276,7 +276,7 @@ end
     end
 end
 
-@testset_accelerated "fit, refit and predict work tests" accel begin
+@testset_accelerated "behavior of fit, predict with entity embeddings" accel begin
     models = [
         MLJFlux.NeuralNetworkBinaryClassifier,
         MLJFlux.NeuralNetworkClassifier,
@@ -332,6 +332,45 @@ end
         # Try model prediction
         Xpred = predict(mach, X)
     end
+end
+
+@testset "by default, warm restarts see optimiser changes" begin
+    # https://github.com/FluxML/MLJFlux.jl/issues/322
+
+    X, y  = make_regression()
+    model = MLJFlux.NeuralNetworkRegressor(
+        ; rng=StableRNGs.StableRNG(123),
+        optimiser=Flux.Adam(0.001),
+    )
+
+    # 1. train for 12 epochs:
+
+    model.epochs = 12
+    mach = machine(model, X, y)
+    fit!(mach, verbosity=0)
+    sum_predictions = predict(mach, X) |> sum
+
+    # 2. repeat the experiment, but change the optimiser after first 10 epochs:
+
+    model = MLJFlux.NeuralNetworkRegressor(
+        ; rng=StableRNGs.StableRNG(123),
+        optimiser=Adam(0.001),
+    )
+    mach = machine(model, X, y)
+
+    # fits for the default 10 epochs:
+    fit!(mach, verbosity=0)
+
+    model.optimiser = Flux.Adam(0.1)
+
+    # fit another 2 epochs, confirming a warm restart:
+    model.epochs = 12
+    @test_logs (:info,) (:info, r"^Loss") (:info, r"^Loss")  fit!(mach, verbosity=2)
+
+    sum_predictions2 = predict(mach, X) |> sum
+
+    # 3. Check we get different outcomes:
+    @test !(sum_predictions ≈ sum_predictions2)
 end
 
 true

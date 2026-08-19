@@ -111,12 +111,10 @@ function MLJModelInterface.fit(model::MLJFluxModel,
     test_chain_works(x, chain)
 
     # Train model with Flux
-    regularized_optimiser, optimiser_state =
-        prepare_optimiser(data, model, chain)
+    optimiser_state = prepare_optimiser(data, model, chain)
     chain, optimiser_state, history = train(
         model,
         chain,
-        regularized_optimiser,
         optimiser_state,
         model.epochs,
         verbosity,
@@ -133,7 +131,6 @@ function MLJModelInterface.fit(model::MLJFluxModel,
         data,
         history,
         shape,
-        regularized_optimiser,
         optimiser_state,
         deepcopy(rng),
         move,
@@ -169,7 +166,6 @@ function MLJModelInterface.update(model::MLJFluxModel,
     data,
     old_history,
     shape,
-    regularized_optimiser,
     optimiser_state,
     rng,
     move,
@@ -217,7 +213,7 @@ function MLJModelInterface.update(model::MLJFluxModel,
         end
         # reset `optimiser_state`:
         data = move.(collate(model, X, y, verbosity))
-        regularized_optimiser, optimiser_state =
+        optimiser_state =
             prepare_optimiser(data, model, chain)
         epochs = model.epochs
     end
@@ -226,7 +222,6 @@ function MLJModelInterface.update(model::MLJFluxModel,
     chain, optimiser_state, history = train(
         model,
         chain,
-        regularized_optimiser,
         optimiser_state,
         epochs,
         verbosity,
@@ -249,7 +244,6 @@ function MLJModelInterface.update(model::MLJFluxModel,
         data,
         history,
         shape,
-        regularized_optimiser,
         optimiser_state,
         deepcopy(rng),
         move,

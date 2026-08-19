@@ -118,7 +118,6 @@ epochs = 10
     _chain_yes_drop, _, history = MLJFlux.train(
         model,
         chain_yes_drop,
-        opt,
         opt_state,
         epochs,
         0,
@@ -133,7 +132,6 @@ epochs = 10
     _chain_no_drop, _, history = MLJFlux.train(
         model,
         chain_no_drop,
-        opt,
         opt_state,
         epochs,
         0,

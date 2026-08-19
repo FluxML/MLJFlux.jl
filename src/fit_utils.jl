@@ -64,5 +64,5 @@ function prepare_optimiser(data, model, chain)
     nbatches = length(data[2])
     regularized_optimiser = MLJFlux.regularized_optimiser(model, nbatches)
     optimiser_state = Optimisers.setup(regularized_optimiser, chain)
-    return regularized_optimiser, optimiser_state
+    return optimiser_state
 end

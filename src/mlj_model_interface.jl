@@ -193,7 +193,10 @@ function MLJModelInterface.update(model::MLJFluxModel,
     if keep_chain
         chain = move(old_chain)
         epochs = model.epochs - old_model.epochs
-        # (`optimiser_state` is not reset)
+        nbatches = length(data[2])
+        # preserve dynamic part of state but update to the current optimiser, as given by
+        # `model`:
+        optimiser_state = adjust(optimiser_state, model, nbatches)
     else
         move = Mover(model.acceleration)
         rng = true_rng(model)

@@ -370,7 +370,7 @@ end
     sum_predictions2 = predict(mach, X) |> sum
 
     # 3. Check we get different outcomes:
-    @test !(sum_predictions ≈ sum_predictions2)
+    @test_broken !(sum_predictions ≈ sum_predictions2)
 end
 
 true

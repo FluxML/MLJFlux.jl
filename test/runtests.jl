@@ -57,6 +57,10 @@ end
     include("metalhead.jl")
 end
 
+@conditional_testset "fit_utils" begin
+    include("fit_utils.jl")
+end
+
 @conditional_testset "mlj_model_interface" begin
     include("mlj_model_interface.jl")
 end

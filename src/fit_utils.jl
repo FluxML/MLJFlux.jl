@@ -66,7 +66,7 @@ function setup_regularized_optimiser(model, nbatches, chain)
     return optimiser_state
 end
 
-function adjust!(optimiser_state, model, nbatches)
+function adjust(optimiser_state, model, nbatches)
     regularized_optimiser = MLJFlux.regularized_optimiser(model, nbatches)
-    Optimisers.adjust!(optimiser_state, regularized_optimiser)
+    Optimisers.adjust(optimiser_state, regularized_optimiser)
 end

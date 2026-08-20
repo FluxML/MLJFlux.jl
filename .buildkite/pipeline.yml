@@ -6,7 +6,6 @@ steps:
       - JuliaCI/julia-test#v1: ~
     agents:
       queue: "cuda"
-      cuda: "*"
     timeout_in_minutes: 90
 
 env:

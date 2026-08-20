@@ -1,12 +1,11 @@
 steps:
-  - label: "Julia v1"
+  - label: "CUDA - Julia v1"
     plugins:
       - JuliaCI/julia#v1:
           version: "1"
       - JuliaCI/julia-test#v1: ~
     agents:
-      queue: "juliagpu"
-      cuda: "*"
+      queue: "cuda"
     timeout_in_minutes: 90
 
 env:

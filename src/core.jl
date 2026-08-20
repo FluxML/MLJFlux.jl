@@ -41,7 +41,6 @@ Update the parameters of a Flux `chain`, where:
 function train_epoch(
     model,
     chain,
-    optimiser,
     optimiser_state,
     X,
     y,
@@ -71,7 +70,6 @@ end
     train(
         model,
         chain,
-        optimiser,
         optimiser_state,
         epochs,
         verbosity,
@@ -117,7 +115,6 @@ initial (no-train) loss.
 function train(
     model,
     chain,
-    optimiser,
     optimiser_state,
     epochs,
     verbosity,
@@ -142,7 +139,6 @@ function train(
         chain, optimiser_state, current_loss = train_epoch(
             model,
             chain,
-            optimiser,
             optimiser_state,
             X,
             y,

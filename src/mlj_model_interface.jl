@@ -111,12 +111,11 @@ function MLJModelInterface.fit(model::MLJFluxModel,
     test_chain_works(x, chain)
 
     # Train model with Flux
-    regularized_optimiser, optimiser_state =
-        prepare_optimiser(data, model, chain)
+    nbatches = length(data[2])
+    optimiser_state = setup_regularized_optimiser(model, nbatches, chain)
     chain, optimiser_state, history = train(
         model,
         chain,
-        regularized_optimiser,
         optimiser_state,
         model.epochs,
         verbosity,
@@ -133,7 +132,6 @@ function MLJModelInterface.fit(model::MLJFluxModel,
         data,
         history,
         shape,
-        regularized_optimiser,
         optimiser_state,
         deepcopy(rng),
         move,
@@ -169,7 +167,6 @@ function MLJModelInterface.update(model::MLJFluxModel,
     data,
     old_history,
     shape,
-    regularized_optimiser,
     optimiser_state,
     rng,
     move,
@@ -196,7 +193,10 @@ function MLJModelInterface.update(model::MLJFluxModel,
     if keep_chain
         chain = move(old_chain)
         epochs = model.epochs - old_model.epochs
-        # (`optimiser_state` is not reset)
+        nbatches = length(data[2])
+        # preserve dynamic part of state but update to the current optimiser, as given by
+        # `model`:
+        optimiser_state = adjust(optimiser_state, model, nbatches)
     else
         move = Mover(model.acceleration)
         rng = true_rng(model)
@@ -217,8 +217,8 @@ function MLJModelInterface.update(model::MLJFluxModel,
         end
         # reset `optimiser_state`:
         data = move.(collate(model, X, y, verbosity))
-        regularized_optimiser, optimiser_state =
-            prepare_optimiser(data, model, chain)
+        nbatches = length(data[2])
+        optimiser_state = setup_regularized_optimiser(model, nbatches, chain)
         epochs = model.epochs
     end
 
@@ -226,7 +226,6 @@ function MLJModelInterface.update(model::MLJFluxModel,
     chain, optimiser_state, history = train(
         model,
         chain,
-        regularized_optimiser,
         optimiser_state,
         epochs,
         verbosity,
@@ -249,7 +248,6 @@ function MLJModelInterface.update(model::MLJFluxModel,
         data,
         history,
         shape,
-        regularized_optimiser,
         optimiser_state,
         deepcopy(rng),
         move,

@@ -8,5 +8,6 @@ updates:
   - package-ecosystem: "julia"
     directories: # Location of Julia projects
       - "/"
+      - "/docs/"
     schedule:
       interval: "weekly"

@@ -17,6 +17,7 @@ for Model in [:NeuralNetworkClassifier, :NeuralNetworkBinaryClassifier]
             builder::B
             finaliser::F
             optimiser::O   # mutable struct from Flux/src/optimise/optimisers.jl
+            eta::Float64 # overrides all rates in `optimiser` if non-zero
             loss::L        # can be called as in `loss(yhat, y)`
             epochs::Int    # number of epochs
             batch_size::Int  # size of a batch
@@ -32,6 +33,8 @@ for Model in [:NeuralNetworkClassifier, :NeuralNetworkBinaryClassifier]
             ; builder::B = Short(),
             finaliser::F = $default_finaliser,
             optimiser::O = Optimisers.Adam(),
+            learning_rate=0.0,
+            eta=learning_rate,
             loss::L = $default_loss,
             epochs = 10,
             batch_size = 1,
@@ -47,6 +50,7 @@ for Model in [:NeuralNetworkClassifier, :NeuralNetworkBinaryClassifier]
                 builder,
                 finaliser,
                 optimiser,
+                eta,
                 loss,
                 epochs,
                 batch_size,
@@ -74,6 +78,7 @@ for Model in [:NeuralNetworkRegressor, :MultitargetNeuralNetworkRegressor]
         mutable struct $Model{B, O, L} <: MLJFluxDeterministic
             builder::B
             optimiser::O  # mutable struct from Flux/src/optimise/optimisers.jl
+            eta::Float64 # overrides all rates in `optimiser` if non-zero
             loss::L       # can be called as in `loss(yhat, y)`
             epochs::Int   # number of epochs
             batch_size::Int # size of a batch
@@ -88,6 +93,8 @@ for Model in [:NeuralNetworkRegressor, :MultitargetNeuralNetworkRegressor]
         function $Model(
             ; builder::B = Linear(),
             optimiser::O = Optimisers.Adam(),
+            learning_rate=0.0,
+            eta=learning_rate,
             loss::L = Flux.mse,
             epochs = 10,
             batch_size = 1,
@@ -102,6 +109,7 @@ for Model in [:NeuralNetworkRegressor, :MultitargetNeuralNetworkRegressor]
             model = $Model{B, O, L}(
                 builder,
                 optimiser,
+                eta,
                 loss,
                 epochs,
                 batch_size,
@@ -132,6 +140,7 @@ mutable struct ImageClassifier{B, F, O, L} <: MLJFluxProbabilistic
     builder::B
     finaliser::F
     optimiser::O
+    eta::Float64 # overrides all rates in `optimiser` if non-zero
     loss::L
     epochs::Int
     batch_size::Int
@@ -146,6 +155,8 @@ function ImageClassifier(
     ; builder::B = image_builder(VGGHack),
     finaliser::F = Flux.softmax,
     optimiser::O = Optimisers.Adam(),
+    learning_rate=0.0,
+    eta=learning_rate,
     loss::L = Flux.crossentropy,
     epochs = 10,
     batch_size = 1,
@@ -159,6 +170,7 @@ function ImageClassifier(
         builder,
         finaliser,
         optimiser,
+        eta,
         loss,
         epochs,
         batch_size,
@@ -226,6 +238,16 @@ const TRANSFORMDOC = """
   was trained on an input `X` that lacks categorical features.
 """
 
+const LEARNING_RATE_DOC = """
+- `eta=0.0` (alias: `learning_rate`): If non-zero, this overrides the learning rate
+  specified in `optimiser`, which is typically is a field names `eta` also. Useful when
+  wrapping an MLJFlux model in MLJ's `TunedModel` with a range of learning rates, and for
+  defining a learning rate schedule, using MLJ's `IteratedModel` wrapper with the
+  `WithModelDo` callback control. If `optimiser` is a chain of optimisers with multiple
+  learning rates, then all rates are uniformly overridden. (The exact mechanism is
+  `Optimisers.adjust!(optimiser_state, eta::Real)`.)
+"""
+
 # # DOCSTRINGS
 
 """
@@ -267,6 +289,8 @@ Train the machine with `fit!(mach, rows=...)`.
   the optimizer), a good rule of thumb is to start out at `10e-3`, and tune using powers
   of `10` between `1` and `1e-7`.
 
+$LEARNING_RATE_DOC
+
 - `loss=Flux.crossentropy`: The loss function which the network will optimize. Should be a
   function which can be called in the form `loss(yhat, y)`.  Possible loss functions are
   listed in [the Flux loss function
@@ -307,8 +331,8 @@ Train the machine with `fit!(mach, rows=...)`.
   training. The default is `Random.default_rng()`.
 
 - `optimizer_changes_trigger_retraining::Bool=false`: Defines what happens when re-fitting
-  a machine if the associated optimiser has changed. If `true`, the associated machine
-  will retrain from scratch on `fit!` call, otherwise it will not.
+  a machine if the associated `optimiser` or `eta` has changed. If `true`, the
+  associated machine will retrain from scratch on `fit!` call, otherwise it will not.
 
 - `acceleration::AbstractResource=CPU1()`: Defines on what hardware training is done. For
   Training on GPU, use `CUDALibs()`.
@@ -460,6 +484,8 @@ Train the machine with `fit!(mach, rows=...)`.
   learning rate (the update rate of the optimizer), a good rule of thumb is to start out
   at `10e-3`, and tune using powers of `10` between `1` and `1e-7`.
 
+$LEARNING_RATE_DOC
+
 - `loss=Flux.binarycrossentropy`: The loss function which the network will optimize. Should be a
   function which can be called in the form `loss(yhat, y)`.  Possible loss functions are
   listed in [the Flux loss function
@@ -500,8 +526,8 @@ Train the machine with `fit!(mach, rows=...)`.
   training.
 
 - `optimizer_changes_trigger_retraining::Bool=false`: Defines what happens when re-fitting
-  a machine if the associated optimiser has changed. If `true`, the associated machine
-  will retrain from scratch on `fit!` call, otherwise it will not.
+  a machine if the associated `optimiser` or `eta` has changed. If `true`, the
+  associated machine will retrain from scratch on `fit!` call, otherwise it will not.
 
 - `acceleration::AbstractResource=CPU1()`: Defines on what hardware training is done. For
   Training on GPU, use `CUDALibs()`.
@@ -670,6 +696,8 @@ Train the machine with `fit!(mach, rows=...)`.
   the optimizer), a good rule of thumb is to start out at `10e-3`, and tune using powers
   of `10` between `1` and `1e-7`.
 
+$LEARNING_RATE_DOC
+
 - `loss=Flux.crossentropy`: The loss function which the network will optimize. Should be a
   function which can be called in the form `loss(yhat, y)`.  Possible loss functions are
   listed in [the Flux loss function
@@ -710,8 +738,8 @@ Train the machine with `fit!(mach, rows=...)`.
   training. The default is `Random.default_rng()`.
 
 - `optimizer_changes_trigger_retraining::Bool=false`: Defines what happens when re-fitting
-  a machine if the associated optimiser has changed. If `true`, the associated machine
-  will retrain from scratch on `fit!` call, otherwise it will not.
+  a machine if the associated `optimiser` or `eta` has changed. If `true`, the
+  associated machine will retrain from scratch on `fit!` call, otherwise it will not.
 
 - `acceleration::AbstractResource=CPU1()`: Defines on what hardware training is done. For
   Training on GPU, use `CUDALibs()`.
@@ -915,6 +943,8 @@ Train the machine with `fit!(mach, rows=...)`.
   the optimizer), a good rule of thumb is to start out at `10e-3`, and tune using powers
   of `10` between `1` and `1e-7`.
 
+$LEARNING_RATE_DOC
+
 - `loss=Flux.mse`: The loss function which the network will optimize. Should be a function
   which can be called in the form `loss(yhat, y)`.  Possible loss functions are listed in
   [the Flux loss function documentation](https://fluxml.ai/Flux.jl/stable/models/losses/).
@@ -948,8 +978,8 @@ Train the machine with `fit!(mach, rows=...)`.
   training. The default is `Random.default_rng()`.
 
 - `optimizer_changes_trigger_retraining::Bool=false`: Defines what happens when re-fitting
-  a machine if the associated optimiser has changed. If `true`, the associated machine
-  will retrain from scratch on `fit!` call, otherwise it will not.
+  a machine if the associated `optimiser` or `eta` has changed. If `true`, the
+  associated machine will retrain from scratch on `fit!` call, otherwise it will not.
 
 - `acceleration::AbstractResource=CPU1()`: Defines on what hardware training is done. For
   Training on GPU, use `CUDALibs()`.
@@ -1180,8 +1210,8 @@ $XDOC
   training. The default is `Random.default_rng()`.
 
 - `optimizer_changes_trigger_retraining::Bool=false`: Defines what happens when re-fitting
-  a machine if the associated optimiser has changed. If `true`, the associated machine
-  will retrain from scratch on `fit!` call, otherwise it will not.
+  a machine if the associated `optimiser` or `eta` has changed. If `true`, the
+  associated machine will retrain from scratch on `fit!` call, otherwise it will not.
 
 - `acceleration::AbstractResource=CPU1()`: Defines on what hardware training is done. For
   Training on GPU, use `CUDALibs()`.

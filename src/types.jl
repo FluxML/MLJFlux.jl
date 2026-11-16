@@ -239,13 +239,13 @@ const TRANSFORMDOC = """
 """
 
 const LEARNING_RATE_DOC = """
-- `eta=0.0` (alias: `learning_rate`): If non-zero, this overrides the learning rate
-  specified in `optimiser`, which is typically is a field names `eta` also. Useful when
-  wrapping an MLJFlux model in MLJ's `TunedModel` with a range of learning rates, and for
-  defining a learning rate schedule, using MLJ's `IteratedModel` wrapper with the
-  `WithModelDo` callback control. If `optimiser` is a chain of optimisers with multiple
-  learning rates, then all rates are uniformly overridden. (The exact mechanism is
-  `Optimisers.adjust!(optimiser_state, eta::Real)`.)
+- `eta=0.0` (alias: `learning_rate`): Learning rate override. If non-zero, this overrides
+  the learning rate specified in `optimiser`, which is typically a field named `eta`
+  also. Useful when wrapping an MLJFlux model in MLJ's `TunedModel` with a range of
+  learning rates, and for defining a learning rate schedule, using MLJ's `IteratedModel`
+  wrapper with the `WithModelDo` callback control. If `optimiser` is a chain of optimisers
+  with multiple learning rates, then all rates are uniformly overridden. (The exact
+  mechanism is `Optimisers.adjust!(optimiser_state, eta)`.)
 """
 
 # # DOCSTRINGS

@@ -236,7 +236,7 @@ function MLJModelInterface.update(model::MLJFluxModel,
     # Properly set history
     if keep_chain
         # note: history[1] = old_history[end]
-        history = vcat(old_history[1:end-1], history)
+        history = vcat(old_history, history[2:end])
     end
 
     # Extract embedding matrices

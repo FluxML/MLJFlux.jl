@@ -2,7 +2,7 @@
 EditURL = "notebook.jl"
 ```
 
-# Early Stopping with MLJ
+# Early Stopping with MLJFlux
 
 This demonstration is available as a Jupyter notebook or julia script
 [here](https://github.com/FluxML/MLJFlux.jl/tree/dev/docs/src/common_workflows/early_stopping).
@@ -21,7 +21,8 @@ using Plots             # To visualize training
 import Optimisers       # native Flux.jl optimisers no longer supported
 using StableRNGs        # for reproducibility across Julia versions
 
-stable_rng() = StableRNGs.StableRNG(123)
+stable_rng() = StableRNGs.StableRNG(123);
+nothing #hide
 ````
 
 ### Loading and Splitting the Data

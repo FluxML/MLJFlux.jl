@@ -182,12 +182,12 @@ function MLJModelInterface.update(model::MLJFluxModel,
     # Decide whether optimiser should trigger retraining from scratch
     optimiser_flag =
         model.optimiser_changes_trigger_retraining &&
-        model.optimiser != old_model.optimiser
+        (model.optimiser != old_model.optimiser || model.eta != old_model.eta)
 
     # Decide whether to retrain from scratch
     keep_chain =
         !optimiser_flag && model.epochs >= old_model.epochs &&
-        MLJModelInterface.is_same_except(model, old_model, :optimiser, :epochs)
+        MLJModelInterface.is_same_except(model, old_model, :optimiser, :eta, :epochs)
 
     # Use old chain if not retraining from scratch or reconstruct and prepare to retrain
     if keep_chain
@@ -195,8 +195,8 @@ function MLJModelInterface.update(model::MLJFluxModel,
         epochs = model.epochs - old_model.epochs
         nbatches = length(data[2])
         # preserve dynamic part of state but update to the current optimiser, as given by
-        # `model`:
-        optimiser_state = adjust(optimiser_state, model, nbatches)
+        # `model`, or, if `model.eta !=0`, adjust only the learning rate:
+        optimiser_state = MLJFlux.adjust(optimiser_state, model, nbatches)
     else
         move = Mover(model.acceleration)
         rng = true_rng(model)

@@ -33,7 +33,8 @@ end
 # https://github.com/FluxML/MLJFlux.jl/issues/213.
 
 function regularized_optimiser(model, nbatches)
-    model.lambda == 0 && return model.optimiser
+    optimiser = model.optimiser
+    model.lambda == 0 && return optimiser
     λ_L1 = model.alpha * model.lambda
     λ_L2 = (1 - model.alpha) * model.lambda
     λ_sign = λ_L1 / nbatches
@@ -43,18 +44,18 @@ function regularized_optimiser(model, nbatches)
     if model.alpha == 0
         return Optimisers.OptimiserChain(
             Optimisers.WeightDecay(λ_weight),
-            model.optimiser,
+            optimiser,
         )
     elseif model.alpha == 1
         return Optimisers.OptimiserChain(
             Optimisers.SignDecay(λ_sign),
-            model.optimiser,
+            optimiser,
         )
     else
         return Optimisers.OptimiserChain(
             Optimisers.SignDecay(λ_sign),
             Optimisers.WeightDecay(λ_weight),
-            model.optimiser,
+            optimiser,
         )
     end
 end
@@ -63,10 +64,14 @@ end
 function setup_regularized_optimiser(model, nbatches, chain)
     regularized_optimiser = MLJFlux.regularized_optimiser(model, nbatches)
     optimiser_state = Optimisers.setup(regularized_optimiser, chain)
-    return optimiser_state
+    model.eta == 0.0 && return optimiser_state
+    return Optimisers.adjust(optimiser_state, model.eta)
 end
 
+# adjust the optimiser state after inspecting the `optimiser` and `eta` hyperparameters:
 function adjust(optimiser_state, model, nbatches)
     regularized_optimiser = MLJFlux.regularized_optimiser(model, nbatches)
-    Optimisers.adjust(optimiser_state, regularized_optimiser)
+    model.eta == 0.0 &&
+        return Optimisers.adjust(optimiser_state, regularized_optimiser)
+    return Optimisers.adjust(optimiser_state, model.eta)
 end

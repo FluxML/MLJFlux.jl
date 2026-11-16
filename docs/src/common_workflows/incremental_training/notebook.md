@@ -9,7 +9,7 @@ This demonstration is available as a Jupyter notebook or julia script
 
 In this workflow example we explore how to incrementally train MLJFlux models.
 
-**Julia version** is assumed to be 1.10.*
+**Julia version** is assumed to be at least 1.12.
 
 ### Basic Imports
 
@@ -18,8 +18,8 @@ using MLJ               # Has MLJFlux models
 using Flux              # For more flexibility
 import Optimisers       # native Flux.jl optimisers no longer supported
 using StableRNGs        # for reproducibility across Julia versions
-
-stable_rng() = StableRNGs.StableRNG(123)
+stable_rng() = StableRNGs.StableRNG(123);
+nothing #hide
 ````
 
 ### Loading and Splitting the Data
@@ -40,18 +40,22 @@ nothing #hide
 ### Instantiating the model
 
 Now let's construct our model. This follows a similar setup to the one followed in the
-[Quick Start](../../index.md#Quick-Start).
+[Quick Start](@ref).
 
 ````@example incremental_training
 NeuralNetworkClassifier = @load NeuralNetworkClassifier pkg=MLJFlux
 clf = NeuralNetworkClassifier(
     builder=MLJFlux.MLP(; hidden=(5,4), σ=Flux.relu),
-    optimiser=Optimisers.Adam(0.01),
+    eta = 0.01,
     batch_size=8,
     epochs=10,
     rng=stable_rng(),
 )
 ````
+
+Instead of explicitly specifying an optimiser, we are going with the default (which is
+`Adam(eta=0.001, beta=(0.9, 0.999), epsilon=1.0e-8)`) and specifying a learning rate
+override of `eta=0.01` (equivalent to specifying `optImiser=Adam(0.01)`).
 
 ### Initial round of training
 
@@ -78,24 +82,30 @@ Poor performance it seems.
 ### Incremental Training
 
 Now let's train it for another 30 epochs at half the original learning rate. All we need
-to do is changes these hyperparameters and call fit again. It won't reset the model
-parameters before training.
+to do is change these hyperparameters and call `fit!` again. The learned
+model parameters (weights and biases) are not re-initialized.
 
 ````@example incremental_training
-clf.optimiser = Optimisers.Adam(clf.optimiser.eta/2)
+clf.eta = clf.eta*0.5
 clf.epochs = clf.epochs + 30
 fit!(mach, verbosity=2);
 nothing #hide
 ````
 
-Let's evaluate the training loss and validation accuracy
+If you'd rather changes to `eta` or `optimiser` force a cold restart, then set the
+`optimiser_changes_trigger_retraining` hyperparameter to `true`. You might want do this
+when comparing the effect of different learning rates on the final performance, using
+MLJ's `TunedModel` wrapper, for example.
+
+Let's evaluate the training loss and
+validation accuracy
 
 ````@example incremental_training
 training_loss = cross_entropy(predict(mach, X_train), y_train)
 ````
 
 ````@example incremental_training
-training_acc = accuracy(predict_mode(mach, X_test), y_test)
+training_accuracy = accuracy(predict_mode(mach, X_test), y_test)
 ````
 
 That's much better. If we are rather interested in resetting the model parameters before

@@ -1,3 +1,9 @@
+using StableRNGs
+import MLJFlux
+using MLJBase
+import StatisticalMeasures
+using Tables
+
 rng = StableRNGs.StableRNG(123)
 
 table = load_iris()
@@ -30,4 +36,27 @@ X = Tables.table(Float32.(Tables.matrix(X)))
     @test loss1 ≈ loss2
     @test !(loss1 ≈ loss3)
     @test loss1 ≈ loss4
+end
+
+@testset "logic around changes to the learning rate + warm restart" begin
+    model = MLJFlux.NeuralNetworkClassifier(
+    builder=MLJFlux.Linear(),
+    rng=StableRNGs.StableRNG(123),
+    epochs=2,
+    )
+    model3 = deepcopy(model)
+    model4 = deepcopy(model)
+
+    # train for 5 epochs, in two steps:
+    mach = machine(model3, X, y)
+    fit!(mach, verbosity=2)
+    model3.epochs += 3
+    fit!(mach, verbosity=2)
+    losses_new = training_losses(mach)
+
+    # train for 5 epochs in one step:
+    model4.epochs += 3
+    mach = machine(model4, X, y)
+    fit!(mach, verbosity=0)
+    @test losses_new ≈ training_losses(mach)
 end

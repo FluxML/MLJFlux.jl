@@ -36,13 +36,22 @@ makedocs(
             "Entity Embdedding"=>"interface/entity_embedding.md",
         ],
         "Common Workflows" => Any[
-            "Incremental Training"=>"common_workflows/incremental_training/notebook.md",
-            "Entity Embeddings"=>"common_workflows/entity_embeddings/notebook.md",
-            "Hyperparameter Tuning"=>"common_workflows/hyperparameter_tuning/notebook.md",
-            "Model Composition"=>"common_workflows/composition/notebook.md",
-            "Model Comparison"=>"common_workflows/comparison/notebook.md",
-            "Early Stopping"=>"common_workflows/early_stopping/notebook.md",
-            "Live Training"=>"common_workflows/live_training/notebook.md",
+            "Incremental Training"=>
+                "common_workflows/incremental_training/notebook.md",
+            "Learning Rate Schedules"=>
+                "common_workflows/learning_rate_schedules/notebook.md",
+            "Entity Embedddfings"=>
+                "common_workflows/entity_embeddings/notebook.md",
+            "Hyperparameter Tuning"=>
+                "common_workflows/hyperparameter_tuning/notebook.md",
+            "Model Composition"=>
+                "common_workflows/composition/notebook.md",
+            "Model Comparison"=>
+                "common_workflows/comparison/notebook.md",
+            "Early Stopping"=>
+                "common_workflows/early_stopping/notebook.md",
+            "Live Training"=>
+                "common_workflows/live_training/notebook.md",
             "Neural Architecture Search"=>"common_workflows/architecture_search/notebook.md",
         ],
         "Extended Examples" => Any[

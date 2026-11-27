@@ -5,7 +5,6 @@ import StatisticalMeasures
 using Tables
 
 rng = StableRNGs.StableRNG(123)
-
 table = load_iris()
 y, X = unpack(table, ==(:target), _->true, rng=rng)
 X = Tables.table(Float32.(Tables.matrix(X)))
@@ -44,15 +43,36 @@ end
     rng=StableRNGs.StableRNG(123),
     epochs=2,
     )
+    model2 = deepcopy(model)
     model3 = deepcopy(model)
     model4 = deepcopy(model)
 
-    # train for 5 epochs, in two steps:
+    # train with default optimiser, halve the learning rate, training for three more
+    # epochs:
+    mach = machine(model, X, y)
+    fit!(mach, verbosity=0)
+    model.eta = model.optimiser.eta*0.5
+    model.epochs += 3
+    fit!(mach, verbosity=0)
+    losses = training_losses(mach)
+
+    # instead, and equivalently, halve the learning rate by changing it inside the
+    # optimiser:
+    mach = machine(model2, X, y)
+    fit!(mach, verbosity=0)
+    model2.optimiser = Adam(model2.optimiser.eta*0.5)
+    model2.epochs += 3
+    fit!(mach, verbosity=0)
+    @test training_losses(mach) ≈ losses
+
+    # instead, and non-equivalently, train for 5 epochs, in two steps, but without
+    # changing the optimiser or learning rate, `eta`:
     mach = machine(model3, X, y)
-    fit!(mach, verbosity=2)
+    fit!(mach, verbosity=0)
     model3.epochs += 3
-    fit!(mach, verbosity=2)
+    fit!(mach, verbosity=0)
     losses_new = training_losses(mach)
+    @test !(losses_new ≈ losses)
 
     # train for 5 epochs in one step:
     model4.epochs += 3

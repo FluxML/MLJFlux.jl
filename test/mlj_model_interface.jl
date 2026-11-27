@@ -116,7 +116,7 @@ end
 @testset "iteration api" begin
     model = MLJFlux.NeuralNetworkRegressor(epochs=10)
     @test MLJBase.supports_training_losses(model)
-    @test MLJBase.iteration_parameter(model) == fieldnames(typeof(model))[4]
+    @test MLJBase.iteration_parameter(model) == :epochs
 
     # integration test:
     X, y = MLJBase.make_regression(10)

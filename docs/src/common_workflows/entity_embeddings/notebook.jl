@@ -22,7 +22,7 @@ PKG_ENV = joinpath(@__DIR__, "..", "..", "..") #!md
 Pkg.activate(PKG_ENV);     #!md
 Pkg.instantiate();     #!md
 
-# **This script tested using Julia 1.10**
+# **This script tested using Julia 1.12**
 
 # ### Basic Imports
 using MLJ
@@ -114,8 +114,6 @@ fit!(mach, verbosity = 0)
 y_pred = predict_mode(mach, X_test)
 balanced_accuracy(y_pred, y_test)
 
-# Notice how the model has learnt to almost perfectly distinguish the classes and all the
-# information has been in the categorical variables.
 
 # ### Visualize the embedding space
 
@@ -169,3 +167,20 @@ first(X_tr, 5)
 
 # This will transform each categorical value into its corresponding embedding
 # vector. Continuous value will remain intact.
+
+# ### Using entity embeddings with other supervised models (transfer learning)
+
+# Suppose we would like to use the entity embeddings learned above to train a K-nearest
+# neighbor model, whose implementation below requires `Continuous` features. Then we can
+# create a pipeline model with two components - one to perform the entity embeddings,
+# namely `clf` above, and one to make the K-nearest neighbor predictions. However, as we
+# are using `clf` as a *transformer*, we must first wrap `clf` using MLJ's `Transformer`:
+
+KNNClassifier = @load KNNClassifier pkg=NearestNeighborModels
+pipe = Transformer(clf) |> KNNClassifier()
+
+mach = machine(pipe, X_train, y_train)
+fit!(mach, verbosity=0)
+y_pred_knn = predict_mode(mach, X_test)
+balanced_accuracy(y_pred_knn, y_test)
+

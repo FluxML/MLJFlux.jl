@@ -58,30 +58,30 @@ test = 501:1000</code></pre><pre class="documenter-example-output"><code class="
 [ Info: Loss is 2.088
 [ Info: Loss is 1.75
 [ Info: Loss is 1.182
-[ Info: Loss is 0.6994
-[ Info: Loss is 0.5137
+[ Info: Loss is 0.6996
+[ Info: Loss is 0.5144
 [ Info: Loss is 0.4247
-[ Info: Loss is 0.3438
-[ Info: Loss is 0.2933
-[ Info: Loss is 0.253</code></pre><p>Inspecting:</p><pre><code class="language-julia hljs">report(mach)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">(training_losses = Float32[2.3085048, 2.2595732, 2.0875967, 1.749871, 1.1817601, 0.69935024, 0.5136806, 0.4246723, 0.34380284, 0.2932834, 0.2529655],)</code></pre><pre><code class="language-julia hljs">chain = fitted_params(mach)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">(chain = Chain(Chain(Chain(Conv((3, 3), 1 =&gt; 16, relu, pad=1), MaxPool((2, 2)), Conv((3, 3), 16 =&gt; 32, relu, pad=1), MaxPool((2, 2)), Conv((3, 3), 32 =&gt; 32, relu, pad=1), MaxPool((2, 2)), flatten), Dense(288 =&gt; 10)), softmax),)</code></pre><pre><code class="language-julia hljs">Flux.params(chain)[2]</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">16-element Vector{Float32}:
- -0.0021797447
-  0.003990275
-  0.007593996
-  0.03696236
-  0.025267152
- -0.0016900195
- -0.0017486883
-  0.0018559672
- -0.0052830945
- -0.0013297115
- -0.001370499
-  0.014835218
-  0.008706556
-  0.025136834
-  0.014502887
-  0.04496013</code></pre><p>Adding 20 more epochs:</p><pre><code class="language-julia hljs">clf.epochs = clf.epochs + 20
+[ Info: Loss is 0.344
+[ Info: Loss is 0.2934
+[ Info: Loss is 0.2531</code></pre><p>Inspecting:</p><pre><code class="language-julia hljs">report(mach)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">(training_losses = Float32[2.3085048, 2.2595732, 2.0875971, 1.7498354, 1.1816682, 0.69962513, 0.5143515, 0.42467436, 0.34399503, 0.2933622, 0.25314575],)</code></pre><pre><code class="language-julia hljs">chain = fitted_params(mach)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">(chain = Chain(Chain(Chain(Conv((3, 3), 1 =&gt; 16, relu, pad=1), MaxPool((2, 2)), Conv((3, 3), 16 =&gt; 32, relu, pad=1), MaxPool((2, 2)), Conv((3, 3), 32 =&gt; 32, relu, pad=1), MaxPool((2, 2)), flatten), Dense(288 =&gt; 10)), softmax),)</code></pre><pre><code class="language-julia hljs">Flux.params(chain)[2]</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">16-element Vector{Float32}:
+ -0.002287266
+  0.004657906
+  0.007710049
+  0.036375586
+  0.02501174
+ -0.0017802292
+ -0.0020314557
+  0.006301284
+ -0.003881529
+ -0.0014192822
+ -0.0014341668
+  0.01494776
+  0.009030639
+  0.024985876
+  0.014093538
+  0.044851914</code></pre><p>Adding 20 more epochs:</p><pre><code class="language-julia hljs">clf.epochs = clf.epochs + 20
 fit!(mach, rows=train, verbosity=0);</code></pre><p>Computing an out-of-sample estimate of the loss:</p><pre><code class="language-julia hljs">predicted_labels = predict(mach, rows=test);
-cross_entropy(predicted_labels, labels[test])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">0.34179024818703213</code></pre><p>Or to fit and predict, in one line:</p><pre><code class="language-julia hljs">evaluate!(
+cross_entropy(predicted_labels, labels[test])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">0.3363818370904091</code></pre><p>Or to fit and predict, in one line:</p><pre><code class="language-julia hljs">evaluate!(
     mach,
     resampling=Holdout(fraction_train=0.5),
     measure=cross_entropy,
@@ -93,12 +93,12 @@ cross_entropy(predicted_labels, labels[test])</code></pre><pre class="documenter
   per_fold, per_observation,
   fitted_params_per_fold, report_per_fold,
   train_test_rows, resampling, repeats
-Tag: ImageClassifier-761
+Tag: ImageClassifier-567
 Extract:
 ┌──────────────────────┬───────────┬─────────────┐
 │<span class="sgr30"> measure              </span>│<span class="sgr30"> operation </span>│<span class="sgr30"> measurement </span>│
 ├──────────────────────┼───────────┼─────────────┤
-│ LogLoss(             │ predict   │ 0.342       │
+│ LogLoss(             │ predict   │ 0.336       │
 │   tol = 2.22045e-16) │           │             │
 └──────────────────────┴───────────┴─────────────┘
 Apply `describe` to this result for a named tuple summary.</code></pre><p>(We could also have specified <code>resampling=[(train, test),]</code> and dropped the <code>rows</code> specifi ation.)</p><h2 id="Wrapping-the-MLJFlux-model-with-iteration-controls"><a class="docs-heading-anchor" href="#Wrapping-the-MLJFlux-model-with-iteration-controls">Wrapping the MLJFlux model with iteration controls</a><a id="Wrapping-the-MLJFlux-model-with-iteration-controls-1"></a><a class="docs-heading-anchor-permalink" href="#Wrapping-the-MLJFlux-model-with-iteration-controls" title="Permalink"></a></h2><p>Any iterative MLJFlux model can be wrapped in <em>iteration controls</em>, as we demonstrate next. For more on MLJ&#39;s <code>IteratedModel</code> wrapper, see the <a href="https://alan-turing-institute.github.io/MLJ.jl/dev/controlling_iterative_models/">MLJ documentation</a>.</p><p>The &quot;self-iterating&quot; classifier, called <code>iterated_clf</code> below, is for iterating the image classifier defined above until one of the following stopping criterion apply:</p><ul><li><code>Patience(3)</code>: 3 consecutive increases in the loss</li><li><code>InvalidValue()</code>: an out-of-sample loss, or a training loss, is <code>NaN</code>, <code>Inf</code>, or <code>-Inf</code></li><li><code>TimeLimit(t=5/60)</code>: training time has exceeded 5 minutes</li></ul><p>These checks (and other controls) will be applied every two epochs (because of the <code>Step(2)</code> control). Additionally, training a machine bound to <code>iterated_clf</code> will:</p><ul><li>save a snapshot of the machine every three control cycles (every six epochs)</li><li>record traces of the out-of-sample loss and training losses for plotting</li><li>record mean value traces of each Flux parameter for plotting</li></ul><p>For a complete list of controls, see <a href="https://alan-turing-institute.github.io/MLJ.jl/dev/controlling_iterative_models/#Controls-provided">this table</a>.</p><h3 id="Wrapping-the-classifier"><a class="docs-heading-anchor" href="#Wrapping-the-classifier">Wrapping the classifier</a><a id="Wrapping-the-classifier-1"></a><a class="docs-heading-anchor-permalink" href="#Wrapping-the-classifier" title="Permalink"></a></h3><p>Some helpers</p><p>To extract Flux params from an MLJFlux machine</p><pre><code class="language-julia hljs">parameters(mach) = vec.(Flux.trainables(fitted_params(mach)))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">parameters (generic function with 1 method)</code></pre><p>To store the traces:</p><pre><code class="language-julia hljs">losses = []
@@ -154,22 +154,22 @@ controls=[
   cache = true, 
   logger = nothing)</code></pre><h3 id="Binding-the-wrapped-model-to-data:"><a class="docs-heading-anchor" href="#Binding-the-wrapped-model-to-data:">Binding the wrapped model to data:</a><a id="Binding-the-wrapped-model-to-data:-1"></a><a class="docs-heading-anchor-permalink" href="#Binding-the-wrapped-model-to-data:" title="Permalink"></a></h3><pre><code class="language-julia hljs">mach = machine(iterated_clf, images, labels);</code></pre><h3 id="Training"><a class="docs-heading-anchor" href="#Training">Training</a><a id="Training-1"></a><a class="docs-heading-anchor-permalink" href="#Training" title="Permalink"></a></h3><pre><code class="language-julia hljs">fit!(mach, rows=train);</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">[ Info: Training machine(ProbabilisticIteratedModel(model = ImageClassifier(builder = Main.MyConvBuilder(3, 16, 32, 32), …), …), …).
 [ Info: No iteration parameter specified. Using `iteration_parameter=:(epochs)`.
-[ Info: loss: 2.195202374459127
-[ Info: loss: 1.858616526882928
+[ Info: loss: 2.1952023754477152
+[ Info: loss: 1.8586165140247317
 [ Info: Saving &quot;/tmp/mnist1.jls&quot;.
-[ Info: loss: 1.0308268068895032
-[ Info: loss: 0.5587112546156654
-[ Info: loss: 0.4706697147118912
+[ Info: loss: 1.0308267831626536
+[ Info: loss: 0.5587112769776758
+[ Info: loss: 0.4706697393706933
 [ Info: Saving &quot;/tmp/mnist2.jls&quot;.
-[ Info: loss: 0.4333857830207363
-[ Info: loss: 0.41650255295863237
-[ Info: loss: 0.41272514080190553
+[ Info: loss: 0.4333882920616511
+[ Info: loss: 0.41649729305863037
+[ Info: loss: 0.412735771008682
 [ Info: Saving &quot;/tmp/mnist3.jls&quot;.
-[ Info: loss: 0.4159023736439424
-[ Info: loss: 0.421495696084631
-[ Info: loss: 0.4309416932525263
-[ Info: final loss: 0.4309416932525263
-[ Info: final training loss: 0.04073835
+[ Info: loss: 0.416092226104444
+[ Info: loss: 0.4213074674043592
+[ Info: loss: 0.4313837520796837
+[ Info: final loss: 0.4313837520796837
+[ Info: final training loss: 0.040694814
 [ Info: Stop triggered by EarlyStopping.Patience(3) stopping criterion.
 [ Info: Total of 22 iterations.</code></pre><h3 id="Comparison-of-the-training-and-out-of-sample-losses:"><a class="docs-heading-anchor" href="#Comparison-of-the-training-and-out-of-sample-losses:">Comparison of the training and out-of-sample losses:</a><a id="Comparison-of-the-training-and-out-of-sample-losses:-1"></a><a class="docs-heading-anchor-permalink" href="#Comparison-of-the-training-and-out-of-sample-losses:" title="Permalink"></a></h3><pre><code class="language-julia hljs">plot(
     epochs,
@@ -188,7 +188,7 @@ plot(
     parameter_means2,
     title=&quot;Flux parameter mean weights&quot;,
     xlab = &quot;epoch&quot;,
-)</code></pre><img src="63c60af2.svg" alt="Example block output"/><p><strong>Note.</strong> The higher the number in the plot legend, the deeper the layer we are **weight-averaging.</p><pre><code class="language-julia hljs">savefig(joinpath(tempdir(), &quot;weights.png&quot;))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&quot;/tmp/weights.png&quot;</code></pre><h3 id="Retrieving-a-snapshot-for-a-prediction:"><a class="docs-heading-anchor" href="#Retrieving-a-snapshot-for-a-prediction:">Retrieving a snapshot for a prediction:</a><a id="Retrieving-a-snapshot-for-a-prediction:-1"></a><a class="docs-heading-anchor-permalink" href="#Retrieving-a-snapshot-for-a-prediction:" title="Permalink"></a></h3><pre><code class="language-julia hljs">mach2 = machine(joinpath(tempdir(), &quot;mnist3.jls&quot;))
+)</code></pre><img src="06f8eb3b.svg" alt="Example block output"/><p><strong>Note.</strong> The higher the number in the plot legend, the deeper the layer we are **weight-averaging.</p><pre><code class="language-julia hljs">savefig(joinpath(tempdir(), &quot;weights.png&quot;))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">&quot;/tmp/weights.png&quot;</code></pre><h3 id="Retrieving-a-snapshot-for-a-prediction:"><a class="docs-heading-anchor" href="#Retrieving-a-snapshot-for-a-prediction:">Retrieving a snapshot for a prediction:</a><a id="Retrieving-a-snapshot-for-a-prediction:-1"></a><a class="docs-heading-anchor-permalink" href="#Retrieving-a-snapshot-for-a-prediction:" title="Permalink"></a></h3><pre><code class="language-julia hljs">mach2 = machine(joinpath(tempdir(), &quot;mnist3.jls&quot;))
 predict_mode(mach2, images[501:503])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">3-element CategoricalArrays.CategoricalArray{Int64,1,UInt32}:
  2
  9
@@ -202,4 +202,4 @@ plot(
     ylab = &quot;cross entropy&quot;,
     label=&quot;out-of-sample&quot;,
 )
-plot!(epochs, training_losses, label=&quot;training&quot;)</code></pre><img src="419aff87.svg" alt="Example block output"/><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../../common_workflows/architecture_search/notebook/">« Neural Architecture Search</a><a class="docs-footer-nextpage" href="../../../contributing/">Contributing »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.20.0 on <span class="colophon-date" title="Friday 27 November 2026 04:49">Friday 27 November 2026</span>. Using Julia version 1.10.14.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+plot!(epochs, training_losses, label=&quot;training&quot;)</code></pre><img src="fe431d56.svg" alt="Example block output"/><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../../common_workflows/architecture_search/notebook/">« Neural Architecture Search</a><a class="docs-footer-nextpage" href="../../../contributing/">Contributing »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.20.0 on <span class="colophon-date" title="Friday 27 November 2026 04:55">Friday 27 November 2026</span>. Using Julia version 1.10.14.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

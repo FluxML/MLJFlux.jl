@@ -81,7 +81,7 @@ iterated_model = IteratedModel(
 fit!(mach)
 validation_losses</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">100-element Vector{Any}:
  0.8352088626868427
- 0.6732681053927667
+ 0.6732681053927665
  0.5739031795541483
  0.5043200472161209
  0.4575995869258531
@@ -93,13 +93,13 @@ validation_losses</code></pre><pre class="documenter-example-output"><code class
  ⋮
  0.025626456909644407
  0.025847989322549007
- 0.02585792897211095
+ 0.025857928972110953
  0.02571874249807848
  0.025520618737545187
  0.02535433864076781
  0.025166694645737318
  0.024993059703878436
- 0.024808875413973974</code></pre><p>Note that the wrapped model sets aside some data on which to make out-of-sample estimates of the loss, which is how <code>validation_losses</code> are calculated. But if we use <code>mach</code> to make predictions on new input features, these are based on retraining the model on <em>all</em> provided data.</p><pre><code class="language-julia hljs">Xnew = (
+ 0.024808875413973978</code></pre><p>Note that the wrapped model sets aside some data on which to make out-of-sample estimates of the loss, which is how <code>validation_losses</code> are calculated. But if we use <code>mach</code> to make predictions on new input features, these are based on retraining the model on <em>all</em> provided data.</p><pre><code class="language-julia hljs">Xnew = (
     sepal_length = Float32[5.8, 5.8, 5.8],
     sepal_width = Float32[4.0, 2.6, 2.7],
     petal_length = Float32[1.2, 4.0, 4.1],
@@ -109,4 +109,4 @@ validation_losses</code></pre><pre class="documenter-example-output"><code class
 predict_mode(mach, Xnew)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">3-element CategoricalArrays.CategoricalArray{String,1,UInt32}:
  &quot;setosa&quot;
  &quot;versicolor&quot;
- &quot;versicolor&quot;</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../early_stopping/notebook/">« Early Stopping</a><a class="docs-footer-nextpage" href="../../architecture_search/notebook/">Neural Architecture Search »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.20.0 on <span class="colophon-date" title="Friday 27 November 2026 04:49">Friday 27 November 2026</span>. Using Julia version 1.10.14.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+ &quot;versicolor&quot;</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../early_stopping/notebook/">« Early Stopping</a><a class="docs-footer-nextpage" href="../../architecture_search/notebook/">Neural Architecture Search »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.20.0 on <span class="colophon-date" title="Friday 27 November 2026 04:55">Friday 27 November 2026</span>. Using Julia version 1.10.14.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

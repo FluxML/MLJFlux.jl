@@ -1,3 +1,10 @@
+!!! note
+
+    MLJ's generic `Transformer` wrapper (see [here]
+	(https://juliaai.github.io/MLJWrappers.jl/dev/transformer/#MLJWrappers.Transformer))
+	performs the same functionality described below for `EntityEmbedder`, 
+	which may be deprecated in the future. 
+
 Most MLJFlux models support categorical features by learning enitity embeddings. By
 wrapping such an MLJFlux model using [`EntityEmbedder`](@ref), the learned embeddings can
 be used in MLJ pipelines as transformer elements. In particular, these embeddings can be

@@ -5,11 +5,9 @@ on:
       - master
       - dev
   push:
-    # Not `dev`: every merge into `dev` arrives via a PR, which is already
-    # tested above. Building `dev` pushes as well only duplicates those runs
-    # while a dev -> master release PR is open.
     branches:
       - master
+      - dev
     tags: '*'
 jobs:
   test:

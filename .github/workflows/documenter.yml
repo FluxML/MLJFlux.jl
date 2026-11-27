@@ -10,6 +10,9 @@ on:
 
 jobs:
   build:
+    # Skip the duplicate run when `dev` is itself a PR head (dev -> master release
+    # PRs); the push-triggered run already covers that commit.
+    if: github.event_name != 'pull_request' || github.head_ref != 'dev'
     permissions:
       contents: write
       pull-requests: read
